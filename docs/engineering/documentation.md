@@ -1,0 +1,24 @@
+# Documentation Standards
+
+"If a human has to repeat it twice, document it."
+
+## 1. Architecture Decision Records (ADRs)
+We use ADRs to capture why architectural decisions were made.
+- **Where**: Stored in `docs/adr/` within the repository.
+- **Format**: 
+  - Context (The problem)
+  - Options Considered
+  - Decision (What we chose and why)
+  - Consequences (Trade-offs)
+
+## 2. API Documentation
+- APIs must be self-documenting.
+- REST APIs must expose a Swagger/OpenAPI UI (e.g., via `@nestjs/swagger` in NestJS or L5-Swagger in Laravel).
+- GraphQL APIs must expose the GraphiQL playground in non-production environments with rich schema descriptions.
+
+## 3. Runbooks
+Every microservice must have a `RUNBOOK.md` that explains to the On-Call engineer:
+1. What this service does.
+2. What alerts are associated with it.
+3. How to view its logs.
+4. Step-by-step instructions for known failure mitigation.

@@ -1,0 +1,163 @@
+# Project Documents
+
+> These four documents must exist before feature development begins. They are not optional and must be kept up to date throughout the project lifecycle.
+
+---
+
+## README.md
+
+The `README.md` is the first file any developer reads. It must be self-sufficient — a developer who has never seen the project must be able to clone the repo, run it locally, and understand its purpose without asking anyone.
+
+**Required sections, in this order:**
+
+| Section | What it must contain |
+|---|---|
+| Project Name & Description | One paragraph: what the system does and who uses it. No marketing language. |
+| Tech Stack | Bullet list of major technologies and their versions (framework, language, database, deployment target). |
+| Prerequisites | Every tool that must be installed before setup (Node version, package manager, Docker, etc.). Link to install docs. |
+| Local Setup | Numbered steps from `git clone` to a running app. Every command must be copy-pasteable and must work. |
+| Environment Variables | Table of every `.env` key with a description of what it does. Mark which are required vs optional. |
+| Running Tests | Separate commands for unit tests, E2E tests, and coverage report. Include the expected output so developers know when it passes. |
+| Environment Links | URLs for staging and production environments. Mark clearly which is which. |
+
+**Rules:**
+
+- All setup commands must be tested before merging. A README that does not work is worse than no README.
+- Keep it current. When you change a setup step, update the README in the same PR.
+- No walls of text. Use headers, tables, and code blocks.
+
+---
+
+## docs/adr/
+
+Architecture Decision Records document significant technical decisions so future engineers understand *why* the system was built the way it was, not just *how*.
+
+**When to write an ADR:**
+
+Write an ADR for any decision that would be hard to reverse, affects multiple developers, or that future maintainers might question. Examples:
+- Choice of framework or language
+- Database selection
+- Authentication strategy
+- State management approach
+- Third-party service selection
+- Deviations from playbook standards
+
+**File naming convention:**
+
+```
+docs/adr/0001-use-nextjs-for-frontend.md
+docs/adr/0002-use-postgresql-over-mongodb.md
+```
+
+Increment the number sequentially. Use kebab-case. The title describes the decision, not the problem.
+
+**Required structure for every ADR:**
+
+```markdown
+# ADR-NNNN: [Short title of the decision]
+
+**Date:** YYYY-MM-DD
+**Status:** Proposed | Accepted | Deprecated | Superseded by ADR-XXXX
+
+## Context
+
+What is the problem or situation that required a decision? What constraints existed (time, cost, existing systems, team skills)?
+
+## Decision
+
+What was decided? State it clearly in one or two sentences. Not why — that comes next.
+
+## Consequences
+
+What becomes easier or harder as a result of this decision? List both positive and negative outcomes.
+```
+
+**Rules:**
+
+- Write ADRs in past or present tense — they record what was decided, not what might happen.
+- Never delete an ADR. If a decision is reversed, mark it **Superseded** and reference the new ADR.
+- The first ADR on every project must document the tech stack decision.
+
+---
+
+## CONTRIBUTING.md
+
+The `CONTRIBUTING.md` tells developers how to work on the project. It must describe the actual process used on the project, not a generic template.
+
+**Required sections:**
+
+### Branch Naming
+
+State the exact convention used. Example:
+
+| Type | Pattern | Example |
+|---|---|---|
+| Feature | `feat/<ticket-id>-short-description` | `feat/PROJ-42-user-auth` |
+| Bug fix | `fix/<ticket-id>-short-description` | `fix/PROJ-99-login-redirect` |
+| Chore | `chore/<short-description>` | `chore/update-dependencies` |
+
+### Commit Message Format
+
+Reference the [Git Hooks & Commits standard](/coding-standards/code-quality/git-hooks) and state the prefix types in use on this project (e.g., `feat`, `fix`, `chore`, `docs`, `refactor`, `test`).
+
+### Pull Request Process
+
+1. Branch must be up to date with `main` before opening a PR.
+2. PR title must follow the same format as commit messages.
+3. PR description must include: what changed, why it changed, and how to test it.
+4. All CI checks must pass before requesting review.
+5. Minimum number of approvals required (state the number — typically 1 or 2).
+6. The author merges after approval — not the reviewer.
+
+### Code Review Checklist
+
+Reviewers must check:
+
+- [ ] Logic is correct and handles edge cases
+- [ ] No secrets or credentials in the diff
+- [ ] New code has tests; coverage has not decreased
+- [ ] Naming is clear and consistent with the codebase
+- [ ] No unnecessary complexity introduced
+- [ ] Migrations (if any) are safe and reversible
+
+### Local Development Tips
+
+Include anything non-obvious: seed data commands, mock service setup, known issues, useful debug flags.
+
+---
+
+## .env.example
+
+The `.env.example` file is the canonical reference for how the application is configured. It must be committed to version control and kept in sync with the actual environment variables the application reads.
+
+**Rules:**
+
+- Every key the application reads must appear in `.env.example`. No undocumented variables.
+- Use placeholder values that make the type and format clear:
+
+```dotenv
+# Application
+NODE_ENV=development
+PORT=3000
+APP_URL=http://localhost:3000
+
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+
+# Authentication
+JWT_SECRET=replace-with-a-long-random-string
+JWT_EXPIRY=15m
+REFRESH_TOKEN_EXPIRY=7d
+
+# Third-party APIs
+STRIPE_SECRET_KEY=sk_test_replace_with_real_key
+STRIPE_WEBHOOK_SECRET=whsec_replace_with_real_secret
+
+# Feature Flags (optional)
+FEATURE_NEW_CHECKOUT=false
+```
+
+- Group variables by concern with a comment header.
+- Mark optional variables with a comment: `# Optional — omit to disable feature`.
+- Never commit real credentials, even to a private repository. Use a secrets manager for production values.
+- When a new environment variable is added to the application, add it to `.env.example` in the same PR.

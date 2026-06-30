@@ -1,0 +1,26 @@
+# Quality & Stability Metrics
+
+Quality metrics provide visibility into the maintainability of the codebase and the effectiveness of our Quality Gates.
+
+## 1. Escaped Defect Rate
+- **Definition**: The number of bugs found in Production compared to the number of bugs found in Pre-Production (QA/Staging).
+- **Target**: < 5% of total defects should be found in Production.
+- **Action**: High escaped defect rates require an immediate review of the E2E test suite. Every escaped defect MUST result in a new automated test to prevent recurrence.
+
+## 2. Code Coverage Trend
+- **Definition**: The percentage of source code executed by automated tests.
+- **Target**: Strictly maintained at >= 80%.
+- **Action**: Monitored continuously via SonarQube. Pipeline fails if coverage drops relative to the `main` branch.
+
+## 3. Technical Debt Ratio
+- **Definition**: The estimated time required to fix all Code Smells and maintainability issues relative to the total time it took to write the code (Measured by SonarQube).
+- **Target**: Maintainability Rating 'A' (< 5% tech debt ratio).
+- **Action**: If the ratio climbs, teams must allocate more than the standard 20% sprint capacity to refactoring.
+
+## 4. Defect Resolution Time (SLA)
+- **Definition**: Time taken to resolve reported bugs based on priority.
+- **Enterprise SLAs**:
+  - **P1 (Critical - Outage)**: < 4 hours.
+  - **P2 (High - Core feature broken)**: < 24 hours.
+  - **P3 (Medium - Workaround exists)**: Within the current or next sprint.
+  - **P4 (Low - Cosmetic)**: Backlogged for prioritization.

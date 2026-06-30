@@ -1,0 +1,214 @@
+# DevSecOps & Security Standards
+
+DevSecOps ensures that security is integrated seamlessly throughout the Software Development Life Cycle (SDLC). By adopting a "Shift-Left" approach, we identify and remediate vulnerabilities during development rather than catching them in production.
+
+## 1. Secure Coding Practices
+
+All developers must adhere to the **OWASP Top 10** proactive controls.
+
+### Input Validation & Output Encoding
+- **Trust No Input**: Validate all incoming data (from APIs, forms, headers, query parameters) against a strict schema (e.g., using Joi, Zod, or Class-Validator).
+- **Output Encoding**: Context-aware output encoding must be applied to prevent Cross-Site Scripting (XSS). Modern frameworks (React/Vue/Blade) handle this natively, but engineers must never bypass it (e.g., avoid `dangerouslySetInnerHTML`).
+
+### Authentication & Authorization
+- **Identity Provider**: Delegate authentication to enterprise Identity Providers (e.g., Azure AD, Okta, Auth0) using OAuth 2.0 / OpenID Connect. Do not build custom password hashing or storage mechanisms.
+- **RBAC/ABAC**: Implement Role-Based or Attribute-Based Access Control on backend APIs. Verify authorization at the controller/route level *before* executing business logic.
+- **JWT Handling**: Short-lived access tokens should be used. Never store sensitive PII inside a JWT payload (they are base64 encoded, not encrypted).
+
+### Secret Management
+- **No Hardcoded Secrets**: Passwords, API keys, and connection strings must never be committed to source control.
+- **Enterprise Vault**: Use secure vaults (e.g., HashiCorp Vault, AWS Secrets Manager, Azure Key Vault) to inject secrets into the application environment at runtime.
+
+## 2. CI/CD Security Gates (Shift-Left)
+
+Automated security scanners are integrated into the CI/CD pipelines to prevent vulnerable code from being deployed.
+
+### SAST (Static Application Security Testing)
+- **Tool**: SonarQube / Checkmarx.
+- **Execution**: Runs on every Pull Request.
+- **Policy**: The PR is blocked if any **Critical** or **High** vulnerabilities (e.g., SQL Injection, Hardcoded Secrets) are detected.
+- **Security Hotspots**: Any flagged "Security Hotspots" must be manually reviewed and marked as "Safe" or "Fixed" by a Security Champion before the gate turns green.
+
+### SCA (Software Composition Analysis)
+- **Tool**: Snyk / Dependabot / NPM Audit.
+- **Execution**: Runs daily and on every build.
+- **Policy**: Scans third-party open-source libraries (`package.json`, `composer.json`). The build will fail if packages containing known CVEs (Common Vulnerabilities and Exposures) with High/Critical severity are present.
+
+### Secret Scanning
+- **Tool**: TruffleHog / GitLeaks.
+- **Execution**: Pre-commit hooks and CI pipelines.
+- **Policy**: Prevents commits from being pushed if high-entropy strings or known token patterns are detected.
+
+## 3. Infrastructure & Container Security
+
+### Immutable Infrastructure
+- Use Infrastructure as Code (IaC) tools like Terraform. Manual changes in cloud consoles (ClickOps) are prohibited.
+
+### Docker Container Hardening
+- **Rootless Containers**: Applications must run as a non-root user inside the Docker container (`USER node` or `USER www-data`).
+- **Base Images**: Use minimal, official Alpine or Distroless base images to reduce the attack surface.
+- **Image Scanning**: Container registries (e.g., AWS ECR, Azure ACR) must scan pushed images for OS-level vulnerabilities using tools like Trivy or AWS ECR Scanner. Base images must contain **0 Critical OS vulnerabilities**.
+
+## 4. Production Security & Rate Limiting
+
+### WAF & DDoS Mitigation
+- **WAF (Web Application Firewall)**: All public-facing domains must be protected by a WAF (e.g., Cloudflare, AWS WAF). Implement managed rulesets for the OWASP Top 10.
+- **DDoS Protection**: Ensure infrastructure relies on managed DDoS mitigation services (e.g., AWS Shield Standard/Advanced). Do not expose direct IP addresses of load balancers or EC2 instances to the internet.
+
+### API Gateway & API Rate Limiting
+- **Global Throttling**: Configure an API Gateway (e.g., AWS API Gateway, Kong) to enforce hard global concurrency limits and rate limits (e.g., 500 requests/sec per IP) before traffic ever reaches the application servers.
+- **Auth Throttling**: Specifically throttle authentication endpoints (`/login`, `/token`) to mitigate credential stuffing and brute force attacks (e.g., maximum 5 failed attempts per minute, triggering an exponential backoff or CAPTCHA).
+
+### Patch Management SLAs & Vulnerability Disclosure
+- A formal process for security researchers to report vulnerabilities must be maintained (`security.txt`).
+- **Critical CVEs**: Patched and deployed within 48 hours of disclosure.
+- **High CVEs**: Patched and deployed within 14 days.
+
+---
+
+## 5. API Role-Based Access Control (RBAC) — External Enforcement
+
+Role-based access control must be enforced at the API layer, not solely within the application. This prevents unauthorized access even when the frontend does not render certain UI elements.
+
+> **Critical rule**: Never trust the client to enforce authorization. A user with access to the network can call any API endpoint directly, bypassing the UI entirely. Every sensitive endpoint must verify the caller's role on the server.
+
+### The Authorization Layers
+
+```
+[Client Request]
+      │
+      ▼
+[API Gateway / Load Balancer]     ← 1. Rate limiting, IP allowlisting
+      │
+      ▼
+[Authentication Guard]            ← 2. Is the token valid? Is the user authenticated?
+      │
+      ▼
+[Authorization Guard / Policy]    ← 3. Does this user's ROLE allow this operation?
+      │
+      ▼
+[Controller / Route Handler]      ← 4. Business logic (only reached if all guards pass)
+```
+
+### NestJS: Role-Based Guards
+
+```ts
+// 1. Define a roles decorator
+import { SetMetadata } from '@nestjs/common'
+export const Roles = (...roles: string[]) => SetMetadata('roles', roles)
+
+// 2. Implement the guard
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ])
+
+    if (!requiredRoles || requiredRoles.length === 0) return true
+
+    const { user } = context.switchToHttp().getRequest()
+    return requiredRoles.some((role) => user?.roles?.includes(role))
+  }
+}
+
+// 3. Register guard globally in main.ts or AppModule
+app.useGlobalGuards(new JwtAuthGuard(), new RolesGuard(reflector))
+
+// 4. Apply to routes
+@Controller('admin/reports')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class AdminReportsController {
+
+  @Get()
+  @Roles('admin', 'finance-manager')      // Only these roles can access
+  async getReports() { ... }
+
+  @Delete(':id')
+  @Roles('admin')                          // Admin only
+  async deleteReport(@Param('id') id: string) { ... }
+}
+```
+
+### Laravel: Gates and Policies
+
+```php
+// 1. Register a Gate for global permission checks
+// app/Providers/AuthServiceProvider.php
+Gate::define('view-admin-reports', function (User $user) {
+    return in_array($user->role, ['admin', 'finance-manager']);
+});
+
+Gate::define('delete-report', function (User $user) {
+    return $user->role === 'admin';
+});
+
+// 2. Use a Policy for model-scoped authorization
+// php artisan make:policy ReportPolicy --model=Report
+class ReportPolicy
+{
+    public function view(User $user, Report $report): bool
+    {
+        return $user->role === 'admin' || $report->owner_id === $user->id;
+    }
+
+    public function delete(User $user, Report $report): bool
+    {
+        return $user->role === 'admin';
+    }
+}
+
+// 3. Enforce in the controller
+class ReportController extends Controller
+{
+    public function index(): JsonResponse
+    {
+        Gate::authorize('view-admin-reports');   // Throws 403 if unauthorized
+        return response()->json(Report::all());
+    }
+
+    public function destroy(Report $report): JsonResponse
+    {
+        $this->authorize('delete', $report);     // Policy check
+        $report->delete();
+        return response()->json(null, 204);
+    }
+}
+```
+
+### API Gateway — External Role Enforcement
+
+For multi-service architectures, enforce role-based access at the **API Gateway** level before requests reach your microservices:
+
+```yaml
+# Kong API Gateway route example
+routes:
+  - name: admin-reports
+    paths:
+      - /api/v1/admin/reports
+    plugins:
+      - name: jwt
+      - name: acl
+        config:
+          allow:
+            - admin
+            - finance-manager
+          hide_groups_header: true
+```
+
+This ensures that even if a microservice's authorization guard has a bug, the API Gateway acts as the last line of defense.
+
+### Common RBAC Anti-Patterns
+
+| Anti-Pattern | Risk | Correct Approach |
+|---|---|---|
+| Only hiding UI elements without backend checks | User calls the API directly — bypasses UI restrictions | Enforce roles in backend guards on every endpoint |
+| Checking role inline: `if ($user->role == 'admin')` | Hard to maintain, impossible to audit | Use Policies/Gates (Laravel) or Guards/Decorators (NestJS) |
+| Returning different data shapes based on role | Error-prone, leaks fields | Use role-aware API Resources / DTOs to control output |
+| Storing roles in the JWT payload only | Stale roles if user is demoted — no real-time enforcement | Verify roles from the database on each request for sensitive operations |

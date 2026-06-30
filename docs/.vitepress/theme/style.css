@@ -1,0 +1,168 @@
+:root {
+  --vp-layout-max-width: 100%;
+  
+  /* Brand Colors */
+  --vp-c-brand-1: #ff6196;
+  --vp-c-brand-2: #ff4785;
+  --vp-c-brand-3: #ff85ae;
+  
+  /* Solid colors for features instead of gradients */
+  --feature-bg: rgba(0, 0, 0, 0.02);
+  --feature-border: rgba(0, 0, 0, 0.08);
+  --feature-shadow: rgba(0, 0, 0, 0.02);
+  --stat-bg: rgba(0, 0, 0, 0.03);
+  --stat-label: #52525b;
+}
+
+.dark {
+  --feature-bg: rgba(255, 255, 255, 0.02);
+  --feature-border: rgba(255, 255, 255, 0.05);
+  --feature-shadow: rgba(0, 0, 0, 0.1);
+  --stat-bg: rgba(0, 0, 0, 0.3);
+  --stat-label: #a1a1aa;
+}
+
+/* --------------------------------------
+   HERO SECTION ENHANCEMENTS
+--------------------------------------- */
+/* Solid color for the main title */
+.VPHero .name {
+  color: #19105b;
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.dark .VPHero .name {
+  color: #ff6196;
+}
+
+/* Floating Animation for the Hero Image */
+.VPHero .image {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Call to Action Buttons */
+.VPHero .action .VPButton.brand {
+  background-color: #19105b;
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+.VPHero .action .VPButton.brand:hover {
+  background-color: #ff6196;
+  transform: translateY(-2px);
+}
+
+.dark .VPHero .action .VPButton.brand {
+  background-color: #ff6196;
+  color: white;
+}
+.dark .VPHero .action .VPButton.brand:hover {
+  background-color: #ff4785;
+}
+
+/* --------------------------------------
+   CLEAN FEATURE CARDS
+--------------------------------------- */
+.VPFeature {
+  background: var(--feature-bg) !important;
+  border: 1px solid var(--feature-border) !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 10px var(--feature-shadow) !important;
+}
+
+.VPFeature:hover {
+  transform: translateY(-4px) !important;
+  border-color: #ff6196 !important;
+}
+
+/* --------------------------------------
+   CUSTOM STATS SECTION
+--------------------------------------- */
+.custom-stats-section {
+  margin-top: 6rem;
+  padding: 4rem 2rem;
+  background-color: var(--stat-bg);
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid var(--feature-border);
+}
+
+.custom-stats-title {
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: #19105b;
+}
+
+.dark .custom-stats-title {
+  color: white;
+}
+
+.custom-stats-desc {
+  font-size: 1.1rem;
+  color: var(--vp-c-text-2);
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.8;
+}
+
+.custom-stats-grid {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+}
+
+.custom-stat-card {
+  background: var(--feature-bg);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--feature-border);
+  min-width: 200px;
+}
+
+.custom-stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.custom-stat-label {
+  color: var(--stat-label);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.5rem;
+}
+
+/* --------------------------------------
+   DOCUMENTATION PAGE HEADERS
+--------------------------------------- */
+/* Primary Navy for Main Headers */
+.vp-doc h1,
+.vp-doc h2 {
+  color: #19105b !important;
+}
+
+/* Secondary Pink for Sub-Headers */
+.vp-doc h3,
+.vp-doc h4,
+.vp-doc h5,
+.vp-doc h6 {
+  color: #ff6196 !important;
+}
+
+/* Ensure Primary Navy headers remain readable in Dark Mode */
+.dark .vp-doc h1,
+.dark .vp-doc h2 {
+  color: rgba(255, 255, 255, 0.87) !important;
+}

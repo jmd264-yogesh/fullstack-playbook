@@ -1,0 +1,18 @@
+{
+  "name": "fs-delivery-playbook",
+  "version": "1.0.0",
+  "description": "Full Stack Delivery Excellence CoE",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vitepress": "^1.2.2",
+    "vue": "^3.4.27"
+  }
+}

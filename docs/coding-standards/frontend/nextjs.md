@@ -1,0 +1,607 @@
+# Next.js Best Practices & Standards
+
+Next.js with the App Router is the standard meta-framework for all frontend projects. It enables React Server Components, file-based routing, server actions, and built-in performance optimizations.
+
+---
+
+## Quick Start
+
+```bash
+npx create-next-app@latest my-app \
+  --typescript \
+  --tailwind \
+  --eslint \
+  --app \
+  --src-dir \
+  --import-alias "@/*"
+
+cd my-app
+npm install @tanstack/react-query @tanstack/react-query-devtools axios zod react-hook-form @hookform/resolvers
+npm install zustand
+```
+
+---
+
+## App Router File Conventions
+
+Every folder inside `src/app/` is a route segment. Only these special file names have meaning:
+
+| File | Purpose |
+|---|---|
+| `page.tsx` | The UI for a route — makes the segment publicly accessible |
+| `layout.tsx` | Persistent shell around a segment and all its children |
+| `loading.tsx` | Automatic Suspense boundary — shown while the page loads |
+| `error.tsx` | Error boundary — shown when a page or its children throw |
+| `not-found.tsx` | Shown when `notFound()` is called |
+| `route.ts` | API endpoint (replaces `pages/api/`) |
+| `middleware.ts` | Runs before every request (at root, outside `app/`) |
+
+```text
+src/app/
+├── layout.tsx              # Root layout — wraps everything
+├── page.tsx                # Home route: /
+├── (marketing)/            # Route group — no URL segment
+│   ├── about/
+│   │   └── page.tsx        # /about
+│   └── pricing/
+│       └── page.tsx        # /pricing
+├── dashboard/
+│   ├── layout.tsx          # Dashboard shell (sidebar, nav)
+│   ├── loading.tsx         # Dashboard skeleton
+│   ├── error.tsx           # Dashboard error fallback
+│   ├── page.tsx            # /dashboard
+│   └── orders/
+│       ├── page.tsx        # /dashboard/orders
+│       └── [id]/
+│           └── page.tsx    # /dashboard/orders/[id]
+└── api/
+    └── webhooks/
+        └── route.ts        # POST /api/webhooks
+```
+
+---
+
+## Server Components vs Client Components
+
+### The Default: Server Components
+
+All components in the App Router are Server Components by default. They:
+- Run on the server at request time (or build time for static routes)
+- Can `await` directly — no `useEffect` for data fetching
+- Ship **zero JavaScript** to the browser
+- Can access server-only resources: databases, environment secrets, file system
+
+```tsx
+// ✅ Server Component — fetches data directly, no JS shipped to client
+// src/app/dashboard/orders/page.tsx
+import { prisma } from '@/database/prisma.service'
+
+export default async function OrdersPage() {
+  const orders = await prisma.order.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  })
+
+  return (
+    <main>
+      <h1>Orders</h1>
+      <OrdersTable orders={orders} />  {/* Also a Server Component */}
+    </main>
+  )
+}
+```
+
+### When to Use `"use client"`
+
+Add `"use client"` only when the component needs:
+
+| Requirement | Example |
+|---|---|
+| Event handlers | `onClick`, `onChange`, `onSubmit` |
+| React state | `useState`, `useReducer` |
+| React effects | `useEffect`, `useRef` |
+| Browser APIs | `window`, `localStorage`, `navigator` |
+| Third-party client libs | Maps, charting libraries, drag-and-drop |
+
+```tsx
+// ✅ "use client" on the smallest possible component
+'use client'
+
+export function AddToCartButton({ productId }: { productId: string }) {
+  const addToCart = useAddToCart()
+  return (
+    <button onClick={() => addToCart.mutate(productId)}>
+      Add to cart
+    </button>
+  )
+}
+```
+
+### Push `"use client"` Down the Tree
+
+Never add `"use client"` to a `layout.tsx` or `page.tsx` unless absolutely required. It forces every nested component into client rendering.
+
+```tsx
+// ❌ Entire page becomes client-rendered
+'use client'
+export default function DashboardPage() {
+  return <div>...</div>
+}
+
+// ✅ Only the interactive part is a client component
+// dashboard/page.tsx — Server Component
+export default async function DashboardPage() {
+  const stats = await fetchStats()
+  return (
+    <div>
+      <StatsGrid stats={stats} />         {/* Server Component */}
+      <InteractiveFilterBar />            {/* Client Component */}
+    </div>
+  )
+}
+```
+
+---
+
+## Data Fetching
+
+### Fetch in Server Components (Preferred)
+
+```tsx
+// src/app/products/page.tsx
+async function getProducts(category: string) {
+  const res = await fetch(`${process.env.API_URL}/products?category=${category}`, {
+    next: { revalidate: 60 },   // Cache for 60 seconds (ISR)
+  })
+  if (!res.ok) throw new Error('Failed to fetch products')
+  return res.json()
+}
+
+export default async function ProductsPage({ searchParams }: { searchParams: { category: string } }) {
+  const products = await getProducts(searchParams.category ?? 'all')
+  return <ProductGrid products={products} />
+}
+```
+
+### Parallel Data Fetching
+
+Avoid sequential waterfalls — fetch in parallel with `Promise.all`:
+
+```tsx
+// ❌ Sequential — total time = A + B
+const user = await fetchUser(id)
+const orders = await fetchOrders(id)
+
+// ✅ Parallel — total time = max(A, B)
+const [user, orders] = await Promise.all([
+  fetchUser(id),
+  fetchOrders(id),
+])
+```
+
+### Client-Side Fetching with React Query
+
+For data that must be fetched after interaction (e.g., search results, paginated lists with client filters):
+
+```tsx
+'use client'
+import { useQuery } from '@tanstack/react-query'
+
+export function CustomerSearch() {
+  const [query, setQuery] = useState('')
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['customers', 'search', query],
+    queryFn: () => api.customers.search(query),
+    enabled: query.length >= 2,
+    staleTime: 30_000,
+  })
+
+  return (
+    <>
+      <input value={query} onChange={(e) => setQuery(e.target.value)} />
+      {isLoading && <Spinner />}
+      {data?.map(c => <CustomerRow key={c.id} customer={c} />)}
+    </>
+  )
+}
+```
+
+---
+
+## Caching & Revalidation
+
+Next.js caches `fetch` results and page renders. Understanding the options is critical.
+
+| Strategy | Config | Use When |
+|---|---|---|
+| **No cache (dynamic)** | `cache: 'no-store'` | Real-time data, user-specific pages |
+| **Time-based (ISR)** | `next: { revalidate: 60 }` | Semi-static data — products, blog posts |
+| **Tag-based** | `next: { tags: ['products'] }` | Invalidate precisely on mutation |
+| **Static** | Default (no fetch config) | Data that never changes at build time |
+
+```ts
+// Mark a route as always dynamic (opt out of caching)
+export const dynamic = 'force-dynamic'
+
+// Or per-fetch
+const data = await fetch(url, { cache: 'no-store' })
+```
+
+### On-Demand Revalidation from Server Actions
+
+```ts
+'use server'
+import { revalidateTag, revalidatePath } from 'next/cache'
+
+export async function updateProduct(id: string, data: TUpdateProductDto) {
+  await prisma.product.update({ where: { id }, data })
+  revalidateTag('products')              // Invalidate all fetches tagged 'products'
+  revalidatePath('/products')           // Or invalidate by path
+}
+```
+
+---
+
+## Server Actions
+
+Replace form-handling API routes with Server Actions — they run on the server, called directly from client forms.
+
+```tsx
+// src/app/dashboard/orders/actions.ts
+'use server'
+import { redirect } from 'next/navigation'
+import { z } from 'zod'
+
+const CreateOrderSchema = z.object({
+  customerId: z.string().uuid(),
+  amount: z.coerce.number().positive(),
+})
+
+export async function createOrderAction(formData: FormData) {
+  const parsed = CreateOrderSchema.safeParse({
+    customerId: formData.get('customerId'),
+    amount: formData.get('amount'),
+  })
+
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors }
+  }
+
+  const order = await prisma.order.create({ data: parsed.data })
+  revalidatePath('/dashboard/orders')
+  redirect(`/dashboard/orders/${order.id}`)
+}
+```
+
+```tsx
+// src/app/dashboard/orders/new/page.tsx
+import { createOrderAction } from '../actions'
+
+export default function NewOrderPage() {
+  return (
+    <form action={createOrderAction}>
+      <input name="customerId" type="hidden" value="..." />
+      <input name="amount" type="number" placeholder="Amount" />
+      <button type="submit">Create Order</button>
+    </form>
+  )
+}
+```
+
+---
+
+## Layouts
+
+Layouts persist between route changes — use them for navigation shells, sidebars, and context providers.
+
+```tsx
+// src/app/dashboard/layout.tsx
+import { Sidebar } from '@/common/components/Sidebar'
+import { TopNav } from '@/common/components/TopNav'
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="flex flex-1 flex-col">
+        <TopNav />
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      </div>
+    </div>
+  )
+}
+```
+
+---
+
+## Metadata & SEO
+
+```tsx
+// Static metadata
+export const metadata = {
+  title: 'Orders — My App',
+  description: 'Manage your orders',
+}
+
+// Dynamic metadata
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const order = await fetchOrder(params.id)
+  return {
+    title: `Order ${order.reference}`,
+    description: `Order placed on ${order.createdAt}`,
+  }
+}
+```
+
+---
+
+## Middleware
+
+Middleware runs on the Edge before every request. Use it for authentication checks and redirects — not for heavy logic.
+
+```ts
+// src/middleware.ts
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function middleware(request: NextRequest) {
+  const token = request.cookies.get('auth-token')?.value
+
+  const isProtected = request.nextUrl.pathname.startsWith('/dashboard')
+
+  if (isProtected && !token) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*'],   // Only run on these paths
+}
+```
+
+---
+
+## Environment Variables
+
+```dotenv
+# .env.local (never commit — gitignored)
+DATABASE_URL=postgresql://...
+JWT_SECRET=replace-with-secret
+
+# .env.example (commit this — shows required keys)
+DATABASE_URL=postgresql://user:password@localhost:5432/mydb
+JWT_SECRET=replace-with-a-long-random-string
+
+# Public variables — prefixed with NEXT_PUBLIC_ (exposed to browser)
+NEXT_PUBLIC_API_URL=https://api.example.com
+```
+
+```ts
+// Server-only (no NEXT_PUBLIC_ prefix — never sent to the browser)
+const secret = process.env.JWT_SECRET!
+
+// Browser-accessible
+const apiUrl = process.env.NEXT_PUBLIC_API_URL
+```
+
+---
+
+## API Routes
+
+Use route handlers for webhooks, third-party callbacks, and endpoints not covered by Server Actions.
+
+```ts
+// src/app/api/webhooks/stripe/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  const body = await request.text()
+  const signature = request.headers.get('stripe-signature') ?? ''
+
+  try {
+    const event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+    await handleStripeEvent(event)
+    return NextResponse.json({ received: true })
+  } catch (err) {
+    return NextResponse.json({ error: 'Webhook error' }, { status: 400 })
+  }
+}
+```
+
+---
+
+## Loading & Error UI
+
+Every significant route segment should have its own `loading.tsx` and `error.tsx`. Next.js wraps these automatically in `<Suspense>` and `ErrorBoundary`.
+
+```tsx
+// src/app/dashboard/loading.tsx — shown while page.tsx is fetching
+import { Skeleton } from '@/common/components/ui/skeleton'
+
+export default function DashboardLoading() {
+  return (
+    <div className="space-y-4 p-6">
+      <Skeleton className="h-8 w-48" />
+      <div className="grid grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-32 rounded-xl" />
+        ))}
+      </div>
+    </div>
+  )
+}
+```
+
+```tsx
+// src/app/dashboard/error.tsx — must be a Client Component
+'use client'
+import { useEffect } from 'react'
+import { Button } from '@/common/components/ui/button'
+
+export default function DashboardError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  useEffect(() => {
+    console.error(error)
+  }, [error])
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 p-12">
+      <h2 className="text-xl font-semibold">Something went wrong</h2>
+      <p className="text-muted-foreground text-sm">{error.message}</p>
+      <Button onClick={reset}>Try again</Button>
+    </div>
+  )
+}
+```
+
+```tsx
+// src/app/dashboard/orders/[id]/not-found.tsx
+import Link from 'next/link'
+import { Button } from '@/common/components/ui/button'
+
+export default function OrderNotFound() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 p-12">
+      <h2 className="text-2xl font-semibold">Order not found</h2>
+      <Button asChild variant="outline">
+        <Link href="/dashboard/orders">Back to orders</Link>
+      </Button>
+    </div>
+  )
+}
+```
+
+```tsx
+// Throw notFound() in a server component to trigger not-found.tsx
+import { notFound } from 'next/navigation'
+
+export default async function OrderDetailPage({ params }: { params: { id: string } }) {
+  const order = await prisma.order.findUnique({ where: { id: params.id } })
+  if (!order) notFound()
+  return <OrderDetail order={order} />
+}
+```
+
+---
+
+## Static Generation — generateStaticParams
+
+Use `generateStaticParams` to statically build pages for known dynamic routes at build time.
+
+```tsx
+// src/app/products/[slug]/page.tsx
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({ select: { slug: true } })
+  return products.map((p) => ({ slug: p.slug }))
+}
+
+// Each slug is rendered to static HTML at build time
+export default async function ProductPage({ params }: { params: { slug: string } }) {
+  const product = await prisma.product.findUnique({ where: { slug: params.slug } })
+  if (!product) notFound()
+  return <ProductDetail product={product} />
+}
+```
+
+---
+
+## Client Navigation Hooks
+
+Use `useRouter`, `usePathname`, and `useSearchParams` for client-side navigation.
+
+```tsx
+'use client'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+
+export function DashboardNav() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const isActive = (href: string) => pathname.startsWith(href)
+
+  function navigateWithParams(path: string) {
+    const params = new URLSearchParams(searchParams.toString())
+    router.push(`${path}?${params.toString()}`)
+  }
+
+  return (
+    <nav className="space-y-1">
+      {[
+        { href: '/dashboard', label: 'Overview' },
+        { href: '/dashboard/orders', label: 'Orders' },
+        { href: '/dashboard/customers', label: 'Customers' },
+      ].map((item) => (
+        <button
+          key={item.href}
+          onClick={() => navigateWithParams(item.href)}
+          className={cn('w-full px-3 py-2 rounded text-sm text-left', isActive(item.href) && 'bg-accent font-medium')}
+        >
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  )
+}
+```
+
+---
+
+## Image Optimization
+
+```tsx
+import Image from 'next/image'
+
+// ✅ Fixed dimensions — always declare width/height
+<Image
+  src="/images/hero.jpg"
+  alt="Hero image"
+  width={1200}
+  height={600}
+  priority            // LCP image — loads eagerly
+  className="rounded-xl"
+/>
+
+// ✅ Responsive fill — parent must have position: relative
+<div className="relative aspect-video w-full overflow-hidden rounded-xl">
+  <Image
+    src={product.imageUrl}
+    alt={product.name}
+    fill
+    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+    className="object-cover"
+    placeholder="blur"
+    blurDataURL="data:image/png;base64,..."   // Tiny base64 preview
+  />
+</div>
+
+// ✅ Remote images — allowlist domains in next.config.ts
+// next.config.ts
+images: {
+  remotePatterns: [{ protocol: 'https', hostname: 'cdn.example.com' }],
+}
+```
+
+---
+
+## Quick Reference Checklist
+
+- [ ] `"use client"` is only added to the smallest component that needs it
+- [ ] Data fetching happens in Server Components, not `useEffect`
+- [ ] Parallel data fetching used where multiple requests are independent
+- [ ] Images use `<Image />` with `priority` on the LCP image
+- [ ] Internal links use `<Link />`, never `<a href>`
+- [ ] Context providers do not wrap the root layout unnecessarily
+- [ ] Cache strategy is deliberately chosen per fetch (`no-store`, `revalidate`, or tags)
+- [ ] Server Actions used for form mutations with Zod validation
+- [ ] Metadata exported from each `page.tsx`
+- [ ] Environment secrets are NOT prefixed with `NEXT_PUBLIC_`
+- [ ] `loading.tsx` and `error.tsx` exist for all significant route segments

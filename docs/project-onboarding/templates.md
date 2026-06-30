@@ -1,0 +1,39 @@
+# Standard Repository Structures
+
+Consistency in repository layout allows engineers to switch between projects seamlessly without spending hours understanding where logic lives.
+
+## Monorepo Strategy (Turborepo / Nx)
+For tightly coupled full-stack applications, we prefer a Monorepo structure managed by Turborepo or Nx.
+
+```text
+/
+├── apps/
+│   ├── web/                # Next.js Frontend
+│   │   ├── src/
+│   │   ├── package.json
+│   │   └── next.config.js
+│   ├── api/                # NestJS Backend
+│   │   ├── src/
+│   │   ├── package.json
+│   │   └── nest-cli.json
+├── packages/
+│   ├── ui/                 # Shared React Components (Tailwind)
+│   ├── database/           # Prisma schema and shared DB client
+│   ├── types/              # Shared TypeScript interfaces (DTOs)
+│   ├── eslint-config/      # Standardized linting rules
+│   └── tsconfig/           # Standardized TS configs
+├── .github/workflows/      # CI/CD Pipelines
+├── turbo.json              # Turborepo task runner config
+└── package.json            # Root workspace dependencies
+```
+
+## Required Boilerplate Files
+Regardless of monorepo or polyrepo, every repository MUST contain the following at the root:
+
+1. **`README.md`**: Must contain:
+   - High-level system architecture overview.
+   - Local development setup instructions (`npm run dev`, Docker Compose commands).
+   - Links to staging/production URLs and APM dashboards.
+2. **`.nvmrc`**: Explicitly defines the required Node.js version (e.g., `20.11.1`).
+3. **`docker-compose.yml`**: Must spin up the local development database (e.g., Postgres, Redis) so developers don't need to install databases globally on their machines.
+4. **`Makefile` or `package.json` scripts**: Standardized commands (`make test`, `make lint`, `make build`) so CI pipelines can execute consistently across different stacks.

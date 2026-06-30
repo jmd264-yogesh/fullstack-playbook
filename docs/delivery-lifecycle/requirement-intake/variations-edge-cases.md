@@ -1,0 +1,213 @@
+# Additional Requirement Intake Variations and Edge Cases
+
+While most projects follow one of the primary requirement intake scenarios, real-world engagements often involve hybrid approaches or special circumstances. The following scenarios outline how the intake process should be adapted to accommodate these situations.
+
+
+
+## 1. Partial FRD Available
+
+### Scenario
+
+The client provides a Functional Requirements Document (FRD) for some features, while other requirements remain undefined or incomplete.
+
+### Approach
+
+* Review and validate documented requirements using the standard FRD intake process.
+* Conduct workshops and discovery sessions to gather missing requirements.
+* Identify gaps in:
+
+  * Business rules
+  * User flows
+  * UI specifications
+  * Integration requirements
+* Maintain an assumptions log for any unresolved items.
+* Validate findings with stakeholders during review sessions.
+
+### Deliverables
+
+* Gap Analysis Document
+* Updated Requirements Backlog
+* Assumptions & Decisions Log
+* Revised Functional Requirements Documentation
+
+### Risks & Mitigation
+
+| Risk | Mitigation |
+| --- | --- |
+| Inconsistent requirements across documented and undocumented areas | Cross-reference all findings and conduct stakeholder reviews |
+| Missing functionality | Validate assumptions and obtain stakeholder sign-off |
+
+---
+
+## 2. Evolving Requirements
+
+### Scenario
+
+Project requirements are expected to evolve throughout the delivery lifecycle, commonly seen in Agile engagements, innovation projects, or long-running programs.
+
+### Approach
+
+* Maintain a living backlog within project management tools.
+* Conduct regular backlog refinement sessions.
+* Review priorities during sprint planning and stakeholder meetings.
+* Document all changes with business justification and impact analysis.
+* Communicate the impact of scope changes on timelines and delivery commitments.
+
+### Deliverables
+
+* Prioritized Product Backlog
+* Change Log
+* Sprint Backlog
+* Impact Assessment Reports
+
+### Risks & Mitigation
+
+| Risk | Mitigation |
+| --- | --- |
+| Scope creep | Implement formal change management processes |
+| Frequent requirement changes | Establish prioritization and approval mechanisms |
+
+---
+
+## 3. API-Only / Backend Services
+
+### Scenario
+
+The project focuses exclusively on backend services, APIs, integrations, or platform functionality with no user interface component.
+
+### Approach
+
+* Treat API specifications as the primary requirements artifact.
+* Define:
+
+  * Endpoints
+  * Request and response schemas
+  * Authentication requirements
+  * Error handling standards
+  * Versioning strategy
+* Create user stories focused on system interactions.
+* Establish API contract testing requirements.
+
+### Example User Story
+
+**As an external system,** I want to retrieve customer information through an API so that I can synchronize customer records.
+
+### Deliverables
+
+* API Specification Document
+* Swagger/OpenAPI Documentation
+* API Contract Definitions
+* Integration Test Cases
+
+### Risks & Mitigation
+
+| Risk | Mitigation |
+| --- | --- |
+| Ambiguous API behavior | Define detailed request and response specifications |
+| Integration failures | Implement contract testing and early integration validation |
+
+---
+
+## 4. Legacy System Integration
+
+### Scenario
+
+The project requires integration with existing legacy systems or applications.
+
+### Approach
+
+* Engage domain experts and system owners early.
+* Document current-state processes and system capabilities.
+* Conduct a fit-gap analysis.
+* Identify integration points and dependencies.
+* Define data migration and transformation requirements.
+* Perform proof-of-concept activities where necessary.
+
+### Deliverables
+
+* Fit-Gap Analysis
+* Integration Architecture Document
+* Data Mapping Specifications
+* Migration Strategy
+
+### Risks & Mitigation
+
+| Risk | Mitigation |
+| --- | --- |
+| Incomplete legacy documentation | Conduct stakeholder interviews and system analysis |
+| Unknown system behavior | Build prototypes and perform integration testing |
+
+---
+
+## 5. Proof of Concept (POC) / Minimum Viable Product (MVP)
+
+### Scenario
+
+The objective is to validate a business idea, concept, or technology with minimal investment and rapid delivery.
+
+### Approach
+
+* Focus only on core business functionality.
+* Limit scope to essential user journeys.
+* Use lightweight documentation.
+* Prioritize speed of delivery and stakeholder feedback.
+* Define minimum acceptance criteria for demonstration purposes.
+
+### Deliverables
+
+* Lean Requirements Document
+* MVP Backlog
+* Demonstration Plan
+* Feedback Collection Framework
+
+### Risks & Mitigation
+
+| Risk | Mitigation |
+| --- | --- |
+| Scope expansion during development | Maintain strict MVP boundaries |
+| Over-engineering | Focus on validation rather than production readiness |
+
+---
+
+## 6. Third-Party Vendor Dependencies
+
+### Scenario
+
+The solution depends on external vendors, service providers, outsourced teams, or client-managed systems.
+
+### Approach
+
+* Treat vendors as key stakeholders.
+* Define responsibilities and deliverables clearly.
+* Document interface contracts and dependencies.
+* Include vendors in requirement reviews where applicable.
+* Establish escalation paths for delays and issues.
+
+### Deliverables
+
+* Dependency Register
+* Vendor Responsibility Matrix
+* Interface Specifications
+* Integration Timeline
+
+### Risks & Mitigation
+
+| Risk | Mitigation |
+| --- | --- |
+| Vendor delivery delays | Include schedule buffers and escalation procedures |
+| Misaligned expectations | Maintain a shared source of truth and regular status reviews |
+
+---
+
+## Guiding Principles
+
+Regardless of the intake variation, the following principles should always be followed:
+
+* Establish clear and validated requirements.
+* Maintain transparent communication with stakeholders.
+* Document assumptions, decisions, and changes.
+* Implement appropriate governance and approval processes.
+* Ensure traceability from requirements through development and testing.
+* Adapt documentation rigor based on project complexity, risk, and compliance requirements.
+
+By tailoring the intake process to project-specific circumstances, teams can improve requirement quality, reduce delivery risks, and maintain alignment between business objectives and technical implementation.

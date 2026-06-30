@@ -1,0 +1,140 @@
+# Technical Document
+
+> A Technical Document (Tech Spec) must be written before implementation begins for any feature that introduces new architecture, affects multiple services, changes a data model, or carries significant risk. It aligns the team on approach before code is written — not after.
+
+---
+
+## When It Is Required
+
+- New service, module, or major feature
+- Changes to the database schema that affect existing data
+- Integration with a third-party system
+- Any decision that would take more than a day to reverse
+- Work that spans more than one developer
+
+---
+
+## Required Sections
+
+### 1. Overview
+
+- **What** is being built, in one paragraph.
+- **Why** it is being built — the business or product problem it solves.
+- **Scope** — what is explicitly in and out of scope for this piece of work.
+
+---
+
+### 2. Goals & Non-Goals
+
+| Goals | Non-Goals |
+|---|---|
+| What this spec aims to achieve | What it deliberately does not address |
+
+---
+
+### 3. Architecture & Design
+
+Describe the technical approach clearly enough that a developer unfamiliar with the area can implement it.
+
+- System or component diagram (even a simple ASCII diagram is acceptable)
+- Key components and their responsibilities
+- How data flows through the system
+- How this fits into the existing architecture — what it touches, what it replaces, what it leaves alone
+
+---
+
+### 4. Data Model
+
+For any schema change, include:
+
+- New tables, collections, or fields with their types and constraints
+- Indexes required and why
+- Migration strategy — how existing data is handled
+- Rollback plan if the migration fails
+
+---
+
+### 5. API Contract
+
+For any new or changed endpoints, define before implementation:
+
+```
+POST /api/v1/payments
+
+Request body:
+{
+  "amount": number,       // in pence/cents, required
+  "currency": string,     // ISO 4217, required
+  "customerId": string    // UUID, required
+}
+
+Response 201:
+{
+  "paymentId": string,
+  "status": "pending" | "completed" | "failed"
+}
+
+Errors:
+400 — invalid input (body describes which field)
+404 — customerId not found
+422 — payment gateway rejected
+```
+
+---
+
+### 6. Security Considerations
+
+- What data is sensitive and how it is protected
+- Authentication and authorisation requirements for new endpoints
+- Any new attack surface introduced and how it is mitigated
+- Secrets — where they are stored, how they are rotated
+
+---
+
+### 7. Error Handling & Edge Cases
+
+List the failure modes explicitly:
+
+- What happens when a downstream service is unavailable
+- What happens on invalid input
+- What happens on partial failure (e.g., DB write succeeds but event publish fails)
+- Whether operations are idempotent and why
+
+---
+
+### 8. Testing Plan
+
+| Test type | What is covered |
+|---|---|
+| Unit tests | Pure logic, transformations, validators |
+| Integration tests | Database interactions, service boundaries |
+| E2E tests | Critical user journeys end-to-end |
+| Manual verification | Steps for the reviewer to confirm the feature works |
+
+---
+
+### 9. Deployment & Rollout
+
+- Are there feature flags? What is the rollout sequence?
+- Are there database migrations? Do they require downtime?
+- Are there environment variables to add before deploying?
+- What does a successful deployment look like? How is it verified?
+
+---
+
+### 10. Open Questions
+
+List decisions not yet made. Assign an owner and a deadline for each.
+
+| Question | Owner | Deadline |
+|---|---|---|
+| Which queue provider — SQS or Redis Streams? | @lead | 2025-06-10 |
+
+---
+
+## Rules
+
+- The Tech Spec is reviewed and approved by a senior engineer or architect before implementation begins. Implementation PRs link back to the approved spec.
+- Keep it lean. Use diagrams and tables instead of prose where possible.
+- Update the spec when the implementation deviates from the design. The spec must reflect what was built, not only what was planned.
+- Store it in `docs/specs/<feature-name>.md` within the repository.
