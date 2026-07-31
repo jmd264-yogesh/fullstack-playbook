@@ -1,0 +1,76 @@
+---
+title: "Logging Standards"
+description: "Vision & Principles requires \"structured logs\" and Observability requires correlation IDs — this page defines what that actually means in practice: the..."
+order: 2
+version: 1.0
+disabled: false
+---
+
+## Logging Standards
+
+[Vision & Principles](/vision-principles) requires "structured logs" and [Observability](/operations/observability) requires correlation IDs — this page defines what that actually means in practice: the exact fields every log line must carry, and when to use each log level.
+
+## Required fields
+
+Every log line must be a single-line JSON object (never a multi-line string) with at least these fields:
+
+```json
+{
+  "timestamp": "2026-07-22T14:32:01.483Z",
+  "level": "info",
+  "service": "orders-api",
+  "correlationId": "b3f1c2a0-9e21-4c3a-9f3d-6a1e7d2b5c90",
+  "message": "Order created",
+  "context": { "orderId": "order_789", "userId": "user_123" }
+}
+```
+
+| Field | Required | Purpose |
+|---|---|---|
+| `timestamp` | Yes | ISO 8601, UTC |
+| `level` | Yes | See log levels table below |
+| `service` | Yes | The emitting service's name — critical once you have more than one microservice's logs in the same aggregator |
+| `correlationId` | Yes on any request-scoped log | The `x-correlation-id` from [Observability](/operations/observability), propagated end-to-end so one request's logs can be found across every service it touched |
+| `message` | Yes | Human-readable summary |
+| `context` | Optional | Structured extra data — never put variable data inline in `message` (bad: `"Order order_789 created"`; good: `message: "Order created", context: { orderId: "order_789" }` — this makes logs queryable) |
+
+## Log levels — when to use which
+
+| Level | Use for | Example |
+|---|---|---|
+| `debug` | Verbose detail, useful only when actively debugging; off by default in Production | "Cache miss for key X, fetching from DB" |
+| `info` | Normal, expected events worth recording | "Order created", "User logged in" |
+| `warn` | Something unexpected happened but the request still succeeded | "Retried DB connection 3 times before succeeding" |
+| `error` | A request or operation failed | "Payment gateway returned 500" |
+| `fatal` | The process itself cannot continue and is about to crash | "Failed to connect to database on startup" |
+
+`LOG_LEVEL` is set per environment (see [Environments & Cloud Basics](/basics/environments-cloud)) — typically `debug` in Dev, `info` or `warn` in Production.
+
+## What never goes in a log
+
+Never log secrets, passwords, full card numbers, or tokens — even at `debug` level. Redact or omit them entirely; see [Security 101](/basics/security). A logging library's default serializers (e.g. Pino's `redact` option) should be configured to strip known sensitive fields automatically, rather than relying on every call site to remember.
+
+## Example: NestJS + Pino
+
+```ts
+// main.ts
+import { Logger } from 'nestjs-pino';
+
+app.useLogger(app.get(Logger));
+```
+
+```ts
+// pino config
+export const loggerConfig = {
+  pinoHttp: {
+    level: process.env.LOG_LEVEL || 'info',
+    redact: ['req.headers.authorization', 'req.body.password'],
+    customProps: (req) => ({ correlationId: req.headers['x-correlation-id'] }),
+  },
+};
+```
+
+## Where this leads next
+
+- [Observability](/operations/observability) — the three pillars (logs, metrics, traces) this feeds into
+- [Incident Management](/operations/incident-management) — how logs are used during a live incident

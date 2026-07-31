@@ -1,0 +1,127 @@
+---
+title: Tooling
+description: Buy vs Build vs Reuse decision framework for ingestion tooling
+order: 3
+version: 1.0
+disabled: false
+---
+
+## Tooling
+
+<Callout type="info">
+  **Cost, Not Technology** - Tooling selection is not a technology decision - it's a cost, complexity, and maintenance decision. The right answer depends on how many sources you have, what type they are, whether JMAN has a reusable connector, and whether the project justifies adding a vendor.
+</Callout>
+
+### The Three Options
+
+| Option | What It Is | Licence Cost | Engineering Effort | Maintenance |
+|--------|-----------|-------------|-------------------|-------------|
+| **Buy** | Managed SaaS connector (Fivetran, Lakeflow Connect, Snowflake OpenFlow) | Per-MAR or included in platform | Minimal (configuration) | Vendor |
+| **Build** | Custom pipeline (Python, Spark, ADF Copy Activity) | Zero | High (weeks per connector) | Project team |
+| **Reuse** | JMAN Marketplace connector | Zero | Low (deploy + configure) | Data Engineering CoE |
+
+The default is NOT "always buy." The default is: **use the option that minimises total cost of ownership for the project's specific source mix.**
+
+### Platform Ingestion Capabilities
+
+Before choosing a tool, understand what each platform provides natively. The scoring below is from the [Platform - Ingestion](/platform/components/ingestion) assessment and determines how much external tooling a project needs.
+
+#### Key Capabilities
+
+| Capability | What It Measures | Why It Matters for Tooling |
+|------------|-----------------|---------------------------|
+| **Batch Ingestion** | Ability to ingest large volumes on schedule | Strong native batch = less need for external tools |
+| **Native Connectors** | Pre-built connectors to common sources | Weak connector coverage = more likely to Buy or Build |
+| **CDC Support** | Row-level change capture from transactional systems | No native CDC = must rely on partners (Fivetran, HVR) |
+| **Schema Evolution** | Detect and apply schema changes without breaking pipelines | Poor schema evolution = more maintenance burden on any tool |
+| **Error Handling & Retry** | Built-in failure detection, retry, and bad record isolation | Weak error handling = custom wrapper code regardless of tool |
+| **Streaming Ingestion** | Near real-time ingestion with sub-minute latency | Niche requirement (~2% of JMAN projects) - weight accordingly |
+
+#### Scoring
+
+<CapabilityMatrix component="ingestion" />
+
+<Callout type="note">
+  **Adjust weights for your project.** The defaults reflect a typical JMAN engagement. For real-time focus: Streaming + 30%. Many SaaS sources: Connectors + 30%. Large transactional DBs: CDC + 25%. Simple file-based: Batch + 35%. High reliability needs: Error Handling + 20%.
+</Callout>
+
+#### Platform Summary
+
+<PlatformTabs>
+
+<PlatformTabsFabric>
+
+**Native ingestion tools:** Data Factory pipelines, Dataflows Gen2, Notebooks, Event Streams
+
+| Sub-Capability | Score | Implication for Tooling |
+|----------------|-------|------------------------|
+| Batch Ingestion | 5/5 | ADF handles most batch scenarios natively - rarely need external tools for batch |
+| Native Connectors | 5/5 | 170+ linked services. Excellent Microsoft ecosystem coverage. External tool only for niche non-Microsoft SaaS |
+| CDC Support | 4/5 | Change Tracking for SQL Server. Complex CDC may need Fivetran |
+| Schema Evolution | 4/5 | Handles additive changes well. No automatic drift detection |
+| Error Handling | 4/5 | Good retry and monitoring through pipeline logging |
+| Streaming Ingestion | 4/5 | Event Streams and Event Hub integration - less flexible than Spark |
+
+**3rd party tool likelihood:** <RatingBadge rating="Low" /> - ADF covers most source types natively
+
+</PlatformTabsFabric>
+
+<PlatformTabsDatabricks>
+
+**Native ingestion tools:** Auto Loader, Lakeflow Connect, Structured Streaming
+
+| Sub-Capability | Score | Implication for Tooling |
+|----------------|-------|------------------------|
+| Batch Ingestion | 5/5 | Auto Loader handles file ingestion at scale with schema inference |
+| Native Connectors | 3/5 | Lakeflow Connect supports ~20 connectors and growing. Gaps remain for niche SaaS |
+| CDC Support | 4/5 | Delta Lake merge provides best-in-class CDC handling |
+| Schema Evolution | 5/5 | Delta format natively supports schema evolution - strongest of the three |
+| Error Handling | 4/5 | Configurable through Spark; requires engineering effort |
+| Streaming Ingestion | 5/5 | Structured Streaming with exactly-once semantics |
+
+**3rd party tool likelihood:** <RatingBadge rating="Medium" /> - Lakeflow covers databases; gaps remain for niche SaaS APIs
+
+</PlatformTabsDatabricks>
+
+<PlatformTabsSnowflake>
+
+**Native ingestion tools:** Snowpipe, OpenFlow, Snowpipe Streaming, partner integrations (Fivetran, Airbyte)
+
+| Sub-Capability | Score | Implication for Tooling |
+|----------------|-------|------------------------|
+| Batch Ingestion | 3/5 | Snowpipe is simple and effective for files. No native source extraction beyond files |
+| Native Connectors | 2/5 | OpenFlow has ~20 connectors (early stage). Partner ecosystem fills the gap |
+| CDC Support | 2/5 | No native CDC capability. Requires Fivetran, HVR, or Debezium |
+| Schema Evolution | 4/5 | VARIANT columns offer flexibility. Structured tables need manual ALTER TABLE |
+| Error Handling | 2/5 | Basic error logging. Limited built-in alerting for ingestion failures |
+| Streaming Ingestion | 3/5 | Snowpipe Streaming is improving but less mature than alternatives |
+
+**3rd party tool likelihood:** <RatingBadge rating="High" /> - budget for external ingestion tooling from day one
+
+</PlatformTabsSnowflake>
+
+</PlatformTabs>
+
+#### Key Considerations
+
+| Dimension | Fabric | Databricks | Snowflake |
+|-----------|--------|------------|-----------|
+| **Complexity vs Overhead** | <RatingBadge rating="Low" /> complexity, <RatingBadge rating="Low" /> overhead | <RatingBadge rating="High" /> flexibility, <RatingBadge rating="Medium" /> overhead | <RatingBadge rating="Low" /> complexity, partner dependency **with additional cost** |
+| **Batch Cost** | <RatingBadge rating="Medium" /> Capacity-based | <RatingBadge rating="High" /> Usage-based (can spike) | <RatingBadge rating="Low" /> Credits |
+| **Streaming Cost** | <RatingBadge rating="Medium" /> Capacity-based | <RatingBadge rating="High" /> Usage-based | <RatingBadge rating="Medium" /> Credits + partner |
+| **Orchestration** | <RatingBadge rating="Easy" /> Native Data Factory | <RatingBadge rating="Medium" /> Workflows, external | <RatingBadge rating="Hard" /> External (Airflow, Dagster) |
+| **Lineage** | <RatingBadge rating="Easy" /> Purview integration | <RatingBadge rating="Easy" /> Unity Catalog | <RatingBadge rating="Medium" /> Horizon, partner tools |
+
+<Callout type="warning">
+  **The Scoring Drives the Tool Choice** - A platform scoring 2/5 on native connectors (Snowflake) needs a different tooling strategy than one scoring 5/5 (Fabric). Use the capability matrix above to quantify the gap, then fill it with the right Buy/Build/Reuse decision per source type.
+</Callout>
+
+### Tooling Checklist
+
+| Assessment Item | Why It Matters |
+|-----------------|---------------|
+| Platform capability scores reviewed for ingestion | Quantifies native vs external tool need |
+| Buy vs Build vs Reuse decision per source with rationale | Prevents default "buy everything" or "build everything" bias |
+| JMAN Marketplace checked before building custom | Avoids reinventing solved problems |
+| Managed tool only when 3+ SaaS sources, existing licence, or team lacks capability | Prevents vendor sprawl for marginal benefit |
+| Tool aligned to platform (ADF for Fabric, Lakeflow for Databricks, etc.) | Platform-native tools have lower friction and cost |

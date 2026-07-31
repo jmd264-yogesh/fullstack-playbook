@@ -1,0 +1,31 @@
+---
+title: Engineering Practices
+description: Performance optimisation, incremental loading, and engineering best practices for data pipelines
+order: 4
+version: 1.0
+---
+
+## Engineering Practices
+
+### Overview
+
+Engineering Practices covers **how** to build data pipelines that are fast, cost-efficient, and maintainable at scale. While [Data Flow](/playbook/data-engineering/transformation/data-flow) defines **what** each layer does and **where** data lives, this section focuses on the techniques that keep pipelines performant as data volumes grow.
+
+### What's Covered
+
+| Topic | Purpose | Key Question |
+|-------|---------|--------------|
+| **Performance Optimisation** | Partitioning, clustering, materialisation, query tuning, and file management | How do we make queries fast and compute costs manageable? |
+| **Incremental Loading** | Watermark, CDC, merge, and SCD-2 patterns for efficient data movement | How do we avoid reprocessing the entire dataset on every run? |
+
+<Callout type="info">
+**Performance is a design decision, not an afterthought.** The choices made here — partitioning strategy, incremental patterns, materialisation type — determine whether a pipeline that works today still works when data grows 10x.
+</Callout>
+
+### When Does This Matter?
+
+- **Day 1 of a project** — choose incremental vs full refresh, set partition keys
+- **Data > 10M rows** — incremental loading becomes essential
+- **Data > 1 TB** — partitioning and clustering are non-negotiable
+- **Compute costs rising** — review materialisation strategy and query patterns
+- **Pipeline SLAs slipping** — diagnose with the performance monitoring checklist

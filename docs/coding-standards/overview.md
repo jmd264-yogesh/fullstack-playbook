@@ -6,7 +6,7 @@ This section defines the common standards and best practices to be followed acro
 
 | Audience | Where to Start |
 |---|---|
-| **New developers starting a project** | [Project Setup Guide](/coding-standards/project-setup) → [Project Start Checklist](/coding-standards/checklists/project-start) |
+| **Creating a brand new repository** | [Project Creation & Golden Paths](/project-onboarding/create-project) → [Project Setup Guide](/coding-standards/project-setup) → [Project Start Checklist](/coding-standards/checklists/project-start) |
 | **Developers joining an existing project** | [Project Setup Guide](/coding-standards/project-setup) → read the relevant stack pages (Frontend / Backend / Database) |
 | **Developers completing a feature** | [Project Completion Checklist](/coding-standards/checklists/project-completion) |
 | **JQAA reviewers** | [JQAA Review Checklist](/coding-standards/checklists/jqaa-review) |
@@ -72,6 +72,8 @@ Every commit is automatically gated by:
 - Dependency vulnerability scan (no HIGH/CRITICAL)
 - SonarQube static analysis
 - Peer review approval
+
+For the exact SonarQube thresholds (branch coverage, duplication, cognitive complexity) and PR review rules, see [Quality Gates: Code Quality](/quality-gates/code-quality) — that page is the canonical source for these numbers, so it's the one to update if a threshold ever changes.
 
 ---
 

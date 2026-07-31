@@ -2,6 +2,8 @@
 
 This exhaustive checklist must be completed by the Release Manager and Engineering Lead prior to any major feature launch or new service deployment.
 
+> **Where this fits**: this checklist applies to **every** major release. If this is a service's very first production launch, also complete the [Production Readiness Checklist](/templates/production-readiness) — it covers first-launch-only reliability and security groundwork this checklist doesn't repeat.
+
 ## 1. Code & Quality Readiness
 - [ ] PR merged to `main` and tagged with Semantic Version (e.g., `v1.2.0`).
 - [ ] CI pipeline is completely green (SonarQube, Snyk, Unit Tests).

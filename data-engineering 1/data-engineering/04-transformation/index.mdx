@@ -1,0 +1,158 @@
+---
+title: Transformation
+description: Overview of Transformation
+order: 0
+version: 1.0
+---
+
+## Brief
+
+### What is Data Transformation?
+
+**Data Transformation** is the process of converting raw, messy data into clean, structured, and meaningful information that the business can actually use. It's where raw numbers and text from source systems get cleaned, combined, enriched, and shaped into tables that answer real business questions - like "What is our monthly revenue by region?" or "Which customers are at risk of churning?"
+
+In simple terms: **transformation answers the question, "How do we turn raw data into useful insights?"**
+
+```mermaid
+flowchart TB
+    subgraph STORAGE["Storage"]
+        subgraph LAYERS["Data Layers"]
+            direction LR
+            RAW["<b>Raw</b><br/><i>As-Is from Source</i>"]
+            STG["<b>Stage</b><br/><i>Cleaned, Standardised</i>"]
+            CORE["<b>Core</b><br/><i>Enriched Business Objects<br/>3NF / Data Vault</i>"]
+            MART["<b>Mart</b><br/><i>Star Schema<br/>Dimensional Modelling</i>"]
+            PROD["<b>Product</b><br/><i>Data Products, KPIs<br/>Metrics Store</i>"]
+        end
+    end
+
+    subgraph TRANSFORM["Transformation"]
+        direction TB
+        T1["<b>SQL</b><br/><i>SQL Models<br/>dbt, Stored Procs.</i>"]
+        T2["<b>Python</b><br/><i>Spark Ecosystem<br/>Notebooks, Snowpark</i>"]
+        T3["<b>Low/No Code</b><br/><i>GUI-based<br/>Data Factory, Matillion</i>"]
+    end
+
+    LAYERS -.->|"shapes data across layers"| TRANSFORM
+    RAW --> STG --> CORE --> MART --> PROD
+
+    classDef bronze fill:#f7f4e4,stroke:#A67C52,stroke-width:2px,color:#000
+    classDef silver fill:#f2f3f5,stroke:#8B9BAE,stroke-width:2px,color:#000
+    classDef gold fill:#fef3b7,stroke:#D4AF37,stroke-width:2px,color:#000
+    classDef orangeBox fill:#FFF3E0,stroke:#FF9800,color:#E65100
+
+    class RAW bronze
+    class STG,CORE silver
+    class MART,PROD gold
+    class T1,T2,T3 orangeBox
+
+    style STORAGE fill:none,stroke:#FFC107,stroke-width:2px
+    style LAYERS fill:none,stroke:#FFC107,stroke-width:1px,stroke-dasharray:5 5
+    style TRANSFORM fill:none,stroke:#FF9800,stroke-width:2px
+```
+
+### The Problem (The "Pain")
+> What is the specific pain point or inefficiency we face today?
+> (e.g., "Currently, every team builds this from scratch...")
+
+As we scale to a team of \~700, \"individual preference\" is no longer a
+sustainable strategy. Currently, the implementation of the
+transformation layer is fragmented. The transformation part is the core
+that translates raw data into insights to answer business questions
+before the data reaches business intelligence tools. It's the
+intersection where technologists and consultants meet to ensure our
+business logic is correctly codified.
+
+#### Language & Tooling divergence
+-   One project uses pure SQL, another relies on PySpark, and a third
+    leverages low-code GUIs. This decision is often driven by
+    individuals' comfort rather than architectural fit, leading to silos
+    that are hard to maintain.
+-   Leading to silos and complete dependency on one technology/tool. This leads to indirect denial of 
+    modern data solutions to clients.
+-   The decision to choose the correct methodology must consider the
+    language our global audience can understand, provide feedback to
+    meet business requirements, and make necessary edits.
+
+##### Data Flow & modelling debt
+We tend to start development from day 1; data modelling must be a
+collaborative "white board design" approach between technology and
+commercial to answer business questions. We frequently skip the \"White
+Board Design\" phase. Engineers often build tables to **satisfy tactical
+requests (\"Add column X\") rather than understanding the
+business question (\"Why?\").**
+-   Uses medallion architecture strictly and naming databases/schemas as
+    bronze, silver, gold
+-   Using too many layers for short-term/single-use case projects -
+    Complicating a simple data modelling use case with too many layers by
+    just following the success model from previous projects.
+-   Inconsistent data modelling methods - Dimensional modelling in the
+    core layer
+-   Inconsistent way of managing reference and mapping data
+
+#### The Cost of Inefficiency Design
+Without standards, teams often default to the easiest path - such as
+running full data refreshes every day rather than designing efficient
+incremental loads. While this works for small datasets, it causes cloud
+compute costs to spiral out of control as data volumes grow.
+
+#### Naming convention
+When team members move between projects, they encounter entirely
+different naming conventions (e.g., Staging vs. Prep, Core vs MDM),
+which increases ramp-up time and error rates.
+
+### The Solution (The Purpose)
+> What are we building, and what does "good" look like?
+
+This framework establishes the \"JMAN Way\" for data transformation. It
+is not about restricting creativity; it is about eliminating low-value
+decisions so engineers can focus on complex problems. We are
+standardising:
+
+-   **Programming language & tooling** - SQL first mindset, using the
+    universal language of data for most of the transformation logic.
+-   **SQL** is treated as the universal language of data, optimised for
+    readability, maintainability, and business transparency. Non-SQL is
+    used only when there is a clear technical justification.
+-   **Data flow and collaborative modelling** - Mandating that data
+    modelling is a joint exercise between Technology and Commercial
+    teams to ensure business logic is correctly codified.
+-   **Naming convention** - Speak the same language across projects, across
+    the company
+-   Data loading method from the **landing zone to the last layer**
+
+### Impact on JMAN Delivery (The Value)
+-   **Consistency:** The JMAN way across projects
+-   **Long-term partnership:** Scalability, quality and JMAN reputation
+-   **Efficiency:** Efficiently scaling our clients\' use cases helps our team reduce
+    rework.
+
+### Why Now? (The Risk)
+> What happens if we do nothing or delay this?
+
+By 2026, we will be \~700 people in business. More than 60% of the
+people are new to the company, typically with 0 -2 years of experience.
+The number of projects increases, and delivery quality will become an
+increasing challenge. Our clients are also evolving. The only way we can
+become a Data & Commercial Partner is by consistently delivering high-quality work.
+
+The knowledge sits in individual minds; spreading it and codifying it is
+non-negotiable. We will keep growing not just next year, but also
+beyond. We must protect and find a way to give ourselves headspace to
+keep focusing on expanding our capabilities and staying ahead.
+
+### Open Questions (The Unknowns)
+-   Should the data vault be the default for our data modelling for
+    multi-site business?
+-   How do we handle the metrics store?
+-   Do we need to use any data modelling tools?
+
+### Key Aspects
+
+| Capability | Key Aspects |
+|------------|-------------|
+| **SQL-First Transformation** | • SQL dialect & standard support <br/> • Query performance & optimisation <br/> • Readability & maintainability <br/> • Collaboration across teams <br/> • IDE support, formatting, linting |
+| **Non-SQL Processing** | • Python support & libraries <br/> • Spark integration (PySpark, Scala) <br/> • User-defined functions (UDFs) <br/> • Notebook development <br/> • Governance (when to use non-SQL) |
+| **[Engineering Practices](/playbook/data-engineering/transformation/engineering-practices)** | • Performance optimisation (partitioning, clustering, materialisation) <br/> • Incremental loading patterns (watermark, CDC, merge) <br/> • Query optimisation & file management <br/> • Cost-efficient pipeline design |
+| **Dependency & Lineage Management** | • DAG definition (explicit dependencies) <br/> • Column-level lineage <br/> • Impact analysis <br/> • Refactoring safety <br/> • Auto-generated documentation |
+| **Testing & Data Quality** | • Schema tests (not null, unique, accepted values) <br/> • Relationship tests (referential integrity) <br/> • Custom business rule validation <br/> • Freshness checks <br/> • CI/CD integration & alerting |

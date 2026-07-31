@@ -5,7 +5,8 @@ Our branching model is designed to minimize merge conflicts and accelerate the d
 ## 1. Branching Model: Trunk-Based Development
 We strictly follow **Trunk-Based Development**.
 - Developers branch off `main`, create short-lived feature branches, and merge back into `main` frequently (at least once a day).
-- Long-lived `develop` or `release/*` branches are heavily discouraged as they lead to integration hell.
+- Long-lived `develop`, `dev`, or `release/*` branches are heavily discouraged as they lead to integration hell.
+- **Dev, Staging, and Production are not branches** — they are deployment environments that the same `main` build gets promoted through automatically. See [CI/CD Pipeline: Deployment Stages](/coding-standards/ci-cd#deployment-stages) for the exact promotion flow.
 
 ## 2. Branch Naming Conventions
 Branches must follow this format: `<type>/<ticket-id>-<short-desc>`

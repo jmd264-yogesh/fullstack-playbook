@@ -12,13 +12,18 @@ Built with [VitePress](https://vitepress.dev/) and deployed via [Vercel](https:/
 
 | Section | Description |
 |---|---|
+| [Getting Started](docs/getting-started.md) | What this playbook is, who it's for, and how to navigate it |
+| [Basics](docs/basics/overview.md) | Beginner-friendly primers on full-stack architecture, Git, APIs, databases, Docker, CI/CD, environments, testing, security, and a glossary |
 | [Delivery Lifecycle](docs/delivery-lifecycle/overview.md) | Standardized SDLC phases from Requirement Intake to Production Hypercare |
+| [Project Onboarding](docs/project-onboarding/create-project.md) | Tech stack selection, project setup, and templates |
 | [Coding Standards](docs/coding-standards/overview.md) | Architectural guidelines for React, Next.js, NestJS, Laravel, TypeScript, and databases |
-| [DevSecOps Standards](docs/coding-standards/devsecops-standards.md) | CI/CD pipelines, SAST/SCA scanning, and zero critical CVE enforcement |
+| [Architecture](docs/architecture/standards.md) | Monorepo/polyrepo guidance, event-driven patterns, and API standards |
+| [Engineering Practices](docs/engineering/git-branching.md) | Branching strategy, environment strategy, and developer experience standards |
+| [Deployment & Operations](docs/operations/overview.md) | Docker, CI/CD pipelines, release management, observability, and incident management |
+| [Security Guardrails](docs/security/security-guardrails.md) | Playbook-wide security coverage and a general security checklist |
 | [Quality Gates](docs/quality-gates/overview.md) | Code quality, testing gates, security gates, and release checklists |
 | [KPIs & Metrics](docs/kpis/delivery-performance.md) | DORA metrics: Deployment Frequency, Lead Time, MTTR, and Change Failure Rate |
 | [Governance](docs/governance/overview.md) | ARB/CAB approval workflows, RACI matrices, and SOC2 compliance automation |
-| [Project Onboarding](docs/project-onboarding/create-project.md) | Tech stack selection, project setup, and templates |
 
 ## Getting Started
 

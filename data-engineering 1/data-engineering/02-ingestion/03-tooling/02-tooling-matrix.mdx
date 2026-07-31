@@ -1,0 +1,240 @@
+---
+title: Tooling Matrix
+description: Comparison of ingestion tools across capabilities and platforms
+order: 2
+version: 1.0
+disabled: false
+---
+
+## Tooling Matrix
+
+<Callout type="info">
+  **The Platform Determines the Default Tool** - Start with platform-native capabilities. Only introduce external tools when the platform can't handle the source type or volume. JMAN Connectors fill the gap where managed tools are overkill and custom builds are wasteful.
+</Callout>
+
+### Capability Comparison
+
+<ComparisonTable
+  data={{
+    headers: [
+      "Capability",
+      "Fabric - ADF",
+      "Databricks",
+      "Snowflake",
+      "Fivetran",
+      "JMAN Connectors"
+    ],
+    rows: [
+      {
+        header: "Model",
+        cells: [
+          { content: "Platform-native (Azure). Deep integration with Azure ecosystem, no additional licensing", status: "above" },
+          { content: "Platform-native (Databricks). Included in DBU cost, tight Unity Catalog integration. New product - connector coverage still growing", status: "meets" },
+          { content: "Platform-native (Snowflake). Early stage, requires BYOC (Bring Your Own Connector). Limited native capabilities today", status: "below" },
+          { content: "Managed SaaS. Fully hosted, vendor-managed infrastructure. Fastest time-to-value but adds licence cost", status: "above" },
+          { content: "Reusable internal asset. Zero vendor cost, full code control. Requires JMAN engineering capability to build and maintain", status: "meets" }
+        ]
+      },
+      {
+        header: "Connector Coverage",
+        cells: [
+          { content: "100+ linked services. Excellent for Microsoft ecosystem (Dynamics, SharePoint, SQL Server). Limited for non-Microsoft SaaS", status: "meets" },
+          { content: "Growing. Good coverage for major SaaS (Salesforce, HubSpot). Database CDC being added. New product - verify your source is supported before committing", status: "below" },
+          { content: "Early stage. Minimal native connectors. Relies on BYOC or partner tools for most sources. Snowpipe handles files well", status: "below" },
+          { content: "500+ connectors. Best-in-class coverage across SaaS, databases, and event sources. The benchmark for managed ingestion", status: "above" },
+          { content: "Per Marketplace inventory. Covers common patterns (Salesforce, REST APIs, databases). Gaps filled by engineering on demand", status: "meets" }
+        ]
+      },
+      {
+        header: "SaaS Sources",
+        cells: [
+          { content: "Limited native. Few SaaS connectors outside Microsoft ecosystem. Custom Web Activity required for most REST APIs", status: "meets" },
+          { content: "Good for major SaaS (Salesforce, HubSpot, etc.). Still expanding - check supported source list. New product maturity risk", status: "below" },
+          { content: "Growing but early. Most SaaS ingestion requires partner tools (Fivetran, Airbyte) or external functions", status: "below" },
+          { content: "Excellent. Industry-leading SaaS connector coverage. Handles pagination, rate limits, and schema evolution automatically", status: "above" },
+          { content: "Common patterns available. Salesforce, HubSpot, NetSuite covered. Custom build for niche sources", status: "meets" }
+        ]
+      },
+      {
+        header: "Database CDC",
+        cells: [
+          { content: "Supported via Change Tracking (SQL Server) and linked services. Requires manual CDC configuration for most engines", status: "meets" },
+          { content: "Native log-based CDC. Strong for supported databases. Still expanding engine coverage - verify your database is supported", status: "below" },
+          { content: "Via partners only. No native CDC capability. Requires Fivetran, HVR, or similar for database change capture", status: "below" },
+          { content: "Excellent. Proven log-based CDC for PostgreSQL, MySQL, SQL Server, Oracle. Minimal source-side configuration", status: "above" },
+          { content: "Patterns for common databases. Debezium-based or query-based CDC. Requires engineering setup and maintenance", status: "meets" }
+        ]
+      },
+      {
+        header: "File Ingestion",
+        cells: [
+          { content: "Excellent. ADF Copy Activity handles CSV, Parquet, JSON, Excel. Event Grid triggers for automatic processing", status: "above" },
+          { content: "Auto Loader is excellent. Automatic file discovery, schema evolution, exactly-once processing via checkpoints", status: "above" },
+          { content: "Snowpipe is excellent. Auto-ingest from cloud storage stages. Proven, reliable file ingestion path", status: "above" },
+          { content: "Limited. File ingestion is not Fivetran's strength. Better served by platform-native tools", status: "below" },
+          { content: "CSV/Excel patterns available. Handles common file formats with validation. Custom code for complex formats", status: "meets" }
+        ]
+      },
+      {
+        header: "Schema Evolution",
+        cells: [
+          { content: "Manual. No built-in schema drift detection. Pipeline fails silently on missing fields. Requires manual mapping updates", status: "below" },
+          { content: "Automatic with Delta Lake. mergeSchema handles new columns seamlessly. Schema evolution is a core strength", status: "above" },
+          { content: "Manual. VARIANT columns offer flexibility but structured tables require manual ALTER TABLE statements", status: "below" },
+          { content: "Automatic. Detects and applies schema changes. New columns added, type changes flagged. Industry-leading", status: "above" },
+          { content: "Configurable. Schema handling depends on connector implementation. Typically additive-only with alerting", status: "meets" }
+        ]
+      },
+      {
+        header: "Cost Model",
+        cells: [
+          { content: "Per-activity-run. Included in Fabric capacity or ADF consumption pricing. Predictable for steady workloads", status: "above" },
+          { content: "Included in DBU. No additional licence cost. Ingestion compute uses standard Databricks clusters", status: "below" },
+          { content: "Included in credits. No additional licence cost. Compute charged via standard Snowflake credits", status: "meets" },
+          { content: "Per-MAR (Monthly Active Row) licence. Can become expensive for high-volume or high-cardinality sources. Monitor closely", status: "below" },
+          { content: "Zero licence cost. Engineering time is the only expense. Most cost-effective for sources with existing patterns", status: "above" }
+        ]
+      },
+      {
+        header: "Version Control & CI/CD",
+        cells: [
+          { content: "Difficult. JSON pipeline definitions are hard to diff and review. ARM/Bicep deployments add complexity", status: "above" },
+          { content: "Code-first (Python, Git). Full CI/CD integration. Notebooks and jobs are version-controlled natively", status: "above" },
+          { content: "Config-based. Limited Git integration. Snowflake SQL scripts can be versioned but lack native CI/CD tooling", status: "meets" },
+          { content: "Config only. No code to version. Connector configurations managed via Fivetran UI or Terraform provider", status: "meets" },
+          { content: "Code-first (Git, CI/CD). Full engineering workflow. Deployed via standard Databricks/Azure DevOps pipelines", status: "above" }
+        ]
+      },
+      {
+        header: "Maintenance Ownership",
+        cells: [
+          { content: "You own it. Microsoft provides the platform but your team maintains pipelines, handles failures, and manages upgrades", status: "meets" },
+          { content: "Vendor-managed connectors. Databricks handles connector updates and bug fixes for Lakeflow Connect sources", status: "below" },
+          { content: "Vendor-managed for native features. BYOC connectors are your responsibility to maintain and update", status: "meets" },
+          { content: "Fully vendor-managed. Fivetran handles all connector maintenance, API changes, and schema updates automatically", status: "above" },
+          { content: "JMAN CoE maintains patterns. Project teams deploy and configure. Shared responsibility model", status: "meets" }
+        ]
+      },
+      {
+        header: "Error Handling & Monitoring",
+        cells: [
+          { content: "Configurable. ADF Monitor provides run history and alerts. Retry policies are manual. Integration with Azure Monitor", status: "above" },
+          { content: "Built-in retry and monitoring via Unity Catalog. Pipeline observability through Databricks Workflows", status: "above" },
+          { content: "Basic. Snowsight provides query history. Limited built-in alerting for ingestion failures", status: "below" },
+          { content: "Built-in retry, alerting, and Fivetran dashboard. Comprehensive monitoring with minimal configuration", status: "above" },
+          { content: "Pattern-dependent. Custom logging and alerting. Quality depends on implementation discipline", status: "meets" }
+        ]
+      },
+      {
+        header: "Data Security",
+        cells: [
+          { content: "Data stays within Azure tenant. All processing runs inside your subscription. Network isolation via Private Endpoints and VNets. Full control over encryption keys (CMK via Key Vault)", status: "above" },
+          { content: "Data stays within your Databricks workspace and cloud storage. Unity Catalog enforces row/column-level access. Network isolation via Private Link. Customer-managed keys supported", status: "above" },
+          { content: "Data stays within your Snowflake account and cloud region. Tri-Secret Secure for customer-managed keys. Network policies restrict access. No data leaves Snowflake infrastructure", status: "above" },
+          { content: "Data transits through Fivetran's cloud by default. Fivetran stores metadata and logs. Hybrid Deployment model keeps data in your VPC but requires additional setup and cost. Verify compliance requirements before adopting - regulated industries may not accept default SaaS model", status: "below" },
+          { content: "Data stays within your infrastructure. Full control over network, encryption, and access. No third-party data transit. Security posture matches your platform configuration", status: "above" }
+        ]
+      },
+      {
+        header: "Orchestration Integration",
+        cells: [
+          { content: "Native end-to-end orchestration. Data Factory pipelines chain ingestion, transformation (Dataflows, notebooks), and downstream triggers (Power BI dataset refresh, Azure Functions) in a single workflow. Event Grid enables event-driven patterns", status: "above" },
+          { content: "Databricks Workflows orchestrate ingestion and transformation natively. Lakeflow Connect syncs are independent - triggered by schedule, not integrated into Workflow DAGs. External orchestrators (Airflow, ADF) needed for cross-platform steps like Power BI refresh", status: "meets" },
+          { content: "Tasks + Streams provide basic internal orchestration. No native integration with external systems. Requires external orchestrators (Airflow, Dagster, ADF) to chain ingestion → transformation → BI refresh. Most complex orchestration story of the three platforms", status: "below" },
+          { content: "Schedule-based syncs only. No DAG-aware orchestration - Fivetran runs independently. Webhooks notify downstream systems on sync completion. Requires external orchestrator to chain Fivetran sync → transformation → Power BI refresh", status: "below" },
+          { content: "Orchestrated via platform-native tools (Databricks Workflows, ADF pipelines). Full DAG integration - ingestion step triggers transformation and downstream refresh. Flexibility depends on deployment platform", status: "above" }
+        ]
+      },
+      {
+        header: "Performance",
+        cells: [
+          { content: "Scalable via Fabric capacity units. Copy Activity parallelism is configurable (DIU). Dataflows Gen2 leverage Spark under the hood. Performance predictable but bounded by capacity SKU - scale up requires capacity change", status: "meets" },
+          { content: "Highest throughput ceiling. Auto Loader scales with cluster size. Spark-based parallelism handles TB-scale ingestion. Auto-scaling clusters adjust to workload. Performance tuning requires Spark expertise (partitioning, shuffle, file sizes)", status: "above" },
+          { content: "Snowpipe is lightweight and efficient for file loads. Warehouse auto-scaling for query-based ingestion. Performance limited by warehouse size - scaling requires resizing or multi-cluster setup. No Spark-level parallelism for complex transformations during ingestion", status: "meets" },
+          { content: "Throughput managed by Fivetran - no user control over parallelism or performance tuning. Initial syncs for large tables can be slow. API rate limits are handled automatically but cannot be overridden. Performance is a black box", status: "below" },
+          { content: "Performance matches the underlying platform (Spark clusters, ADF capacity). Full control over parallelism, partitioning, and resource allocation. Tuning is the team's responsibility", status: "meets" }
+        ]
+      }
+    ]
+  }}
+/>
+
+### Strengths & Limitations by Tool
+
+#### Fivetran
+
+| Strengths | Limitations |
+|-----------|-------------|
+| 500+ connectors covering most SaaS sources | Per-MAR pricing can be expensive for high-volume sources |
+| Automatic schema evolution and error handling | Limited control over extraction logic and scheduling |
+| Fast setup - minutes per connector | Config-only - no code, can't customise behaviour |
+| Excellent CDC for databases | File ingestion is limited compared to platform-native |
+| Hybrid Deployment option for data residency requirements | Default SaaS model routes data through Fivetran's cloud - verify compliance before adopting |
+| Webhook notifications for downstream orchestration | No DAG-aware orchestration - requires external orchestrator for end-to-end workflows |
+
+#### Fabric - ADF
+
+| Strengths | Limitations |
+|-----------|-------------|
+| Deep Azure integration (Dynamics, SharePoint, SQL Server) | JSON pipelines are hard to version control and review |
+| Dataflows Gen2 for low-code ingestion | Limited native SaaS connectors (outside Microsoft ecosystem) |
+| Event Grid for event-driven file processing | Complex CDC requires manual configuration |
+| On-premises Data Gateway for hybrid scenarios | No built-in schema evolution |
+
+#### Lakeflow Connect
+
+| Strengths | Limitations |
+|-----------|-------------|
+| Native Databricks integration - included in DBU cost | Connector coverage still growing (fewer than Fivetran) |
+| Automatic schema evolution with Delta tables | Requires Databricks workspace |
+| Native CDC for databases | New product - less battle-tested than Fivetran |
+| Code-first approach (Python, Git, CI/CD) | Complex sources may still need custom notebooks |
+
+#### Snowflake OpenFlow
+
+| Strengths | Limitations |
+|-----------|-------------|
+| Native Snowflake integration - included in credits | Early stage - limited connector coverage |
+| Zero infrastructure management | No native API connector - partner tools required |
+| Snowpipe for excellent file ingestion | Less flexible than code-based approaches |
+
+#### JMAN Connectors
+
+| Strengths | Limitations |
+|-----------|-------------|
+| Zero vendor cost | Coverage depends on Marketplace inventory |
+| Tested patterns for common sources | Requires engineering capability to deploy |
+| Full code control (Git, CI/CD) | Maintenance falls on JMAN CoE |
+| Handles pagination, retry, schema evolution | May lack niche connectors |
+
+### Platform Decision Matrix
+
+<Callout type="note">
+  **Match Tool to Source Type** - Don't let one outlier source drive the tool choice for all sources. Use platform-native for databases and files, managed tools only for SaaS sources that justify the cost.
+</Callout>
+
+| Source Type | Platform: Databricks | Platform: Snowflake | Platform: Fabric |
+|---|---|---|---|
+| **SaaS (3+ sources)** | Fivetran or Lakeflow | Fivetran | Fivetran |
+| **SaaS (1-2 sources)** | JMAN Connector / Lakeflow | JMAN Connector / OpenFlow | JMAN Connector / ADF custom |
+| **Database (CDC)** | Lakeflow Connect | Fivetran or OpenFlow | ADF linked service |
+| **Database (query)** | JMAN Connector / notebook | JMAN Connector | ADF Copy Activity |
+| **Files** | Auto Loader | Snowpipe + stage | ADF Copy Activity |
+| **Custom APIs** | JMAN Connector / notebook | JMAN Connector | ADF Web + Copy |
+| **3rd Party** | Delta Sharing | Snowflake Share | ADF + custom |
+| **Unstructured** | Store ADLS + Unity Catalog | External stage | Blob Storage |
+
+<AntiPatterns patterns={[
+  {
+    title: "Wrong Tool for Source Mix",
+    problem: "A managed tool is selected for all sources when platform-native is better for the majority. The team pays licence fees for capabilities they don't need while getting inferior results for databases and files.",
+    example: "A Databricks project had 5 PostgreSQL databases and 1 HubSpot. The team chose Fivetran for all 6 sources. Fivetran's PostgreSQL connector was less capable than Lakeflow Connect's native CDC. Paying $3,000/month for a managed tool when the platform-native option was better for 83% of sources.",
+    prevention: "Evaluate tools per source type, not per project. Use platform-native for databases and files. Reserve managed tools for SaaS sources where pagination, rate limiting, and schema evolution justify the cost."
+  },
+  {
+    title: "The Vendor Lock-in Creep",
+    problem: "Team starts with one managed tool source, then gradually moves all sources to the managed tool 'for consistency.' Licence cost grows linearly. When the tool increases pricing, the team is locked in with no alternative.",
+    example: "A project started Fivetran for 3 Salesforce objects. Over 12 months, the team migrated all 15 sources to Fivetran 'for consistency.' Monthly cost grew from $800 to $8,000. When Fivetran changed their MAR pricing model, the team had no fallback - all connectors were Fivetran-dependent.",
+    prevention: "Keep platform-native tools for databases and files regardless of managed tool adoption. Only use managed tools for sources that genuinely benefit. Maintain the capability to build custom connectors as a fallback."
+  }
+]} />

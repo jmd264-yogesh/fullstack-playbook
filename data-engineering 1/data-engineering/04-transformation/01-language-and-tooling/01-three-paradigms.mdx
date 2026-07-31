@@ -1,0 +1,254 @@
+---
+title: Language
+description: Programming language options for transforming the data from raw layer
+version: 1.0
+order: 1
+---
+
+## Language
+
+There are three primary ways to transform data from the landing zone to
+the data mart layer. At JMAN, we choose the tool based on the workload,
+not just personal preference.
+
+1.  **SQL-Based - The Standard**
+2.  **Python-Based - Advanced for complex transformation, ML workload & ingestion**
+3.  **GUI-Based - Low Code / No Code (ex: Alteryx)**
+
+### SQL-Based - The Standard
+
+![SQL is dead](/handbook/sql-is-dead.png)
+
+**The \"SQL is Dead\" meme:** Every year, like clockwork, a meme floats
+around the online data community declaring that \"SQL is dying.\" We saw
+this in the Big Data era when Hadoop and MapReduce entered the scene,
+promising to replace relational databases. We saw it again when NoSQL
+took off.
+
+**SQL didn\'t die. It evolved.** The rise of modern Cloud Data Warehouses
+(Snowflake, Databricks SQL, BigQuery) brought SQL back to the forefront
+for OLAP workloads.
+
+-   Snowflake natively supports SQL as a first-class citizen for
+    transformation.
+-   Databricks, which focused on Spark (Scala/Python) in its early days,
+    eventually introduced Databricks SQL and Photon to bring
+    high-performance SQL to the Lakehouse.
+
+While Python became the king of Data Science, SQL remained the
+undisputed king of Data Transformation. Why?
+
+-   **<Term>MPP</Term> Power:** Modern Cloud Warehouses (Snowflake, Databricks SQL) run
+    on Massively Parallel Processing (MPP) engines. These engines
+    optimise SQL execution plans far better than most manual Python
+    scripts.
+-   **Universal Language:** SQL is the only language that is native to the
+    Data & Analytical Engineer, the Analyst, and the BI Tool. It breaks down silos.
+-   **Zero Dependency Hell:** In Python, you manage `requirements.txt`,
+    conflicting libraries, and environments. In SQL, you just run the
+    code. It works.
+
+The rise of the \"Analytics Engineer\" role - a job title that grew by
+46% year-over-year in 2022 - is predicated entirely on the shift from
+\"ETL\" (Extract, Transform, Load) to \"ELT\" (Extract, Load,
+Transform). In the ELT model, transformation happens *inside* the
+warehouse using SQL, leveraging the warehouse\'s compute power rather
+than an external Python execution.
+
+For 80% of our transformation workloads - joining, aggregating, and
+cleaning structured data - SQL is the default choice. It is
+maintainable, readable, and performant.
+
+### Python-Based - Advanced for complex transformation, ML workload & ingestion
+
+Pandas and NumPy are the core libraries that drive Python\'s popularity
+for data transformation. However, standard Pandas is designed for
+single-node processing, not distributed computing.
+
+To overcome this, the open-source community evolved. Apache Spark (via
+PySpark) added Pandas-like DataFrame APIs to support complex data
+manipulation at a massive scale.
+
+While SQL handles reporting and insights, Python is primarily the domain
+of Data Scientists and ML Engineers building predictive models. For Data
+Engineers, we reserve Python for specific tasks where SQL falls short:
+
+-   **Ingestion:** Python is excellent for building ingestion pipelines and connectors from APIs, streaming sources, and custom file formats 
+    into the landing zone
+-   **Complex Logic:** Tasks like **Identity Resolution** or deep
+    recursive logic are often easier to implement in Python than SQL.
+-   **Unstructured Data:** Parsing PDFs, images, or deeply nested
+    JSON/XML structures
+-   **Advanced Logic:** Running Machine Learning inference, complex
+    statistical simulations (Monte Carlo), or graph processing
+
+Major platforms like Snowflake (Snowpark) and Databricks now support
+running Python and SQL on the *same* engine.
+
+Python is the undisputed leader in Data Science. However, using Python
+for simple `SELECT * WHERE` transformations introduces unnecessary
+\"Dependency Hell\" (in terms of environment and library management).
+
+### GUI-Based - Low Code / No Code
+
+Both SQL and Python require a technical skillset. Not every business has
+a team of engineers ready to write code. This is where GUI-based tools
+(such as Alteryx, Matillion, or Fabric Data Flow) rose to prominence,
+enabling users to apply business rules by dragging and dropping
+datasets for rapid prototyping to prove the business value early.
+
+**The Trap of \"Easy\"** GUI tools sound great for quickly building
+insights, but they come with significant long-term debt:
+
+-   **Version Control nightmare:** Git is not a friend to GUI tools.
+    Diffing binary files or JSON blobs is difficult, limiting collaborative
+    development.
+-   **Reusability:** Python and SQL support DRY (Don\'t Repeat Yourself)
+    principles easily. Achieving modularity in tools like Alteryx is
+    complex or impossible.
+-   **The \"Spaghetti Bowl\":** We have seen this many times in our own
+    implementations. A GUI workflow with more than 50 steps quickly
+    becomes unmanageable - a visual \"spaghetti bowl\" that is
+    harder to debug.
+-   **Performance overhead:** Your GUI tool often has to \"compile\" your
+    visual flow into a query that the database understands. This
+    translation layer adds latency and requires additional compute
+    horsepower on your local computer.
+
+![Alteryx Spaghetti](/handbook/alteryx-spaghetti.png)
+
+The global software industry has moved toward **\"Everything as Code\"**
+(Infrastructure as Code, Pipelines as Code).
+
+Visual ETL tools often suffer from the \"Last 20% Problem\" - they make
+the first 90% of a project fast, but the last 20% (custom logic,
+debugging, complex orchestration) takes 80% of the time.
+
+### Which method is suitable?
+
+{/* Render the component and pass the data */}
+<div className="my-8 not-prose">
+  <ComparisonTable 
+  data={{
+    headers: [
+      "Requirements",
+      "SQL-Based (Default for core)",
+      "Code-Based (For complex/ML)",
+      "GUI-Based (Prototyping only)"
+    ],
+    rows: [
+      {
+        header: "Join, Aggregate, apply KPI logic",
+        cells: [
+          { content: "Declarative language designed specifically for this. Highly optimized by warehouse MPP engines.", status: "above" },
+          { content: "Powerful (DataFrames), but verbose for simple aggregations. Overkill for standard business logic.", status: "meets" },
+          { content: "Easy for simple joins, but complex window functions or multi-step logic quickly become unmanageable.", status: "below" },
+        ]
+      },
+      {
+        header: "Rapid Prototyping (less than a week)",
+        cells: [
+          { content: "Requires warehouse infrastructure setup before development can begin. Slower to first output.", status: "below" },
+          { content: "Excels with manual extracts and local files. Quick iteration in notebooks without infrastructure dependency.", status: "meets" },
+          { content: "Fastest path to first insight. Drag-and-drop interfaces enable non-technical users to build POCs in hours.", status: "above" },
+        ]
+      },
+      {
+        header: "Data Science & Machine learning workloads",
+        cells: [
+          { content: "Limited to basic regression/forecasting (Snowpark/BigQuery ML). Not suited for training.", status: "below" },
+          { content: "Native ecosystem (Scikit-Learn, PyTorch, TensorFlow). The only viable choice for custom ML.", status: "above" },
+          { content: "Limited to 'Black Box' AutoML capabilities; lacks flexibility for model tuning.", status: "below" },
+        ]
+      },
+      {
+         header: "High data volume handling",
+         cells: [
+           { content: "Modern warehouses (Snowflake/Databricks) scale compute instantly to handle Petabytes.", status: "above" },
+           { content: "Spark is the gold standard for distributed processing of massive datasets.", status: "above" },
+           { content: "Modern tools push down queries to the warehouse, but often generate inefficient, bloated SQL code that consumes more credits.", status: "meets" }
+         ]
+      },
+      {
+        header: "Version control and collaborative development",
+        cells: [
+          { content: "dbt, Stored Procedures, and Notebooks can be version controlled; supports CI/CD.", status: "above" },
+          { content: "Notebooks and scripts can be version controlled; allows collaborative development environment; supports CI/CD.", status: "above" },
+          { content: "Binary GUI files cannot be easily diffed or code-reviewed in Git; no automated CI/CD supports.", status: "below" }
+        ]
+      },
+      {
+        header: "Understandable by Universal team",
+        cells: [
+          { content: "The lingua franca of data. Readable by Engineers, Analysts, and Analytics Engineers.", status: "above" },
+          { content: "Restricted to Data Engineers and Data Scientists. Black box to commercial teams.", status: "below" },
+          { content: "Visual flows are easy to read initially, but 'Spaghetti flows' become unreadable as complexity grows.", status: "meets" }
+        ]
+      },
+      {
+        header: "Unit testing & Data quality",
+        cells: [
+          { content: "With tools like dbt, testing is configuration-based (unique, not null) and highly accessible.", status: "above" },
+          { content: "Supports rigorous unit testing frameworks (PyTest) for CI/CD pipelines. Best for complex logic testing.", status: "above" },
+          { content: "Testing is often manual or non-existent. Hard to automate data quality checks inside the pipeline.", status: "below" }
+        ]
+      },
+      {
+        header: "Orchestration & Dependency",
+        cells: [
+          { content: "Requires external wrappers (dbt, Airflow) to manage dependency graphs effectively.", status: "meets" },
+          { content: "Fine-grained control over execution; easy to integrate with Airflow/Databricks Jobs.", status: "above" },
+          { content: "Usually comes with built-in scheduling, visual monitoring, and dependency management.", status: "above" }
+        ]
+      },
+      {
+        header: "Library management",
+        cells: [
+          { content: "No dependency management required; Apply transformation rules on top of data directly.", status: "above" },
+          { content: "Requires strict environment management (Docker/Conda) to avoid 'Dependency Hell' and conflicts.", status: "below" },
+          { content: "Managed by Vendor. Limited to pre-installed libraries. Custom libraries often difficult/impossible.", status: "meets" }
+        ]
+      },
+      {
+        header: "Vendor Lock-in",
+        cells: [
+          { content: "ANSI SQL is standard. Migrating SELECT * from Snowflake to Databricks is relatively easy.", status: "above" },
+          { content: "PySpark is portable, but proprietary libraries (e.g., specific Databricks utils) can create lock-in.", status: "meets" },
+          { content: "Logic built in Informatica or Matillion cannot be exported. Requires a total rebuild to migrate.", status: "below" }
+        ]
+      }
+    ]
+  }} 
+/>
+</div>
+
+####  The Verdict: A \"SQL-First, Python-Plus\" architecture
+
+Based on this assessment, JMAN advocates for a hybrid architecture that
+prioritises long-term maintainability over short-term convenience.
+
+-   For **80% of our transformation pipeline** - specifically the
+    > cleaning, standardisation, and aggregation logic within the silver
+    > and gold layers - **SQL** is the undisputed choice. It offers the
+    > highest degree of transparency, auditability, and performance at
+    > the lowest Total Cost of Ownership (TCO).
+
+-   We reserve **Code-Based frameworks (Python/Spark)** strictly for
+    > \"Edge\" workloads where SQL hits its ceiling - such as
+    > unstructured data parsing, API ingestion, and Machine Learning
+    > inference. This prevents the common anti-pattern of
+    > \"Resume-Driven Development,\" where engineers over-complicate
+    > simple logic using complex code.
+
+-   While **GUI-based tools** serve a purpose for rapid prototyping or
+    > simple one-off data movements, we strictly exclude them from the
+    > Core Enterprise Data Model. The lack of robust version control and
+    > automated testing in low-code tools introduces unacceptable risks
+    > to data governance and collaborative scaling.
+
+
+| Approach | When to Use | When NOT to Use |
+|----------|-------------|-----------------|
+| **SQL + dbt** | Core transformation: cleaning, standardisation, aggregation, dimensional modelling | Unstructured data, ML inference, complex iterative algorithms |
+| **Python / Spark** | Ingestion, unstructured data parsing, ML workloads, identity resolution | Simple joins and aggregations that SQL handles better |
+| **GUI / Low-Code** | Rapid prototyping, one-off data movements, early POCs | Core data model, production pipelines, anything requiring CI/CD |

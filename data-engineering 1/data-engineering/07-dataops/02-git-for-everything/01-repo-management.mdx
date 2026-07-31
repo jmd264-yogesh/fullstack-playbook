@@ -1,0 +1,145 @@
+---
+title: Repo Management
+description: Overview of Repo Management
+order: 1
+version: 1.0
+maturity: Foundation
+---
+
+## Repo Management
+
+### Mono-repo vs Poly-repo
+
+Everything can be codified, and assets can be version controlled. Now
+the real question is how we manage the repositories. There are two
+options in front of us,
+1.  **Mono-repo** - Uses a single repo for all components
+2.  **Poly-repo** - Uses a separate repo for each component
+
+![Repo Management](/handbook/repo-management.png)
+
+### Mono-repo
+
+- **Concept:** One giant repository containing IaC, dbt, Airflow, and ML
+code
+- **Pros:** Easy code sharing; atomic commits (change the data model and the
+dashboard in one PR)
+- **Cons:** Can become bloated;
+
+- Large number of files and directories across unrelated domains
+- Increased CI/CD execution time due to broader change detection
+- More complex CI logic to determine what needs to be built or tested
+- Difficult permission management for large or multi-team setups
+
+```bash
+📦 data-platform
+ ┣ 📂 iac               # Terraform for all environments
+ ┃  ┣ 📂 modules        
+ ┃  ┣ 📂 environments
+ ┃
+ ┣ 📂 ingestion         # Python scripts for all sources
+ ┃  ┣ 📂 source1    
+ ┃  ┗ 📂 source2    
+ ┃
+ ┣ 📂 orchestration     # DAGs or DABs
+ ┃  ┣ 📂 usecase1    
+ ┃  ┗ 📂 usecase2
+ ┃    
+ ┣ 📂 transformation    # dbt project   
+ ┃  ┣ 📂 models      
+ ┃  ┣ 📂 macros            
+ ┃  ┗ 📂 tests
+ ┃
+ ┣ 📂 data-science      # Notebooks & ML pipelines 
+ ┃  ┣ 📂 eda      
+ ┃  ┣ 📂 models      
+ ┃
+ ┣ 📂 .github           # CI/CD pipeline   
+ ┃  ┣ 📂 workflows     
+ ┃  ┣ 📂 models 
+ ┃
+ ┣ 📜 README.md         # Technical documentation for environent setup
+ ```
+
+### Poly-repo
+
+*Concept:* Separate repositories for every single component or pipeline.
+*Pros:* strict isolation; clear ownership.
+*Cons:* \"Dependency Hell.\" A change in a data model requires
+coordinating PRs across 3 different repos.
+
+```bash
+📦 data-platform-infra          # Repe for Terraform for all environments
+ ┣ 📂 modules        
+ ┣ 📂 environments
+ ┣ 📂 .github                   # CI/CD pipeline   
+ ┃  ┣ 📂 workflows     
+ ┃  ┣ 📂 models 
+ ┣ 📜 README.md                 # Technical documentation for environent setup
+
+📦 data-platform-elt          # Repo for ingestion, transformation & orchestration
+ ┣ 📂 ingestion                 # Python scripts for all sources
+ ┃  ┣ 📂 source1    
+ ┃  ┗ 📂 source2    
+ ┃
+ ┣ 📂 orchestration             # DAGs or DABs
+ ┃  ┣ 📂 usecase1    
+ ┃  ┗ 📂 usecase2
+ ┃    
+ ┣ 📂 transformation            # dbt project   
+ ┃  ┣ 📂 models      
+ ┃  ┣ 📂 macros            
+ ┃  ┗ 📂 tests
+ ┣ 📂 .github                   # CI/CD pipeline   
+ ┃  ┣ 📂 workflows     
+ ┃  ┣ 📂 models 
+ ┃
+ ┣ 📜 README.md                 # Technical documentation for environent setup
+ 
+📦 data-science                 # Repo for Data Science Notebooks & ML pipelines 
+ ┣ 📂 usecase1       
+ ┃  ┣ 📂 eda      
+ ┃  ┣ 📂 models   
+ ┣ 📂 usecase2      
+ ┃  ┣ 📂 eda      
+ ┃  ┣ 📂 models   
+ ┣ 📂 .github                   # CI/CD pipeline   
+ ┃  ┣ 📂 workflows     
+ ┃  ┣ 📂 models 
+ ┣ 📜 README.md                 # Technical documentation for environent setup
+ ```
+
+### Recommended approach - Poly Repo
+
+![Repo Management](/handbook/poly-repo.png)
+
+### Why Poly Repo approach recommended?
+
+**Lifecycle Alignment**
+-   Data Engineering workloads require strict, deterministic pipelines
+    with high test coverage.
+-   Data Science workloads function as \"Research & Development,\"
+    requiring rapid iteration, experimentation, and non-linear
+    workflows.
+-   Separating these allows us to apply strict CI/CD gates to
+    Engineering without slowing down the agility required for
+    Science/Exploration.
+
+**Atomic Deployments**
+-   For Data Engineering, we group Ingestion, Transformation, and
+    Orchestration.
+-   *Why:* A single feature (e.g., \"Add Revenue Metric\") usually
+    requires changes to the Python script (Ingest), SQL (Transform), and
+    YAML (Orchestrate). Co-locating them enables a Single Pull Request
+    to deploy the entire feature safely, avoiding cross-repo dependency
+    errors.
+
+**Specialised CI/CD Patterns**
+-   Infrastructure-as-code (IaC) requires state file management
+    (Terraform state).
+-   BI workloads (Power BI/Tableau) often deal with binary files or XML
+    that require specialised diffing tools rather than standard code
+    diffing tools, for example: eviewing a SQL, python code is different from reviewing a JSON (.pbip file) where we've to review it from Power BI
+-   Separating these workloads allows us to build specialised build
+    pipelines optimised for the specific asset type (e.g., specialised
+    linters for SQL vs. specialised diff-checkers for Infrastructure).

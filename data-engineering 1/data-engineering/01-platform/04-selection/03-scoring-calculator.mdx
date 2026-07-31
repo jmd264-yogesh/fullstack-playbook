@@ -1,0 +1,87 @@
+---
+title: Scoring Calculator
+description: Interactive tool for quantified platform recommendations
+order: 2
+version: 1.0
+disabled: false
+---
+
+## Platform Selection Calculator
+
+<Callout type="info">
+  **Quantified Recommendations** - This calculator applies the JMAN scoring methodology to produce defensible platform recommendations. Complete each section in order for accurate results.
+</Callout>
+
+### How to Use
+
+1. **Set Component Weights** - Adjust importance based on client workload priorities
+2. **Assess Client Fit** - Score the client on each dimension
+3. **Review Results** - See calculated scores and recommendation
+
+The calculator applies:
+- Component capability scores (pre-assessed by JMAN)
+- Client-adjusted weightings
+- Vendor capability modifiers
+- Client fit modifiers
+
+### Interactive Calculator
+
+<PlatformCalculator />
+
+### Interpreting Results
+
+#### Score Ranges
+
+| Range | Interpretation |
+|-------|----------------|
+| **4.5+** | Strong recommendation; clear platform leader |
+| **4.0-4.5** | Good fit; viable option |
+| **3.5-4.0** | Adequate but with trade-offs |
+| **Below 3.5** | Significant concerns; investigate alternatives |
+
+#### Score Difference
+
+| Difference | Interpretation |
+|------------|----------------|
+| **>0.5** | Clear winner; high confidence |
+| **0.2-0.5** | Likely winner; moderate confidence |
+| **&lt;0.2** | Close call; consider other factors |
+
+#### Client Fit Indicators
+
+| Indicator | Meaning |
+|-----------|---------|
+| **Strong Fit** | Client profile closely matches platform expectations |
+| **Good Fit** | Minor misalignments, manageable |
+| **Neutral** | Neither strong alignment nor misalignment |
+| **Weak Fit** | Significant misalignments; delivery risk |
+| **Poor Fit** | Major misalignments; reconsider platform |
+
+### Common Scenarios
+
+#### Scenario A: Microsoft-Heavy Analytics
+
+**Typical Settings:**
+- BI & Semantic: 25%
+- Microsoft Ecosystem: 5
+- AI Ambition: 2
+
+**Expected Result:** Fabric leads due to Power BI integration
+
+#### Scenario B: Advanced ML Platform
+
+**Typical Settings:**
+- AI/ML: 25%
+- Technical Capability: 5
+- AI Ambition: 5
+
+**Expected Result:** Databricks leads due to MLflow, Feature Store
+
+#### Scenario C: SQL-First Modern Stack
+
+**Typical Settings:**
+- Transformation: 25%
+- Technical Capability: 3
+- Speed to Value: 4
+
+**Expected Result:** Snowflake competitive due to SQL simplicity

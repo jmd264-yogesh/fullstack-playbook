@@ -2,6 +2,8 @@
 
 > Interactive Checklist: When starting a new Full-Stack project, clone this template and check off the boxes as you complete the onboarding phases.
 
+> **Where this fits**: this is the condensed, one-page version — good for tracking progress in a kickoff meeting or PM tool. For the full line-by-line checklist engineers actually work through, use the [Project Start Checklist](/coding-standards/checklists/project-start) alongside the [Project Setup Guide](/coding-standards/project-setup). For how the repository itself gets created, see [Project Creation & Golden Paths](/project-onboarding/create-project).
+
 ## 1. Discovery & Design
 - [ ] Architecture Decision Record (ADR) created and approved by ARB.
 - [ ] Database schema drafted and reviewed.

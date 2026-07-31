@@ -1,0 +1,103 @@
+---
+title: IaC
+description: Terraform, Pulumi, and native IaC patterns for data platforms
+order: 0
+version: 1.0
+disabled: false
+---
+
+## Infrastructure as Code
+
+**Reproducible Infrastructure** - If you can't recreate your platform from code, you don't own it-it owns you. IaC transforms infrastructure from fragile snowflakes into versioned, tested, reproducible assets.
+
+Infrastructure as Code (<Term>IaC</Term>) enables declarative management of platform resources. Instead of clicking through UIs or running ad-hoc scripts, you define the desired state in code and let tooling make it so.
+
+<Callout type="question">Can we recreate this environment from scratch using only code in version control?</Callout>
+
+### Scoring Template
+
+#### Capability Matrix
+
+<CapabilityMatrix component="opsIac" />
+
+#### Adjusting Weights for Client Context
+
+| Client Profile | Adjust Weights |
+|----------------|----------------|
+| **Multi-cloud / multi-platform** | Terraform Support + 30% |
+| **Single platform (Fabric)** | Native IaC + 30%, Terraform Support - 20% |
+| **Large team with GitOps** | Terraform Support + 25%, State Management + 20% |
+| **Small team, simple setup** | Provider Coverage - 15%, Native IaC + 20% |
+| **Strict compliance** | State Management + 25%, Provider Coverage + 15% |
+
+### Why IaC Matters
+
+| Without IaC | With IaC |
+|-------------|----------|
+| "How did we configure prod?" | `git show main:terraform/prod` |
+| Manual environment setup (hours) | `terraform apply` (minutes) |
+| Configuration drift between envs | Identical environments guaranteed |
+| Changes are untracked | Full audit trail in Git |
+| Disaster recovery is a project | Disaster recovery is a deploy |
+
+### Platform Comparison
+
+#### IaC Maturity
+
+| Platform | Terraform | Native IaC | Overall Maturity |
+|----------|-----------|------------|------------------|
+| **Fabric** | Limited | ARM/Bicep (partial) | <RatingBadge rating="Developing" /> |
+| **Databricks** | Comprehensive | Asset Bundles | <RatingBadge rating="Mature" /> |
+| **Snowflake** | Partial | Schemachange | <RatingBadge rating="Moderate" /> |
+
+#### Terraform Provider Coverage
+
+| Resource Category | Fabric | Databricks | Snowflake |
+|-------------------|--------|------------|-----------|
+| **Workspaces/Accounts** | <RatingBadge rating="Developing" /> | <RatingBadge rating="Mature" /> | <RatingBadge rating="Mature" /> |
+| **Compute Resources** | <RatingBadge rating="Developing" /> | <RatingBadge rating="Mature" /> | <RatingBadge rating="Mature" /> |
+| **Storage/Databases** | <RatingBadge rating="Developing" /> | <RatingBadge rating="Mature" /> | <RatingBadge rating="Mature" /> |
+| **Security/IAM** | <RatingBadge rating="Developing" /> | <RatingBadge rating="Mature" /> | <RatingBadge rating="Moderate" /> |
+| **Pipelines/Jobs** | <RatingBadge rating="Developing" /> | <RatingBadge rating="Mature" /> | <RatingBadge rating="Developing" /> |
+| **Governance** | <RatingBadge rating="Developing" /> | <RatingBadge rating="Mature" /> | <RatingBadge rating="Moderate" /> |
+| **Networking** | <RatingBadge rating="Developing" /> | <RatingBadge rating="Mature" /> | <RatingBadge rating="Moderate" /> |
+
+### State Management
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Remote Backend (S3/ADLS)** | Shared, locked, versioned | Setup required |
+| **Terraform Cloud** | Managed, collaboration | Cost |
+| **Local** | Simple | Not for teams |
+
+### Decision Guidance
+
+| Terraform | Native IaC | Scripts |
+|-----------|------------|---------|
+| Multi-platform infrastructure | Single platform focus | Terraform support missing (Fabric) |
+| Team has Terraform experience | Simpler requirements | One-time setup tasks |
+| Full GitOps workflow desired | Native tooling preferred | Complex conditional logic |
+| Complex resource dependencies | Terraform gaps for specific resources | API-first operations |
+
+### Anti-Patterns
+
+<AntiPatterns patterns={[
+  {
+    title: "The ClickOps Drift",
+    problem: "Resources created in UI, never added to IaC. Environments drift. \"It works in prod but not dev.\"",
+    example: "A team created a Snowflake warehouse via UI for \"quick testing.\" It worked perfectly. Three months later, they tried to recreate production in DR. The warehouse wasn't in Terraform-nobody remembered the exact configuration. It took 2 days to reverse-engineer settings from production.",
+    prevention: "Policy: if it's not in code, it doesn't exist. Regular drift detection. Import existing resources."
+  },
+  {
+    title: "The Mega-Module",
+    problem: "Single Terraform module manages everything. Changes are risky. Apply takes 20 minutes.",
+    example: "A platform team put all infrastructure in one massive Terraform module: 150 resources, 3000 lines. Every change required 20-minute apply. A typo in a dev database config could accidentally destroy production. Nobody dared make changes.",
+    prevention: "Small, focused modules. Environment-specific composition. Use workspaces or separate state files."
+  },
+  {
+    title: "The Hardcoded Secret",
+    problem: "Password in terraform.tfvars committed to Git. Security incident.",
+    example: "An engineer committed terraform.tfvars with a database password to a public GitHub repo. Within 4 hours, cryptocurrency miners were running on the cloud account. The bill was £12,000 before the breach was detected.",
+    prevention: "Secrets manager integration. Git hooks to detect secrets. Security scanning in CI."
+  }
+]} />

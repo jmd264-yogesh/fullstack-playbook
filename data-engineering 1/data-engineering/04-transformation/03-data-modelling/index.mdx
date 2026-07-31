@@ -1,0 +1,85 @@
+---
+title: Data Modelling
+description: The Metrics That Matter framework for building business model-driven analytical schemas
+order: 3
+version: 1.0
+---
+
+## Data Modelling
+
+### What is Data Modelling?
+
+**Data Modelling** is the practice of designing how data is structured, organised, and related within a database so that it can efficiently answer business questions. Think of it as creating the blueprint for a warehouse - you decide where each product goes on the shelves so that workers (analysts, dashboards, AI models) can find what they need quickly without searching through every box.
+
+In simple terms: **data modelling answers the question, "How do we organise our data so the business can get answers fast?"**
+
+### Data Modelling Patterns
+
+Different business problems require different structural approaches. The data & analytics industry has developed several proven patterns, each suited to specific use cases:
+
+| Pattern | What It Does | Best For | Layer | Trade-off |
+|---------|-------------|----------|-------|-----------|
+| **Dimensional Modelling (Star Schema)** | Organises data into facts (events/transactions) and dimensions (context/attributes) in a star-shaped layout | BI reporting, dashboards, self-serve analytics | [Mart](/playbook/data-engineering/transformation/data-flow/data-mart) | Optimised for reads, not for capturing complex entity relationships |
+| **Data Vault** | Separates raw business keys (Hubs), relationships (Links), and descriptive attributes (Satellites) into distinct tables | Multi-source integration, M&A, auditability, environments with frequent source changes | [Core](/playbook/data-engineering/transformation/data-flow/core) | More tables and joins; steeper learning curve for analysts |
+| **3NF (Third Normal Form)** | Eliminates data redundancy by normalising into many related tables with strict referential integrity | Core/enterprise layer where business entities need to be modelled accurately | [Core](/playbook/data-engineering/transformation/data-flow/core) | Complex joins for reporting; not suited for direct BI consumption |
+| **One Big Table (OBT)** | Pre-joins all relevant data into a single wide, flat table | Data products, embedded analytics, AI/ML feature input, self-serve users who want simplicity | [Product](/playbook/data-engineering/transformation/data-flow/data-product) | High storage cost; refresh complexity; not suited for ad-hoc exploration across entities |
+| **Activity Schema** | Models all business events as a single stream with entity and activity type columns | Event-driven analytics, customer journey analysis, product analytics | [Mart](/playbook/data-engineering/transformation/data-flow/data-mart) / [Product](/playbook/data-engineering/transformation/data-flow/data-product) | Requires discipline to avoid becoming a dumped catch-all table |
+
+<Callout type="info">
+**No single pattern fits all layers.** In the JMAN six-layer model, we typically use **3NF or Data Vault** in the Core layer (to accurately model business entities), **Dimensional Modelling** in the Mart layer (to enable fast reporting), and **OBT** in the Product layer (to power self-serve and AI apps). The right pattern depends on the layer's purpose, not on personal preference.
+</Callout>
+
+### Pain
+
+<Callout type="info">
+  **JMAN IP** - Data modelling is not just a technical pattern. It's how we codify business knowledge into reusable, queryable structures. Our "Metrics That Matter" framework is what makes JMAN different-we know the metrics that drive value for each business model.
+</Callout>
+
+Every client has data. Few can answer the questions that matter.
+
+We see the same pattern repeatedly: source systems capture transactions perfectly, but when the CFO asks "what's our net revenue retention?" or a PE investor requests "customer-level gross margin by cohort," the answer requires weeks of spreadsheet work. The data exists, but it's not *structured* for questions.
+
+The symptoms are consistent across engagements:
+
+**Metrics defined inconsistently.** Revenue means different things in different reports. One dashboard shows ARR, another shows billings, a third shows recognised revenue-none reconcile. Finance maintains a "source of truth" spreadsheet that nobody else can access.
+
+**BI tools become metric logic dumping grounds.** Business logic lives in Power BI measures, Tableau calculated fields, and Excel formulas. Every developer creates their own interpretation. When definitions need to change, there's no single place to update.
+
+**Every report requires engineering effort.** Business users can't self-serve because querying the data requires understanding complex joins across operational schemas. The analytics team becomes a bottleneck, fielding ad-hoc requests instead of building capability.
+
+**PE/investor due diligence exposes gaps.** When it's time for a funding round or exit, clients discover they can't produce the metrics investors expect. Three-year cohort analysis? Customer concentration? Revenue quality breakdown? The data exists, but extracting it takes months.
+
+### Solution
+
+The JMAN approach solves this through **business model-driven data model design**.
+
+Rather than starting with source systems and asking "what can we report?", we start with the business model and ask "what questions must this data answer?" We work backwards from investor presentations, board packs, and operational KPIs to define the metrics that matter-then we build schemas that make those metrics trivially easy to calculate.
+
+This is the **Metrics That Matter Framework**:
+
+1. **Understand the business model** - SaaS, Professional Services, Wealth Management, MSP, Field Services each have distinct metric patterns
+2. **Identify the metrics that drive value** - Revenue, Margin, Customer, Pipeline, Expansion themes with specific KPIs per business model
+3. **Design the dimensional model** - Star schema with facts capturing events and dimensions providing context
+4. **Define metrics once, consume everywhere** - Calculations live in the model, not scattered across BI tools
+
+**The result:** a data model that answers business questions directly, supports self-serve analytics, and produces investor-ready metrics on demand.
+
+### Why now?
+
+**PE-backed clients need investor-ready metrics.** Due diligence timelines are compressing. Investors expect data rooms with cohort analysis, retention curves, and margin breakdowns. Clients without structured data models scramble for months; clients with dimensional models respond in days.
+
+**Self-serve analytics demands consistent foundations.** Business users expect to explore data without filing tickets. This only works when the underlying model is intuitive-star schemas with clear facts and dimensions, not operational spaghetti.
+
+**AI/ML requires well-structured features.** Predictive models need clean, consistent inputs. A properly designed dimensional model provides feature-ready data without additional transformation.
+
+**BI tool sprawl makes centralised metrics critical.** Organisations use Power BI, Tableau, Looker, and Excel simultaneously. When metric logic lives in the model rather than the tool, consistency is guaranteed regardless of consumption method.
+
+### Impact on JMAN Delivery
+
+**Faster time-to-insight.** Reusable patterns per business model mean we're not starting from scratch. A Professional Services engagement leverages proven schemas for utilisation, fee-earner analysis, and project profitability.
+
+**Consistent metrics across engagements.** JMAN-delivered solutions speak the same language. ARR means ARR. Net Revenue Retention is calculated the same way. Clients moving between JMAN teams experience continuity.
+
+**Foundation for productised solutions.** The dimensional model is the core IP that enables JMAN to build repeatable products. BI tools are interchangeable; the model is the value.
+
+**Defensible, auditable numbers.** Metrics reconcile to management accounts. Calculations are documented and version-controlled. When investors ask "how did you calculate this?", there's a clear answer.

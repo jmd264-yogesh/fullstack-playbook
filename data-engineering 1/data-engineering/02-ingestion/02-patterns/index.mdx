@@ -1,0 +1,457 @@
+---
+title: Patterns
+description: Loading strategies, frequency, and scheduling patterns for ingestion
+order: 2
+version: 1.0
+disabled: false
+---
+
+## Patterns
+
+<Callout type="info">
+  **Per-Table, Not Per-Source** - The loading strategy determines how data moves from source to Raw. This decision is made per source table, not per source system - the same Salesforce org might use full load for `ref_country_codes` (500 rows) and incremental for `opportunity` (2M rows).
+</Callout>
+
+### Extract & Load Strategy Overview
+
+Every ingestion pipeline has four decisions:
+* **when** (historical backfill or ongoing refresh)
+* **how to extract** (what data to pull from the source)
+* **how to load** (how to write it to the target)
+* **how often** (daily, multi-daily, micro-batch, event-driven, or streaming)
+
+These are independent choices that combine to form the complete loading pattern.
+
+```mermaid
+graph LR
+    subgraph Phase["PHASE (When)"]
+        direction TB
+        HL["<strong>Historical Load</strong><br/>One-time backfill of<br/>all historical data"]
+        DR["<strong>Daily Refresh</strong><br/>Ongoing scheduled<br/>extraction"]
+    end
+
+    subgraph Extract["EXTRACT (How to extract)"]
+        direction TB
+        FL["<strong>Full Load</strong><br/>All rows every run"]
+        IL["<strong>Incremental Load</strong><br/>Only changed rows"]
+    end
+
+    subgraph Load["LOAD (How to load)"]
+        direction TB
+        TL["<strong>Truncate & Load</strong><br/>Replace target entirely"]
+        AP["<strong>Append</strong><br/>Add new rows to target"]
+        DS["<strong>Daily Snapshot</strong><br/>Preserve each day as<br/>a separate partition"]
+    end
+
+    subgraph Frequency["FREQUENCY (How often)"]
+        direction TB
+        FD["<strong>Daily</strong><br/>Once per day"]
+        FM["<strong>Multi-daily</strong><br/>Multiple times per day"]
+        FB["<strong>Micro-batch</strong><br/>Every few minutes"]
+        FE["<strong>Event-driven</strong><br/>Triggered on change"]
+        FS["<strong>Streaming</strong><br/>Continuous real-time"]
+    end
+
+    HL --> FL
+    HL --> IL
+    DR --> FL
+    DR --> IL
+
+    FL --> TL
+    FL --> DS
+    IL --> AP
+    IL --> DS
+
+    TL --> FD
+    TL --> FM
+    AP --> FD
+    AP --> FM
+    AP --> FB
+    AP --> FE
+    AP --> FS
+    DS --> FD
+
+    classDef phase fill:#F7EBFC,stroke:#C36BDB,stroke-width:2px,color:#000
+    classDef extract fill:#CEFAFE,stroke:#26D4F0,stroke-width:2px,color:#000
+    classDef load fill:#CFF8F0,stroke:#18978E,stroke-width:2px,color:#000
+    classDef freq fill:#FFE3EA,stroke:#E7166D,stroke-width:2px,color:#000
+
+    class HL,DR phase
+    class FL,IL extract
+    class TL,AP,DS load
+    class FD,FM,FB,FE,FS freq
+    style Phase fill:#F3F3F7,stroke:#D1D0DC
+    style Extract fill:#F3F3F7,stroke:#D1D0DC
+    style Load fill:#F3F3F7,stroke:#D1D0DC
+    style Frequency fill:#F3F3F7,stroke:#D1D0DC
+```
+
+### Scenario Walk-Throughs
+
+#### Scenario 1: Currency Code Reference Table (500 rows)
+
+```mermaid
+graph LR
+    subgraph Phase["PHASE"]
+        direction TB
+        HL["Historical Load"]
+        DR["<strong>Daily Refresh ✓</strong>"]
+    end
+    subgraph Extract["EXTRACT"]
+        direction TB
+        FL["<strong>Full Load ✓</strong>"]
+        IL["Incremental Load"]
+    end
+    subgraph Load["LOAD"]
+        direction TB
+        TL["<strong>Truncate & Load ✓</strong>"]
+        AP["Append"]
+        DS["Daily Snapshot"]
+    end
+    subgraph Frequency["FREQUENCY"]
+        direction TB
+        FD["<strong>Daily ✓</strong>"]
+        FM["Multi-daily"]
+        FB["Micro-batch"]
+        FE["Event-driven"]
+        FS["Streaming"]
+    end
+
+    DR ==> FL
+    FL ==> TL
+    TL ==> FD
+
+    classDef active fill:#CFF8F0,stroke:#18978E,stroke-width:3px,color:#000,font-weight:bold
+    classDef inactive fill:#F3F3F7,stroke:#D1D0DC,stroke-width:1px,color:#999
+
+    class DR,FL,TL,FD active
+    class HL,IL,AP,DS,FM,FB,FE,FS inactive
+    style Phase fill:#F3F3F7,stroke:#D1D0DC
+    style Extract fill:#F3F3F7,stroke:#D1D0DC
+    style Load fill:#F3F3F7,stroke:#D1D0DC
+    style Frequency fill:#F3F3F7,stroke:#D1D0DC
+```
+
+The client's ERP has a `ref_currency_codes` table with 500 rows. It rarely changes (maybe once a quarter). There's no `updated_at` column.
+
+- **Phase:** Daily Refresh - runs every morning at 5am
+- **Extract:** Full Load - 500 rows takes 2 seconds. Not worth building incremental for this volume.
+- **Load:** Truncate & Load - wipe the target, reload all 500 rows. Target always matches source exactly. If a currency code was removed, it disappears from the warehouse too.
+
+Every morning, all 500 rows are extracted from the ERP and replace the entire target table. Target always matches source exactly - if a currency code was removed from the ERP, it disappears from the warehouse too.
+
+---
+
+#### Scenario 2: Salesforce Opportunities (2M rows, ongoing)
+
+```mermaid
+graph LR
+    subgraph Phase["PHASE"]
+        direction TB
+        HL["Historical Load"]
+        DR["<strong>Daily Refresh ✓</strong>"]
+    end
+    subgraph Extract["EXTRACT"]
+        direction TB
+        FL["Full Load"]
+        IL["<strong>Incremental Load ✓</strong>"]
+    end
+    subgraph Load["LOAD"]
+        direction TB
+        TL["Truncate & Load"]
+        AP["<strong>Append ✓</strong>"]
+        DS["Daily Snapshot"]
+    end
+    subgraph Frequency["FREQUENCY"]
+        direction TB
+        FD["<strong>Daily ✓</strong>"]
+        FM["Multi-daily"]
+        FB["Micro-batch"]
+        FE["Event-driven"]
+        FS["Streaming"]
+    end
+
+    DR ==> IL
+    IL ==> AP
+    AP ==> FD
+
+    classDef active fill:#CFF8F0,stroke:#18978E,stroke-width:3px,color:#000,font-weight:bold
+    classDef inactive fill:#F3F3F7,stroke:#D1D0DC,stroke-width:1px,color:#999
+
+    class DR,IL,AP,FD active
+    class HL,FL,TL,DS,FM,FB,FE,FS inactive
+    style Phase fill:#F3F3F7,stroke:#D1D0DC
+    style Extract fill:#F3F3F7,stroke:#D1D0DC
+    style Load fill:#F3F3F7,stroke:#D1D0DC
+    style Frequency fill:#F3F3F7,stroke:#D1D0DC
+```
+
+The client's Salesforce org has 2M Opportunity records. Only ~3,000 change per day. Each record has a `SystemModstamp` field.
+
+- **Phase:** Daily Refresh - runs at 5:30am via Databricks Workflow
+- **Extract:** Incremental - query `WHERE SystemModstamp > '2026-03-08T05:30:00Z'`. Extracts ~3,000 rows in 15 seconds instead of 2M rows in 45 minutes.
+- **Load:** Append - add the 3,000 changed rows to Raw with `__loaded_at` and `__batch_id`. Stage deduplicates to get current state.
+
+Only the ~3,000 changed records are extracted and appended to Raw with a new `__batch_id`. Raw now contains both the old version (`__batch_101`) and the new version (`__batch_102`) of each changed record. Stage deduplicates by keeping the latest version per Opportunity ID.
+
+---
+
+#### Scenario 3: CRM Accounts with Hard Deletes (50K rows)
+
+```mermaid
+graph LR
+    subgraph Phase["PHASE"]
+        direction TB
+        HL["Historical Load"]
+        DR["<strong>Daily Refresh ✓</strong>"]
+    end
+    subgraph Extract["EXTRACT"]
+        direction TB
+        FL["<strong>Full Load ✓</strong>"]
+        IL["Incremental Load"]
+    end
+    subgraph Load["LOAD"]
+        direction TB
+        TL["Truncate & Load"]
+        AP["Append"]
+        DS["<strong>Daily Snapshot ✓</strong>"]
+    end
+    subgraph Frequency["FREQUENCY"]
+        direction TB
+        FD["<strong>Daily ✓</strong>"]
+        FM["Multi-daily"]
+        FB["Micro-batch"]
+        FE["Event-driven"]
+        FS["Streaming"]
+    end
+
+    DR ==> FL
+    FL ==> DS
+    DS ==> FD
+
+    classDef active fill:#CFF8F0,stroke:#18978E,stroke-width:3px,color:#000,font-weight:bold
+    classDef inactive fill:#F3F3F7,stroke:#D1D0DC,stroke-width:1px,color:#999
+
+    class DR,FL,DS,FD active
+    class HL,IL,TL,AP,FM,FB,FE,FS inactive
+    style Phase fill:#F3F3F7,stroke:#D1D0DC
+    style Extract fill:#F3F3F7,stroke:#D1D0DC
+    style Load fill:#F3F3F7,stroke:#D1D0DC
+    style Frequency fill:#F3F3F7,stroke:#D1D0DC
+```
+
+The client's sales team regularly merges duplicate Accounts in the CRM. Merged accounts are hard-deleted (no soft-delete flag, no CDC). The business needs to answer "how many active accounts did we have last Tuesday?"
+
+- **Phase:** Daily Refresh - runs at 6am
+- **Extract:** Full Load - extract all 50K accounts every day. This is the only way to detect deletions (missing rows = merged/deleted).
+- **Load:** Daily Snapshot - store each day's full extract as a date-partitioned snapshot. Yesterday's data is preserved. Today's snapshot sits alongside it.
+
+Each day's full extract is stored as a separate partition in Raw:
+
+| Snapshot Date | Records | Notable Change |
+|---|---|---|
+| 2026-03-07 | 50,000 | Acct-001, Acct-002, Acct-003 all present |
+| 2026-03-08 | 49,999 | Acct-002 missing (merged/deleted in CRM) |
+
+**Query examples:** "Accounts on March 7?" → filter `snapshot_date = 2026-03-07` → 50,000. "What was deleted?" → compare consecutive snapshots → Acct-002 missing.
+
+---
+
+#### Scenario 4: PostgreSQL Orders Table (80M rows, first-time setup)
+
+```mermaid
+graph LR
+    subgraph Phase["PHASE"]
+        direction TB
+        HL["<strong>Historical Load ✓</strong>"]
+        DR["Daily Refresh"]
+    end
+    subgraph Extract["EXTRACT"]
+        direction TB
+        FL["Full Load"]
+        IL["<strong>Incremental Load ✓</strong>"]
+    end
+    subgraph Load["LOAD"]
+        direction TB
+        TL["Truncate & Load"]
+        AP["<strong>Append ✓</strong>"]
+        DS["Daily Snapshot"]
+    end
+    subgraph Frequency["FREQUENCY"]
+        direction TB
+        FD["<strong>Daily ✓</strong>"]
+        FM["Multi-daily"]
+        FB["Micro-batch"]
+        FE["Event-driven"]
+        FS["Streaming"]
+    end
+
+    HL ==> IL
+    IL ==> AP
+    AP ==> FD
+
+    classDef active fill:#CFF8F0,stroke:#18978E,stroke-width:3px,color:#000,font-weight:bold
+    classDef inactive fill:#F3F3F7,stroke:#D1D0DC,stroke-width:1px,color:#999
+
+    class HL,IL,AP,FD active
+    class DR,FL,TL,DS,FM,FB,FE,FS inactive
+    style Phase fill:#F3F3F7,stroke:#D1D0DC
+    style Extract fill:#F3F3F7,stroke:#D1D0DC
+    style Load fill:#F3F3F7,stroke:#D1D0DC
+    style Frequency fill:#F3F3F7,stroke:#D1D0DC
+```
+
+New project onboarding. The client's PostgreSQL `orders` table has 80M rows spanning 5 years. After the backfill, daily refresh takes over.
+
+- **Phase:** Historical Load - one-time, scheduled over a weekend against the read replica
+- **Extract:** Incremental by date range - chunk by month (`WHERE order_date BETWEEN '2021-01-01' AND '2021-01-31'`). Each chunk is a manageable 1.3M rows. If chunk 37 of 60 fails, resume from chunk 37.
+- **Load:** Append (chunked) - each chunk is appended to Raw with a checkpoint recorded. After all 60 chunks complete, validate total row count against source.
+- **Then:** Switch to Daily Refresh → Incremental (by `updated_at`) → Append
+
+**Historical Load (weekend):** 60 chunks by month (Jan 2021 → Mar 2026), each ~1.1-1.5M rows. Checkpoint recorded after each chunk. If chunk 37 fails, resume from chunk 37 - not from scratch. After all 60 complete, validate total row count (80M) against source.
+
+**Then Daily Refresh (ongoing):** Switch to incremental using `WHERE updated_at > last_watermark`, extracting ~5K rows/day.
+
+---
+
+#### Scenario 5: Employee Directory from BambooHR (2K rows, need history)
+
+```mermaid
+graph LR
+    subgraph Phase["PHASE"]
+        direction TB
+        HL["Historical Load"]
+        DR["<strong>Daily Refresh ✓</strong>"]
+    end
+    subgraph Extract["EXTRACT"]
+        direction TB
+        FL["Full Load"]
+        IL["<strong>Incremental Load ✓</strong>"]
+    end
+    subgraph Load["LOAD"]
+        direction TB
+        TL["Truncate & Load"]
+        AP["Append"]
+        DS["<strong>Daily Snapshot ✓</strong>"]
+    end
+    subgraph Frequency["FREQUENCY"]
+        direction TB
+        FD["<strong>Daily ✓</strong>"]
+        FM["Multi-daily"]
+        FB["Micro-batch"]
+        FE["Event-driven"]
+        FS["Streaming"]
+    end
+
+    DR ==> IL
+    IL ==> DS
+    DS ==> FD
+
+    classDef active fill:#CFF8F0,stroke:#18978E,stroke-width:3px,color:#000,font-weight:bold
+    classDef inactive fill:#F3F3F7,stroke:#D1D0DC,stroke-width:1px,color:#999
+
+    class DR,IL,DS,FD active
+    class HL,FL,TL,AP,FM,FB,FE,FS inactive
+    style Phase fill:#F3F3F7,stroke:#D1D0DC
+    style Extract fill:#F3F3F7,stroke:#D1D0DC
+    style Load fill:#F3F3F7,stroke:#D1D0DC
+    style Frequency fill:#F3F3F7,stroke:#D1D0DC
+```
+
+HR needs to track employee changes over time (title changes, department transfers, manager changes). BambooHR has an `updated_at` field. Only ~10-20 records change daily, but the business needs "who was in which department last quarter?"
+
+- **Phase:** Daily Refresh - runs at 6:30am
+- **Extract:** Incremental - query only changed records via BambooHR API (`?since=2026-03-08`). Extracts ~15 rows instead of 2,000.
+- **Load:** Daily Snapshot - but only for the changed records, merged with yesterday's snapshot to produce today's full state. This gives point-in-time history without the cost of a full extract.
+
+Yesterday's snapshot (2,000 employees) is merged with today's 15 changed records to produce today's full snapshot (2,001 employees). Unchanged records carry forward. Updated records (e.g., Bob moved from Sales to Marketing) are overwritten. New hires are added. The result is a complete point-in-time state for every day - enabling queries like "who was in which department last quarter?"
+
+### Phase Strategies
+
+#### Historical Load (Initial Backfill)
+
+One-time extraction of all historical data. Runs once (or during re-platforming / disaster recovery). Fundamentally different from daily refresh - treat it as a separate engineering problem.
+
+| Pros | Cons |
+|------|------|
+| Establishes the full baseline - all history available from day one | Can take hours to days for large sources (10M+ rows, multi-GB) |
+| Enables historical trend reporting immediately after go-live | Risks overwhelming the source system (API limits, DB locks) |
+| Only runs once - no ongoing cost | Requires chunking + checkpointing (failure at hour 30 of 48 wastes days) |
+| Can be scheduled during a maintenance window to minimise impact | Must coordinate with source team for capacity and access |
+
+#### Daily Refresh (Ongoing)
+
+Scheduled extraction that runs on a recurring cadence (daily, hourly, event-driven). This is the steady-state operation after historical load completes.
+
+| Pros | Cons |
+|------|------|
+| Keeps data current - business decisions based on fresh data | Requires monitoring, alerting, and SLA tracking |
+| Small, predictable data volumes per run | Accumulates technical debt if not maintained (schema drift, credential expiry) |
+| Cost is stable and budgetable | Must handle edge cases: late-arriving data, source downtime, retries |
+| Can be tuned independently of historical load | Frequency decision has cost implications (hourly = 24x daily cost) |
+
+<Callout type="warning">
+  **Historical Load and Daily Refresh are Different Pipelines** - Historical load needs chunking, checkpointing, and a weekend maintenance window. Daily refresh needs watermarking, retry logic, and SLA monitoring. Building one pipeline that "does both" leads to fragile code that handles neither well.
+</Callout>
+
+### How the Four Dimensions Combine
+
+| Phase | Extract | Load | Frequency | When to Use | Example |
+|-------|---------|------|-----------|-------------|---------|
+| Historical | Full Load | Append (chunked) | One-time | First-time backfill of large tables | Load 3 years of Salesforce Opportunity history in date-range chunks |
+| Historical | Incremental (by date range) | Append (chunked) | One-time | Backfill when source supports range queries | Load PostgreSQL orders by month: Jan 2024, Feb 2024, ... |
+| Daily | Full Load | Truncate & Load | Daily | Small reference tables, ongoing | Refresh 500-row currency code table every morning |
+| Daily | Full Load | Daily Snapshot | Daily | Sources with hard deletes, need history | Snapshot CRM accounts daily to track changes over time |
+| Daily | Incremental | Append | Daily | Large transactional tables, CDC | Append today's new/updated orders to Raw |
+| Daily | Incremental | Append | Event-driven | File arrival or webhook triggers | Ingest new files as they land in blob storage |
+| Daily | Incremental | Daily Snapshot | Daily | Slowly changing dimensions | Snapshot customer attributes daily for SCD-2 construction |
+
+### Decision Priority
+
+Start with "Can the source support incremental?" If yes, use it for any table above 100K rows. If no, use full load and monitor cost. CDC is the gold standard for databases - use it whenever the DBA grants access.
+
+<Callout type="note">
+  **Raw Layer Default** - For most production tables, use the following default pattern. Daily Snapshot is used when point-in-time history is a business requirement. Historical Load is always a separate, one-time pipeline with chunking and checkpointing.
+</Callout>
+
+```mermaid
+graph LR
+    subgraph Phase["PHASE"]
+        direction TB
+        HL["Historical Load"]
+        DR["<strong>Daily Refresh ✓</strong>"]
+    end
+    subgraph Extract["EXTRACT"]
+        direction TB
+        FL["Full Load"]
+        IL["<strong>Incremental ✓</strong>"]
+    end
+    subgraph Load["LOAD"]
+        direction TB
+        TL["Truncate & Load"]
+        AP["<strong>Append ✓</strong>"]
+        DS["Daily Snapshot"]
+    end
+    subgraph Frequency["FREQUENCY"]
+        direction TB
+        FD["<strong>Daily ✓</strong>"]
+        FM["Multi-daily"]
+        FB["Micro-batch"]
+        FE["Event-driven"]
+        FS["Streaming"]
+    end
+
+    DR ==> IL
+    IL ==> AP
+    AP ==> FD
+
+    classDef active fill:#CFF8F0,stroke:#18978E,stroke-width:3px,color:#000,font-weight:bold
+    classDef inactive fill:#F3F3F7,stroke:#D1D0DC,stroke-width:1px,color:#999
+
+    class DR,IL,AP,FD active
+    class HL,FL,TL,DS,FM,FB,FE,FS inactive
+    style Phase fill:#F3F3F7,stroke:#D1D0DC
+    style Extract fill:#F3F3F7,stroke:#D1D0DC
+    style Load fill:#F3F3F7,stroke:#D1D0DC
+    style Frequency fill:#F3F3F7,stroke:#D1D0DC
+```

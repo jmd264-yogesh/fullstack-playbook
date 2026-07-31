@@ -1,0 +1,115 @@
+---
+title: "Code Organization Principles"
+description: "---"
+order: 3
+version: 1.0
+disabled: false
+---
+
+## Code Organization Principles
+
+---
+
+## Component Design
+
+### Single Responsibility
+Each component should do one thing well. Break complex pages into smaller, focused components. A component that is hard to name is probably doing too much.
+
+### Return Early
+Use early returns for guards and edge cases to keep the main logic clean and readable.
+
+```tsx
+// ✅ Guard at the top, main path unindented
+function CustomerCard({ customer }: { customer: TCustomer | null }) {
+    if (!customer) return null
+
+    return (
+        <div>
+            <h2>{customer.name}</h2>
+        </div>
+    )
+}
+```
+
+### One Component Per File
+Never define multiple exported components in a single file.
+
+### Open-Closed Principle
+Components should be open for extension via props/composition, and closed for modification. Avoid internal `if` conditions that fundamentally change behaviour — use component variants or composition instead.
+
+### Prefer Named Exports
+Export components directly rather than using default export. Named exports make refactoring and IDE navigation more reliable.
+
+```tsx
+// ✅ Named export
+export function CustomerForm() { ... }
+
+// ❌ Default export
+export default function CustomerForm() { ... }
+```
+
+### Prefer Arrow Functions
+
+```tsx
+// ✅ Arrow function syntax
+export const CustomerForm = () => { ... }
+```
+
+---
+
+## State Management Hierarchy
+
+Follow this order when deciding where to manage state. Prefer options higher in the list.
+
+| Priority | State Type | When to Use |
+|---|---|---|
+| 1 | **React Query Cache** | Server state — API responses, mutations, real-time sync |
+| 2 | **URL / Query Params** | Navigation state, panel open/close, filter values — for shareability and deep linking |
+| 3 | **Local Component State** | UI-only state (open/close toggles, local form input) |
+| 4 | **Zustand Store** | Cross-component client state that cannot be derived from server data or URL |
+| 5 | **React Context** | Avoid unless absolutely necessary — only to prevent extreme prop drilling |
+
+> Adding global state prematurely is one of the most common architecture mistakes. Start with local state and promote to global only when genuinely needed across multiple unrelated components.
+
+---
+
+## Styling Guidelines
+
+- Use **Tailwind CSS** for all styling. Never inject inline styles with the `style` attribute.
+- Avoid hardcoded colours. All colours must be defined in the Tailwind theme configuration.
+- Use the **Tailwind Merge** utility (`cn()` or `classnames.ts`) to conditionally combine class names.
+- Use the **Tailwind CSS Prettier plugin** for automatic class sorting.
+
+```tsx
+// ✅ Conditional classes via cn()
+import { cn } from '@/common/util/classnames'
+
+<button className={cn('px-4 py-2 rounded', isActive && 'bg-blue-600 text-white')}>
+    Submit
+</button>
+
+// ❌ Inline styles
+<button style={{ padding: '8px 16px', backgroundColor: 'blue' }}>
+    Submit
+</button>
+```
+
+---
+
+## Performance Principles
+
+- **Avoid premature memoisation.** Do not add `useMemo` or `useCallback` without a measured performance problem.
+- **Avoid `useEffect` waterfalls.** Fetch data in parallel where possible; use React Query's parallel queries.
+- **Avoid God Components.** A component that manages dozens of state variables and renders hundreds of lines of JSX needs to be split.
+- **Avoid `useEffect` for derived state.** Compute derived values inline during render — only use `useEffect` for genuine side effects (timers, subscriptions, external system sync).
+
+```tsx
+// ❌ useEffect for derived state
+const [fullName, setFullName] = useState('')
+useEffect(() => {
+    setFullName(`${firstName} ${lastName}`)
+}, [firstName, lastName])
+
+// ✅ Derive inline
+const fullName = `${firstName} ${lastName}`
+```

@@ -1,0 +1,146 @@
+---
+title: Platform
+description: Overview of Platform Selection
+order: 0
+version: 1.0
+disabled: false
+---
+
+## Platform
+
+### What is a Data Platform?
+
+A **data platform** is not a single tool - it is a collection of interconnected components that together enable an organisation to ingest, store, transform, serve, and govern data. When we say "platform selection," we are evaluating how well each option (Fabric, Databricks, Snowflake) covers all of these components.
+
+```mermaid
+flowchart TB
+    subgraph PIPELINE[" "]
+        direction LR
+        SOURCES["<b>Sources</b><br/><i>SaaS, Databases, APIs<br/>Files, Events</i>"]
+        INGESTION["<b>Ingestion</b><br/><i>Batch, CDC, Real-time<br/>Reverse ETL</i>"]
+        TRANSFORMATION["<b>Transformation</b><br/><i>SQL / dbt, Python<br/>Low/No Code</i>"]
+        CONSUMERS["<b>Consumers</b><br/><i>Dashboards, Data Apps<br/>AI Apps, Sharing</i>"]
+
+        SOURCES --> INGESTION --> TRANSFORMATION --> CONSUMERS
+    end
+
+    subgraph CROSSCUT["Cross-Cutting Concerns"]
+        direction LR
+        STORAGE["<b>Storage & Compute</b><br/><i>Data Layers, Lakehouse<br/>Warehouse, SQL, Spark</i>"]
+        O["<b>Orchestration</b><br/><i>Scheduling, Dependencies<br/>Event Triggering, Alerting</i>"]
+        D["<b>DataOps</b><br/><i>IaC, Version Control<br/>CI/CD, Observability, FinOps</i>"]
+        G["<b>Data Governance</b><br/><i>Quality, Catalog, Lineage<br/>Metadata, AI Governance</i>"]
+        SE["<b>Security & Privacy</b><br/><i>IAM, Access Control<br/>Encryption, Masking</i>"]
+    end
+
+    PIPELINE -.->|"applies across all components"| CROSSCUT
+
+    classDef sourcesStyle fill:#CFF8F0,stroke:#18978E,color:#065f46
+    classDef ingestionStyle fill:#FFE3EA,stroke:#E7166D,color:#9f1239
+    classDef storageStyle fill:#EEF2FF,stroke:#4338CA,color:#312e81
+    classDef transformStyle fill:#CEFAFE,stroke:#0391B3,color:#0c4a6e
+    classDef consumersStyle fill:#F7EBFC,stroke:#C36BDB,color:#581c87
+    classDef orchStyle fill:#FEF3C7,stroke:#D97706,color:#78350f
+    classDef dataopsStyle fill:#DBEAFE,stroke:#2563EB,color:#1e3a8a
+    classDef govStyle fill:#F1F5F9,stroke:#475569,color:#1e293b
+    classDef secStyle fill:#FCE7F3,stroke:#DB2777,color:#831843
+
+    class SOURCES sourcesStyle
+    class INGESTION ingestionStyle
+    class STORAGE storageStyle
+    class TRANSFORMATION transformStyle
+    class CONSUMERS consumersStyle
+    class O orchStyle
+    class D dataopsStyle
+    class G govStyle
+    class SE secStyle
+
+    style PIPELINE fill:none,stroke:none
+    style CROSSCUT fill:none,stroke:#D1D0DC,stroke-width:2px
+```
+
+Each chapter in this playbook covers one of these components in depth. Platform selection evaluates how well a given platform addresses **all** of them - not just one capability in isolation.
+
+| Component | What It Covers | Key Question |
+|-----------|---------------|--------------|
+| **Ingestion** | Getting data from source systems into the platform | How do we connect to 50+ SaaS tools, databases, and APIs? |
+| **Storage** | Where and how data is physically stored | Lakehouse vs warehouse? Open formats vs proprietary? |
+| **Compute** | Processing power for queries, transformations, and ML | How does compute scale? What does it cost at peak? |
+| **Transformation** | Converting raw data into business-ready datasets | SQL-first or Python-first? dbt support? |
+| **Orchestration** | Scheduling, dependencies, and failure handling | Native scheduling or external tools? Event-driven support? |
+| **DataOps** | CI/CD, version control, environments, observability | How do we deploy changes safely? How do we monitor health? |
+| **Data Governance** | Quality, catalog, lineage, metadata | Where do we define data quality rules? How is lineage tracked? |
+| **Security & Privacy** | IAM, encryption, access control, masking | How granular is access control? Is data encrypted at rest? |
+
+### What is Platform Selection?
+
+**Platform Selection** is the process of choosing the right data platform - the foundational technology stack - for a given client or project. It's about evaluating options like Microsoft Fabric, Databricks, and Snowflake against the client's specific needs: their existing tools, team skills, budget, data volumes, and long-term goals. A good platform choice sets a project up for success; a poor one creates years of friction.
+
+In simple terms: **platform selection answers the question, "Which data platform is the best fit for this client's needs?"**
+
+### The Problem (The "Pain")
+> What is the specific pain point or inefficiency we face today?
+> (e.g., "Currently, every team builds this from scratch...")
+
+As JMAN continues to scale, data platform selection for clients is increasingly inconsistent and often driven by **individual preference, prior experience, or short-term delivery convenience** rather than a **structured, outcome-led assessment.**
+
+This has resulted in:
+* Inconsistent platform recommendations across clusters and solutions.
+* Longer decision cycles with clients due to unclear or subjective guidance.
+* Suboptimal platform choices that do not fully align with client skillsets, budgets, or existing technology ecosystems.
+* Increased delivery risk where platforms are selected without sufficient consideration of long-term scalability, cost, governance, or AI readiness.
+
+Without a clear, repeatable approach, platform selection becomes a point of friction rather than a value-added advisory capability.
+
+### The Opportunity
+
+Platform selection is a critical moment where JMAN can differentiate as a trusted partner rather than a delivery vendor. By productising our approach, we can provide clients with clear, defensible recommendations that balance technology capability, commercial reality, and organisational readiness.
+
+JLabs will create a consistent framework to evaluate and recommend Microsoft **Fabric, Databricks, and Snowflake** (with the modern data stack)tailored to each client’s context.
+
+### The Solution (The Purpose)
+> What are we building, and what does "good" look like?
+
+This initiative will establish the **JMAN Way for Data Platform Selection**
+
+JLabs will design a structured, repeatable platform selection framework that:
+* Enables consistent, high-quality recommendations across the business.
+* Balances technical capability, cost, security, and organisational readiness.
+* Accelerates decision-making for both JMAN teams and clients.
+* Positions JMAN as platform-agnostic, outcome-focused, and deeply informed.
+
+This is not about narrowing choice, but about removing ambiguity and low-value debate from platform decisions.
+
+#### Platforms in Scope
+The framework will support structured comparison and recommendation across:
+
+<PlatformsInScope />
+
+#### Platform Evaluation Dimensions
+Each platform will be assessed consistently across the following six areas:
+
+<EvalDimensionGrid />
+
+### Key Outputs
+* A standardised platform selection framework usable across all engagements.
+* A decision matrix/scoring model to support defensible recommendations.
+* Platform comparison artefacts (Fabric vs Databricks vs Snowflake).
+* Client-facing materials to support advisory conversations.
+* Clear guidance on when each platform is best suited and where trade-offs exist.
+
+### Impact on JMAN Delivery (The Value)
+- **Consistency** - One clear, trusted approach across clusters and solutions.
+- **Speed** - Faster client decision-making and reduced pre-sales friction.
+- **Quality** - Better-aligned platforms leading to more successful deliveries.
+- **Credibility** - Stronger positioning as a strategic data & AI advisor.
+- **Scalability** - Reduced dependency on individual expertise and preference.
+
+### Why Now? (The Risk)
+> What happens if we do nothing or delay this?
+
+JMAN’s growth, combined with increasing client expectations around cost control, AI readiness, and platform longevity, makes informal platform selection unsustainable.
+
+Codifying this knowledge through JLabs ensures we:
+* Protect delivery quality as we scale.
+* Capture and share expertise that currently lives in individuals’ heads.
+* Create space for innovation by removing repeated, low-value decisions.

@@ -145,6 +145,87 @@
 }
 
 /* --------------------------------------
+   ROLE ROUTER SECTION (Home page)
+--------------------------------------- */
+.role-router-section {
+  margin-top: 4rem;
+  padding: 3rem 2rem 1rem;
+  text-align: center;
+}
+
+.role-router-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  max-width: 1152px;
+  margin: 3rem auto 0;
+  text-align: left;
+}
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--feature-bg);
+  border: 1px solid var(--feature-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-decoration: none !important;
+  color: var(--vp-c-text-1);
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 10px var(--feature-shadow);
+}
+
+.role-card:hover {
+  transform: translateY(-4px);
+  border-color: #ff6196;
+}
+
+.role-card-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.role-card-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #19105b;
+  margin-bottom: 0.5rem;
+}
+
+.dark .role-card-title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.role-card-desc {
+  font-size: 0.9rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.6;
+  flex-grow: 1;
+}
+
+.role-card-link {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ff6196;
+}
+
+/* --------------------------------------
+   PATH SECTION (Home page)
+--------------------------------------- */
+.path-section {
+  margin-top: 4rem;
+  padding: 3rem 2rem 4rem;
+  text-align: center;
+}
+
+.path-section .mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 2rem auto;
+}
+
+/* --------------------------------------
    DOCUMENTATION PAGE HEADERS
 --------------------------------------- */
 /* Primary Navy for Main Headers */

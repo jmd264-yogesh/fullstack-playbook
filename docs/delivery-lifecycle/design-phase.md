@@ -49,6 +49,30 @@ graph TD
 
 ---
 
+## Threat Modeling
+
+Every new service or major architectural change must go through a lightweight threat modeling pass before development starts — this is what "Security by Default / Shift Left" (see [Vision & Principles](/vision-principles)) means concretely at the design stage, not just in CI scans.
+
+**Process:**
+1. Using the Container-level architecture diagram already produced above, the Tech Lead and one InfoSec/Security-Champion reviewer walk through each trust boundary (e.g. Client → Gateway, Gateway → API, API → Database).
+2. For each boundary, apply **STRIDE**: could this interaction allow **S**poofing, **T**ampering, **R**epudiation, **I**nformation disclosure, **D**enial of service, or **E**levation of privilege?
+3. Findings and mitigations are logged in the design's ADR (or a short `THREAT-MODEL.md` alongside it) — not left as a verbal discussion.
+
+| Trust boundary example | Question to ask | Typical mitigation |
+|---|---|---|
+| Client → API Gateway | Can an unauthenticated request reach a protected endpoint? | AuthGuard on every route by default, not opt-in |
+| API → Database | Can user input reach a query unparameterized? | ORM/parameterized queries only — see [Security 101](/basics/security) |
+| Service → Service (async) | Can a malicious/duplicate event be replayed? | Idempotent consumers — see [Architecture Standards](/architecture/standards) |
+
+This output feeds directly into the [ARB review](/governance/approvals) for any change that requires one.
+
+## Exit Criteria
+- Architecture diagram and tech stack justification documented in an ADR.
+- Threat modeling pass completed and logged for any new service or major architectural change.
+- API contracts (REST/GraphQL schemas) agreed between frontend and backend so both can build in parallel.
+
+---
+
 ## Architectural Tool & Component Comparisons
 
 To guide architectural decisions during the design phase, teams must evaluate database and email component alternatives based on their trade-offs:

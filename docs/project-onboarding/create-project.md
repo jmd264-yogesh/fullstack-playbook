@@ -2,6 +2,8 @@
 
 To eliminate "Day 1" friction and ensure immediate compliance with enterprise standards, we utilize an **Internal Developer Portal (IDP)** (e.g., Backstage) for all project bootstrapping.
 
+> **Where this fits**: this page is Step 1 — how a repository gets created. Once the IDP has provisioned it, move to the [Project Setup Guide](/coding-standards/project-setup) (Step 2) to configure it, tracking progress with the [Project Start Checklist](/coding-standards/checklists/project-start). The [Project Kickoff Checklist](/templates/project-kickoff) is a condensed, one-page version of the same journey, handy for a kickoff meeting. [Templates](/project-onboarding/templates) documents the exact repo structure the Golden Path scaffolds for you.
+
 ## The "Golden Path" Concept
 A Golden Path is an opinionated, highly automated workflow that sets up a repository, CI/CD pipelines, and cloud infrastructure instantly. It represents the CoE's recommended way of building software.
 
