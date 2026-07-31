@@ -1,0 +1,236 @@
+---
+title: Tooling Matrix
+description: Tooling Matrix
+tags: ["tooling", "language"]
+version: 1.0
+order: 2
+---
+
+## Transformation Orchestration: The Tooling Matrix
+
+We have chosen SQL as our language for 80% of transformation workload. Now we must choose the vessel to
+deliver it. We compare the three most common execution frameworks:
+* dbt Core
+* Notebooks (PySpark/PySQL)
+* Stored Procedures
+
+We have established that SQL is our preferred transformation language. But SQL
+files sitting in a folder are not a platform - they are a liability. We
+need a framework to compile, test, and deploy that SQL safely.
+
+### Tooling comparison
+
+<ComparisonTable 
+  data={{
+    headers: [
+      "Feature",
+      "dbt Core",
+      "Notebooks (PySpark/SQL)",
+      "Stored Procedures (Legacy)"
+    ],
+    rows: [
+      {
+        header: "Developer Productivity",
+        cells: [
+          { content: "Accelerator. Handles DDL (Create/Update tables) automatically. Engineers focus purely on SELECT logic. Reusable macros eliminate repetitive code", status: "above" },
+          { content: "Exploratory. Excellent for ad-hoc analysis, but 'productionizing' requires writing heavy boilerplate code for error handling and connections", status: "meets" },
+          { content: "Slow. Requires writing manual DDL (CREATE TABLE IF NOT EXISTS, DROP, INSERT). Engineers spend 40% of time on plumbing, not business logic", status: "below" },
+        ]
+      },
+      {
+        header: "CI/CD & Code Quality",
+        cells: [
+          { content: "Native Integration. Supports 'Slim CI' (testing only modified models). Linters (SQLFluff) auto-validate code style/naming before merge", status: "above" },
+          { content: "Difficult. Hard to lint mixed code (Python + SQL + Markdown). CI pipelines often have to run the entire notebook to test a small change", status: "meets" },
+          { content: "Clunky. Database-side code is notoriously hard to integrate into Git pipelines. Deployments are often manual or require fragile script runners", status: "below" },
+        ]
+      },
+      {
+         header: "Naming & Standardization",
+         cells: [
+           { content: "Enforced. The file name is the table name (customer.sql -> customer table). Enforces consistent naming conventions via project configuration", status: "above" },
+           { content: "Wild West. Naming is arbitrary (variable names, temp views). Hard to enforce a 'standard' across 50 different notebooks", status: "below" },
+           { content: "Manual. Relies entirely on developer discipline. Easy for 'Production' tables to be named 'test_table_v2' by accident", status: "below" }
+         ]
+      },
+      {
+        header: "Modularity (DRY Principle)",
+        cells: [
+          { content: "Native. Enables 'Functions for SQL'. Logic (e.g., clean_currency()) is written once as a Macro and applied across 100+ models. Fix a bug once, fix it everywhere", status: "above" },
+          { content: "Requires Discipline. Requires abstracting logic into external libraries. Notebooks themselves often encourage copy-pasting code blocks", status: "meets" },
+          { content: "Hard. Difficult to reuse logic without creating complex chains of dependencies. Often leads to thousands of lines of SQL in one file", status: "below" }
+        ]
+      },
+      {
+        header: "Complex interative & stateful Transformation",
+        cells: [
+          { content: "Limited. Optimised for declarative, set-based SQL. Procedural or iterative logic is awkward and harder to maintain when forced into dbt", status: "below" },
+          { content: "Good fit. Native support for procedural logic and state, but requires discipline to stay modular and production-ready", status: "above" },
+          { content: "Possible but risky. Procedural logic quickly becomes tightly coupled, opaque, and hard to test or refactor", status: "below" }
+        ]
+      },
+      {
+        header: "Real-time Transformation",
+        cells: [
+          { content: "Not designed for real-time. Batch-first; “near real-time” relies on frequent runs with higher cost and complexity", status: "below" },
+          { content: "Best fit. Supports event-driven and streaming patterns, with added operational overhead", status: "above" },
+          { content: "Fragile at scale. Prone to locking, contention, and poor observability", status: "below" }
+        ]
+      },
+      {
+        header: "Testing & Data Quality",
+        cells: [
+          { content: "Built-in. Tests are simple configurations (unique, not_null). Data quality is validated BEFORE the data hits the dashboard", status: "above" },
+          { content: "Manual. Requires writing explicit assertions or integrating complex libraries (e.g., Great Expectations). Often skipped", status: "meets" },
+          { content: "Non-Existent. Requires writing complex boilerplate code to assert data quality. Rarely implemented in practice", status: "below" }
+        ]
+      },
+      {
+        header: "Documentation",
+        cells: [
+          { content: "Auto Generated. Generates a visual DAG (Lineage Graph) and data dictionary automatically from the code. Always up to date", status: "above" },
+          { content: "Manual. Relies on Markdown cells that quickly go stale and become disconnected from the actual code", status: "below" },
+          { content: "Black Box. Lineage is hidden inside code blocks. Impossible to visualize dependencies without expensive 3rd party parsers", status: "below" }
+        ]
+      }
+    ]
+  }} 
+/>
+
+While Notebooks are excellent for Data Science & Ingestion, and Stored
+Procedures were the standard of the last decade, **dbt** is the 
+framework that treats **\"Data as Software.\"**
+
+### Platform Support for dbt Core
+
+> **Updated March 2026:** All three platforms now offer native dbt integration. Fabric launched a native dbt job in ADF (Public Preview, Dec 2025). Snowflake reached GA for dbt Projects on Snowflake (Nov 2025). Databricks continues to mature its first-class dbt task in Lakeflow Jobs.
+
+<ComparisonTable
+  data={{
+    headers: [
+      "Capability",
+      "Fabric",
+      "Databricks",
+      "Snowflake"
+    ],
+    rows: [
+      {
+        header: "Adapter Maturity",
+        cells: [
+          { content: "dbt-fabric is a Trusted adapter, now Microsoft-maintained. Native dbt job in Fabric Data Factory bundles dbt Core v1.9 with runtime v1.0. Supports Fabric Warehouse, Azure SQL, PostgreSQL, and Snowflake adapters", status: "above" },
+          { content: "dbt-databricks is a Trusted adapter, Databricks-maintained. Production-grade, tightly integrated with Unity Catalog, Delta Lake, and Photon engine", status: "above" },
+          { content: "dbt-snowflake is a Trusted adapter, dbt Labs-maintained. Most mature, widest community adoption. Snowflake bundles its own dbt engine with version pinning support (1.9+, 1.10+)", status: "above" }
+        ]
+      },
+      {
+        header: "Incremental Models",
+        cells: [
+          { content: "merge (default since v1.9.7), append, delete+insert, and microbatch strategies supported. Requires proper primary keys and unique constraints for incremental builds", status: "above" },
+          { content: "Full support. merge (default via Delta), append, delete+insert, insert_overwrite, and microbatch strategies. Native Delta Lake merge for efficient upserts", status: "above" },
+          { content: "Full support. merge, append, delete+insert, and microbatch strategies. Snowflake's MPP engine handles large incremental merges efficiently", status: "above" }
+        ]
+      },
+      {
+        header: "Materializations",
+        cells: [
+          { content: "Table (default), view, table clone, seeds, snapshots. Ephemeral models (CTEs) are NOT supported due to T-SQL limitations. No dynamic tables", status: "meets" },
+          { content: "Table, view, incremental, ephemeral, snapshot, seed. Streaming tables and materialized views via Databricks-specific materializations. Iceberg table support since v1.9.0", status: "above" },
+          { content: "All standard materializations: table, view, incremental, ephemeral, snapshot, seed. Dynamic tables provide native incremental refresh without dbt scheduling", status: "above" }
+        ]
+      },
+      {
+        header: "CI/CD Integration",
+        cells: [
+          { content: "GitHub integration for connecting dbt projects to Fabric workspaces. Git-based workflow supported natively within Fabric Data Factory", status: "above" },
+          { content: "Git folders integration for source control. Databricks Asset Bundles for deployment automation. dbt tasks combinable with other workflow tasks (Auto Loader, notebooks)", status: "above" },
+          { content: "Snowflake CLI (snow dbt deploy, snow dbt execute) enables CI/CD pipeline integration. Git-connected Workspaces for development in Snowsight", status: "above" }
+        ]
+      },
+      {
+        header: "Catalog / Governance",
+        cells: [
+          { content: "Runs within Fabric's enterprise-grade security and governance. Visual lineage, run monitoring, and test results visible in the Fabric workspace alongside pipelines and reports", status: "above" },
+          { content: "Full Unity Catalog integration with 3-level namespace (catalog/schema/relations). dbt models registered as managed tables with lineage, access control, and data discovery", status: "above" },
+          { content: "dbt projects are schema-level objects with full RBAC. Execution history tracked via DBT_PROJECT_EXECUTION_HISTORY. Governance via Snowflake's native RBAC and Horizon catalog", status: "above" }
+        ]
+      },
+      {
+        header: "Cost Model",
+        cells: [
+          { content: "Consumption rate: 2 CU-hours per dbt job execution. Billed for entire execution duration (compilation + dependency resolution + model execution). No build caching - every run compiles fresh", status: "meets" },
+          { content: "DBU-based consumption. Serverless SQL warehouses (default since June 2025) auto-scale and start in seconds - cost-efficient for dbt. Non-serverless: separate DBU + cloud compute charges", status: "above" },
+          { content: "Standard credit-based consumption. dbt runs execute on a virtual warehouse with auto-suspend. No additional surcharge for the dbt Projects feature itself", status: "above" }
+        ]
+      },
+      {
+        header: "Native Orchestration",
+        cells: [
+          { content: "Native dbt job item in Fabric Data Factory (Public Preview). Built-in scheduling, monitoring, and no-code onboarding. No external orchestrator needed for dbt runs within Fabric", status: "above" },
+          { content: "First-class dbt task type in Lakeflow Jobs (GA). Schedule dbt runs alongside notebooks and ingestion in a single DAG. Supports time-based scheduling and data-arrival triggers. Serverless compute by default", status: "above" },
+          { content: "Native dbt Projects on Snowflake (GA since Nov 2025). Schedule via Snowflake Tasks. Run, test, and manage dbt projects entirely within Snowsight. DAG visualisation alongside source code", status: "above" }
+        ]
+      },
+      {
+        header: "Known Limitations",
+        cells: [
+          { content: "Public Preview. No build caching. 1 MB output limit per job. Ephemeral materialisation unsupported (T-SQL limitation). Must use tsql-utils instead of dbt-utils. No grants with auto-provisioning", status: "below" },
+          { content: "Python models require a separate cluster. Materialisation v2 is experimental (atomicity concerns). dbt platform task for dbt Cloud orchestration is in Beta", status: "meets" },
+          { content: "No env_var support (use --vars instead). No concurrent execution of the same dbt project object. No serverless tasks - must use user-managed warehouses. 20,000 file limit per project. dbt docs serve not supported", status: "meets" }
+        ]
+      }
+    ]
+  }}
+/>
+
+### dbt is the "Terraform" for Data Transformation
+Just as Terraform became the industry standard for Infrastructure as Code (IaC) by abstracting away the complexities of AWS, Azure, and GCP, dbt has become the standard for Transformation as Code.
+
+While modern data platforms (Snowflake, Databricks, BigQuery) offer built-in transformation tools, relying on them creates technical debt and vendor lock-in. dbt solves this by decoupling the business logic from the execution engine. It significantly reduces coupling to a specific execution engine by standardising transformation logic, while still allowing engine-specific optimisations when needed
+
+We prefer **dbt** as the JMAN standard for three critical reasons:
+
+**Productivity** In traditional Stored Procedures, an engineer spends
+40% of their time writing \"Plumbing Code\" (CREATE TABLE, DROP TABLE,
+MERGE INTO). dbt abstracts this away entirely. Our engineers write
+simple SELECT statements, and dbt handles the materialization (Table vs.
+View vs. Incremental) automatically. This allows us to **deliver
+features faster**.
+
+**Enforcing the \"JMAN Standard\" (Naming)** One of the most complex
+parts of scaling a team to 700 people is getting everyone to name things
+the same way. dbt solves this architecturally.
+
+-   **Configuration over Discipline:** We configure naming patterns in
+    the dbt\_project.yml file.
+-   **File-Based Identity:** The file name dictates the database object
+    name. A developer cannot accidentally name a table
+    Customer\_Final\_V2 if the file is named dim\_customer.sql. The tool
+    enforces the standard for us.
+
+**Automated Quality (CI/CD)** dbt allows us to validate quality *before*
+code is merged.
+
+-   **Linting:** We use SQLFluff in our pipeline to automatically check
+    that every SQL line follows JMAN\'s formatting standards.
+-   **Testing:** We run automated tests on every Pull Request. If a
+    developer breaks a naming convention or introduces a duplicate
+    primary key, the **pipeline fails immediately**. This prevents \"bad
+    code\" from ever reaching the production environment.
+
+### Performance impact
+
+A common misconception is that dbt is slower than Spark because it generates text-based SQL. In reality, dbt
+leverages **Push-Down optimisation**. It compiles your logic into highly
+optimised SQL that runs directly on the Warehouse\'s MPP engine (e.g.,
+Databricks Photon or Snowflake).
+
+For 90% of high-volume transformation use cases (Joins, Aggregations),
+this architecture is **more performant and cost-efficient** than
+spinning up separate Spark clusters, as it avoids the overhead of data
+serialisation and network transfer. We reserve Notebooks only for
+workloads where SQL execution plans hit their architectural limits
+(e.g., complex iterative algorithms).
+
+We use **Notebooks** for Data Science and ingestion. We
+use **SQL** for Transformation. We use **dbt** to govern, test, and
+document that SQL.

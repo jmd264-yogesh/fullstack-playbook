@@ -1,0 +1,102 @@
+---
+title: "General Security Checklist"
+description: "General full-stack application security baseline checklist for frontend, backend, auth, data, infra, and CI/CD."
+order: 1
+version: 1.0
+disabled: false
+---
+
+## General Security Checklist
+
+This is the baseline security posture any full-stack application should meet, independent of this specific playbook. Use it to spot-check new projects or fill gaps the playbook doesn't yet cover explicitly (e.g. threat modeling, CSRF, clickjacking, file uploads, business-logic abuse).
+
+| Core Sections | Security Checkpoints | OWASP Mappings |
+| :---: | :---: | :---: |
+| **8** | **8 layers** | **10 controls** |
+
+## 2.1 Frontend / Client
+
+- **XSS:** never render untrusted HTML directly (avoid `dangerouslySetInnerHTML`, `v-html`, `innerHTML`); rely on framework auto-escaping; sanitize any rich-text/user-generated HTML with a vetted library (DOMPurify) if raw HTML must be rendered.
+- **Content Security Policy:** strict CSP header disallowing inline scripts/eval; nonce or hash-based script allowlisting.
+- **Clickjacking:** `X-Frame-Options: DENY` or CSP `frame-ancestors 'none'`.
+- **CSRF:** SameSite cookies (`Lax`/`Strict`) plus CSRF tokens for state-changing form submissions if cookies are used for auth.
+- **Secrets in the client:** never ship API keys, signing secrets, or internal URLs into client-side bundles or public env vars (e.g. no secret in `NEXT_PUBLIC_*` / `VITE_*`).
+- **Dependency hygiene:** audit npm packages for known vulnerabilities and unmaintained/typosquatted packages; lockfiles committed.
+- **Sensitive data exposure:** don't log tokens/PII to browser console; disable source maps in production or restrict access to them.
+
+## 2.2 Backend / API
+
+- **Input validation everywhere:** validate type, length, format, and range server-side even if the client already validates — client-side validation is UX only, never a security control.
+- **Injection prevention:** parameterized queries/ORMs for SQL; avoid `eval`/dynamic code execution; escape shell arguments if shelling out; validate/allowlist for NoSQL query operators to prevent NoSQL injection.
+- **Authorization at every layer:** re-check permissions on every request server-side — never rely on a hidden UI element or a client-supplied role/ID.
+- **IDOR (Insecure Direct Object Reference):** verify the requesting user owns/can access the specific resource ID, not just that they're authenticated.
+- **Mass assignment:** use DTOs/allowlists for what fields a client can set — never blindly bind request bodies to DB models (a user shouldn't be able to POST `{"role":"admin"}`).
+- **File uploads:** validate file type/size server-side (not by trusting the extension or MIME header), store outside the web root or in object storage, scan for malware, randomize stored filenames, disable execution in the upload directory.
+- **SSRF:** if the server fetches user-supplied URLs, allowlist destinations and block internal/link-local IP ranges (169.254.x.x, 10.x, 192.168.x, cloud metadata endpoints).
+- **Error handling:** never leak stack traces, SQL errors, or internal paths to clients in production; log details server-side only.
+- **Rate limiting & abuse controls:** throttle auth, password-reset, and other sensitive endpoints separately from general API limits.
+- **Business-logic abuse:** think beyond OWASP's technical list — check for race conditions in payment/coupon flows, price manipulation, workflow bypass (e.g. skipping a required approval step via direct API call).
+
+## 2.3 Authentication & Session Management
+
+- Prefer delegating to a proven IdP (OAuth2/OIDC via Azure AD, Okta, Auth0, Cognito) over building custom auth.
+- **Passwords:** bcrypt/argon2/scrypt hashing with per-user salt; enforce reasonable minimum length/complexity; check against known-breached password lists (e.g. HaveIBeenPwned range API) where feasible.
+- **MFA:** for privileged accounts/admin panels at minimum; ideally offered to all users.
+- **Session/token design:** short-lived access tokens, refresh-token rotation, revoke-on-logout, revoke-all-on-password-change.
+- **Secure cookie flags:** `HttpOnly`, `Secure`, `SameSite` for any session cookie.
+- **Account-recovery flows:** are a common weak point: rate-limit reset requests, expire reset tokens quickly (minutes, not days), never reveal whether an email/username exists via response timing or messaging.
+- Lock out or exponentially back off after repeated failed logins; alert on impossible-travel / anomalous login patterns for sensitive accounts.
+
+## 2.4 Data & Database
+
+- Encrypt data at rest (managed disk/DB encryption) and in transit (TLS 1.2+ everywhere, HSTS enabled).
+- **Principle of Least Privilege:** for DB accounts — app runtime user should never hold DDL rights or superuser.
+- Separate read/write credentials where practical; separate reporting/analytics access from transactional DB.
+- **PII/sensitive fields:** classify data, minimize what's collected/retained, encrypt or tokenize highly sensitive fields (SSNs, card numbers — or better, don't store card data at all, use a PCI-compliant processor).
+- **Backups:** encrypted, access-restricted, and periodically tested for restore — a backup nobody can restore isn't a control.
+- **Data residency & retention:** honor GDPR/CCPA data-subject requests (export/delete); define and enforce retention/deletion schedules instead of keeping data indefinitely.
+
+## 2.5 Infrastructure, Containers & Network
+
+- **Infrastructure as Code:** (Terraform/CloudFormation/Pulumi) — no manual production changes; all changes reviewed via PR.
+- **Containers:** run as non-root, minimal base images (distroless/Alpine), read-only root filesystem where possible, image scanning in CI (Trivy/Grype/ECR scanning) blocking on critical CVEs.
+- **Network segmentation:** private subnets for databases/internal services; only load balancers/API gateways internet-facing; security groups scoped to least privilege, not `0.0.0.0/0`.
+- **WAF + DDoS protection:** in front of public endpoints; managed OWASP ruleset as a baseline.
+- **Secrets:** never in environment files committed to git, container images, or CI logs — injected at runtime from a vault/secrets manager, scoped per-environment.
+- **Patch management:** define and track SLAs for critical/high vulnerabilities (e.g. 48h critical / 14d high) across both application dependencies and base OS/images.
+- Just-in-time, logged, time-boxed access to production — no standing SSH/DB credentials for engineers.
+
+## 2.6 CI/CD & Supply Chain
+
+- **SAST:** (SonarQube, Semgrep, CodeQL) on every PR, blocking on high/critical findings.
+- **SCA / dependency scanning:** (Snyk, Dependabot, `npm audit`/`pip-audit`) on a schedule and every build; don't allow audit suppression flags in CI.
+- **Secret scanning:** (GitLeaks, TruffleHog) as a pre-commit hook and CI gate.
+- **Container/image scanning:** before pushing to a registry and again before deploy.
+- **Signed commits/artifacts:** and SBOM (Software Bill of Materials) generation for traceability of what's actually deployed.
+- **Least-privilege CI credentials:** pipeline service accounts scoped to only what that pipeline needs, rotated regularly.
+- **Branch protection:** required reviews, no direct pushes to main, mandatory status checks including security gates.
+
+## 2.7 Observability, Incident Response & Compliance
+
+- Immutable audit logs for sensitive actions (who/what/when), shipped to a system engineers can't tamper with from the app itself.
+- Centralized logging/alerting for auth failures, privilege escalation attempts, and anomalous traffic patterns.
+- **Documented incident-response plan:** who's paged, how a breach is triaged/contained/disclosed, and legal/compliance notification obligations (GDPR 72-hour breach notification, etc.).
+- `security.txt` and a responsible-disclosure process for external researchers.
+- Periodic penetration testing / DAST scans, especially before major releases; track remediation SLAs.
+- Map applicable compliance regimes early (GDPR, SOC2, HIPAA, PCI-DSS depending on data handled) — retrofitting compliance is far more expensive than designing for it upfront.
+- **Threat modeling:** during design, not after: identify trust boundaries, data flows, and abuse cases (e.g. STRIDE) before writing code for anything handling sensitive data or money.
+
+## 2.8 OWASP Top 10 (2021) Quick Reference
+
+| # | Category | Core Mitigation |
+| :---: | :--- | :--- |
+| **A01** | Broken Access Control | Server-side authorization on every request; deny by default; no client-trusted role/ID checks |
+| **A02** | Cryptographic Failures | TLS everywhere, strong hashing for passwords, encrypt sensitive data at rest, no home-grown crypto |
+| **A03** | Injection | Parameterized queries/ORMs, strict input validation, output encoding |
+| **A04** | Insecure Design | Threat modeling at design time; abuse-case thinking, not just happy-path requirements |
+| **A05** | Security Misconfiguration | Hardened defaults, no debug mode in prod, security headers (Helmet/CSP), least-privilege configs |
+| **A06** | Vulnerable & Outdated Components | SCA scanning, patch SLAs, remove unused dependencies |
+| **A07** | Identification & Authentication Failures | MFA, rate-limited login, secure session/token handling, no custom crypto for auth |
+| **A08** | Software & Data Integrity Failures | Signed artifacts/SBOM, verified CI/CD pipeline integrity, no untrusted deserialization |
+| **A09** | Security Logging & Monitoring Failures | Immutable audit logs, alerting on auth anomalies, tested incident-response plan |
+| **A10** | Server-Side Request Forgery (SSRF) | Allowlist outbound destinations for server-initiated requests; block internal/metadata IP ranges |

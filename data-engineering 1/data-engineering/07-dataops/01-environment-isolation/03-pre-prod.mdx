@@ -1,0 +1,88 @@
+---
+title: Pre-Production
+description: Overview of Pre-Production
+order: 3
+version: 1.0
+maturity: Advanced
+---
+
+## Pre-Prod
+
+Pre-Prod is an **ephemeral** environment created immediately before a Production release. It mirrors Production data to validate that changes will not cause regressions.
+
+#### Purpose
+
+While UAT validates business logic, Pre-Prod validates technical integration:
+
+* Row Count Analysis: Confirm no unexpected data loss (e.g., accidentally filtering out 50% of records)
+* KPI Variance Checks: Verify that key metrics remain within acceptable thresholds (e.g., Revenue variance under 1%)
+* Schema Compatibility: Ensure downstream dependencies are not broken
+
+### Scope of execution
+
+The continuous deployment (CD) process runs the latest code end-to-end against the mirrored production data.
+
+-   **Starting Point:** Pre-Prod pipelines begin from the Production Raw Layer, not from source extraction. This avoids API rate limits and prevents duplicate data pulls.
+-   **Exclusion:** Ingestion pipelines are excluded unless the release specifically targets ingestion logic.
+
+### Automated Quality Gates
+If regression tests detect variances beyond defined thresholds, the pipeline fails automatically and blocks the release. This prevents known issues from reaching Production.
+
+### Handling large data volumes
+
+A modern data platform provides Zero-copy cloning, which mirrors data without a physical copy. Leveraging zero-copy cloning speeds up
+deployment.
+
+### Deployment strategy
+
+<Callout type="question">
+**Key decision:** Should Production re-run pipelines from validated code, or swap in Pre-Prod's already-computed outputs directly?
+</Callout>
+
+<SideBySideComparison
+    leftTitle="Option A — Code Promotion"
+    rightTitle="Option B — Blue-Green Data Swap"
+    leftColor="blue"
+    rightColor="purple"
+    leftItems={[
+        { text: "Code is deployed and tested on Pre-Prod." },
+        { text: "If tests pass, the same code is promoted to Production." },
+        { text: "Production pipelines re-run to generate final outputs." },
+        { text: "Best for: teams that prioritise safety over deployment speed." },
+        { text: "Trade-off: slower due to re-computation in Production." }
+    ]}
+    rightItems={[
+        { text: "Code runs on a Pre-Prod clone of Production." },
+        { text: "If validation passes, the Pre-Prod schema is atomically swapped to become Production." },
+        { text: "No re-computation required — data is already validated and ready." },
+        { text: "Best for: platforms with zero-copy cloning and atomic swap support." },
+        { text: "Trade-off: requires mature platform capabilities to execute safely." }
+    ]}
+/>
+
+| | Option A — Code Promotion | Option B — Blue-Green Swap |
+|---|---|---|
+| Maturity | <LevelBadge level="Standard" /> | <LevelBadge level="Advanced" /> |
+| Deployment speed | Slower (re-computation in prod) | Faster (no re-computation) |
+| Safety | Higher | Requires platform guardrails |
+| Platform requirement | Any | Zero-copy cloning + atomic swaps |
+| Re-computation in prod | Yes | No |
+
+### Teardown - Cleanup
+
+After deployment completes (success or failure), the Pre-Prod environment is automatically dropped. This maintains catalogue hygiene and prevents stale environments from accumulating.
+
+### FAQ
+
+##### What is the difference between CI & Pre-Prod?
+* CI – A process, not an environment. CI runs automatically when a Pull Request is opened. It validates code quality through linting, unit tests, vulnerability scans, and build checks. CI answers: "Is this code safe to merge?"
+* Pre-Prod – An ephemeral environment spun up after CI passes, specifically for release validation. It mirrors Production data (via zero-copy cloning) and runs end-to-end pipelines to validate that numbers match. Pre-Prod answers: "Will this release break Production?"
+
+| Aspect | CI (Continuous Integration) | Pre-Prod |
+|--------|----------------------------|----------|
+| What is it? | Process (automated checks) | Environment (ephemeral infrastructure) |
+| When does it run? | On every PR/commit | Before Production release |
+| What does it test? | Code correctness  syntax, unit tests, security vulnerabilities | Data correctness  row counts, KPI variance, schema compatibility |
+| Data used | Mock, synthetic, or none | Cloned Production data (zero-copy) |
+| Duration | Minutes | Minutes to hours depending on pipeline scope |
+| Outcome | PR is mergeable | Release is deployable |

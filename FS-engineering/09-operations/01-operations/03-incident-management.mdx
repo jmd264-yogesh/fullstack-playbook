@@ -1,0 +1,23 @@
+---
+title: "Reliability & Incident Management"
+description: "- SEV-1 (Critical): Total system outage or severe data breach. (SLA: 15 mins)."
+order: 3
+version: 1.0
+disabled: false
+---
+
+## Reliability & Incident Management
+
+## 1. Incident Severity Matrix
+- **SEV-1 (Critical)**: Total system outage or severe data breach. (SLA: 15 mins).
+- **SEV-2 (High)**: Core functionality broken for many users. (SLA: 30 mins).
+- **SEV-3 (Medium)**: Non-core feature broken, workaround exists. (SLA: Next working day).
+
+## 2. The On-Call Process
+- Handled via PagerDuty/Opsgenie.
+- Alerts must be actionable. "CPU is at 80%" is not an alert; autoscaling handles that. "Payment Success Rate dropped below 95%" is an alert.
+
+## 3. Blameless Postmortems
+After every SEV-1 or SEV-2 incident, a postmortem document is required.
+- **Rule**: Postmortems are strictly **blameless**. We do not ask "Who broke it?", we ask "Why did the system allow a human to break it?"
+- Must result in actionable Jira tickets (e.g., adding a new E2E test, tweaking an alert threshold) to prevent recurrence.

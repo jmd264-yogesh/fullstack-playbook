@@ -1,0 +1,33 @@
+---
+title: "Delivery & Productivity Metrics"
+description: "While DORA measures operational health, we need to measure how effectively the team delivers business value."
+order: 1
+version: 1.0
+disabled: false
+---
+
+## Delivery & Productivity Metrics
+
+While DORA measures operational health, we need to measure how effectively the team delivers business value. We use metrics aligned with the **SPACE Framework** (Satisfaction, Performance, Activity, Communication, Efficiency).
+
+## 1. Sprint Predictability
+- **Definition**: (Completed Story Points / Committed Story Points) * 100.
+- **Target**: 85% - 100%.
+- **Analysis**: 
+  - *Consistently < 85%*: The team is over-committing, suffering from scope creep, or facing hidden technical debt.
+  - *Consistently > 100%*: The team is under-committing or sandbagging.
+
+## 2. Cycle Time (Lead Time for Work)
+- **Definition**: The time elapsed from when a Jira ticket moves to "In Progress" until it is moved to "Done".
+- **Target**: Less than 3 days per User Story.
+- **Analysis**: Long cycle times usually highlight bottlenecks in the PR review phase, QA bottlenecks, or User Stories that were not broken down sufficiently (Violating the 'Small' INVEST criteria).
+
+## 3. PR Review Time
+- **Definition**: Time from when a PR is opened to when it is merged.
+- **Target**: Less than 24 hours.
+- **Analysis**: Fast PR reviews are the hallmark of a healthy engineering culture. Long PR times lead to merge conflicts and context switching.
+
+## Metric Anti-Patterns (What we do NOT measure)
+- ❌ **Lines of Code (LOC) written**: Incentivizes bloated, over-engineered code.
+- ❌ **Number of Commits**: Incentivizes artificial commit padding.
+- ❌ **Comparing Velocity between teams**: Story points are relative to the specific team. Team A's "5 points" is not equivalent to Team B's "5 points". Velocity is strictly for internal capacity planning.

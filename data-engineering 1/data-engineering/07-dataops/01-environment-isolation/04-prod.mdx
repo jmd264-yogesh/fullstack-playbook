@@ -1,0 +1,143 @@
+---
+title: Production
+description: Overview of Production
+order: 4
+version: 1.0
+maturity: Foundation
+---
+
+## Production
+
+Production is the live system. It is the single source of truth powering executive dashboards, financial reporting, operational analytics, and ML models.
+
+### Access control
+
+| Access Type | Permission | Notes |
+| :--- | :--- | :--- |
+| **Engineers** | Read-Only | Default state. Granted via RBAC groups based on role and data classification. |
+| **Orchestrator** | Write | The Service Principal (e.g., Data Factory, Airflow) that executes scheduled pipelines. |
+| **Break-Glass Admin** | **Temporary Write** | Elevated access for P1 incidents only. Time-limited (e.g., 4 hours) and fully audit-logged. |
+
+### Break-Glass Procedure
+
+In critical outages requiring manual intervention:
+
+1. A senior engineer requests temporary elevated access
+2. Access is granted for a defined time window (e.g., 2 hours)
+3. All actions are logged to an immutable audit trail
+4. Access automatically revokes after the window expires
+
+### Decision Framework
+
+Start with two questions:
+
+1. **What's the cost of Production errors?** If the business runs daily operations on this data, errors are expensive. If it's exploratory analytics, errors are recoverable.
+2. **What's the release cadence?** Frequent releases need robust validation. Quarterly releases can tolerate more manual checks.
+
+#### Scorecard
+
+Score your project across four dimensions. Each dimension is scored 1-3, with higher scores indicating greater need for robust environments.
+
+| Business Dimension | Low Impact (1 point) | Medium Impact (2 points) | High Impact (3 points) |
+| :--- | :--- | :--- | :--- |
+| **Business Criticality** | Errors cause inconvenience; business continues normally | Errors cause rework or delayed decisions; workarounds exist | Errors halt operations; business cannot function without correct data |
+| **Operational Dependency** | I read this to understand what happened yesterday. | I use this to plan my week. (e.g., Inventory forecasting). | I cannot perform my job right now without this. (e.g., Fraud checks, Live routing). |
+| **Data Consumer Impact** | Internal team only (\<10 users) | Cross-functional teams (10-50 users) | **Enterprise / External.** 100+ Users, C-Suite, or embedded in Client-Facing Apps. |
+| **Data Freshness** | 24h latency is acceptable. | Daily refresh expected | Intraday refresh |
+
+#### Verdict
+
+| Total Score | Tier | Environments | Description |
+|-------------|------|--------------|-------------|
+| 4-6 | <LevelBadge level="Standard" /> | Dev + Prod | Lightweight. Dev doubles as UAT with explicit client agreement. Acceptable for proof-of-concepts or exploratory workstreams. |
+| 7-9 | <LevelBadge level="Foundation" /> | Dev + UAT + Prod | Standard. Dedicated UAT for business sign-off before Production. Default for most client engagements. |
+| 10-12 | <LevelBadge level="Advanced" /> | Dev + UAT + Pre-Prod + Prod | Mission-critical. Ephemeral Pre-Prod mirrors Production for regression testing. Required when cost of error exceeds cost of infrastructure. |
+
+#### Calculator
+
+<EnvDecisionCalculator />
+
+#### Override Rules
+
+Regardless of score, escalate to the next tier if any of the following apply:
+
+- **Regulatory or compliance data** → Minimum <LevelBadge level="Foundation" />
+- **Financial reporting or revenue recognition** → Minimum <LevelBadge level="Foundation" />
+- **External client-facing data product** → <LevelBadge level="Advanced" />
+- **Client explicitly requests regression testing** → Gold <LevelBadge level="Advanced" />
+
+#### Summary
+
+<Callout type="info">
+  Increase environments as business risk increases. Do not add environments without clear purpose - isolation should balance risk mitigation with operational complexity. Production stability is prioritised over developer convenience.
+</Callout>
+
+| Environment | When Required | When Optional |
+|-------------|---------------|---------------|
+| **Development** | Always | Never - engineers need a place to build |
+| **Production** | Always | Never - business users need stable access |
+| **UAT** | Standard for all client projects | May combine with Dev for short proof-of-concepts (\<4–6 weeks) with explicit client agreement |
+| **Pre-Prod** | When cost of a Production error is high (financial reporting, operational dashboards, regulatory data) | Exploratory or low-stakes analytics where errors are tolerable |
+
+#### Environment Patterns
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+  <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 bg-white">
+    <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1">MVP</div>
+    <div className="font-semibold text-slate-800 dark:text-slate-100 mb-3">Dev + Prod</div>
+    <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Use when</div>
+    <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1 mb-3 list-disc list-inside">
+      <li>Scope is limited</li>
+      <li>Data is non-critical</li>
+      <li>No regulatory reporting</li>
+      <li>Short delivery cycle</li>
+    </ul>
+    <div className="flex gap-2 flex-wrap text-xs">
+      <span className="rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5">Risk: Low</span>
+      <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5">Overhead: Minimal</span>
+    </div>
+  </div>
+
+  <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 bg-white">
+    <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1">Standard</div>
+    <div className="font-semibold text-slate-800 dark:text-slate-100 mb-3">Dev + UAT + Prod</div>
+    <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Use when</div>
+    <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1 mb-3 list-disc list-inside">
+      <li>Business users must validate</li>
+      <li>Dashboards affect decisions</li>
+      <li>Multiple contributors exist</li>
+      <li>Controlled promotion required</li>
+    </ul>
+    <div className="flex gap-2 flex-wrap text-xs">
+      <span className="rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5">Risk: Moderate</span>
+      <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5">Overhead: Balanced</span>
+    </div>
+  </div>
+
+  <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 bg-white">
+    <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1">Mission-Critical</div>
+    <div className="font-semibold text-slate-800 dark:text-slate-100 mb-3">Dev + UAT + Pre-Prod + Prod</div>
+    <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Use when</div>
+    <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1 mb-3 list-disc list-inside">
+      <li>Errors have financial or regulatory impact</li>
+      <li>SLAs or operational dashboards exist</li>
+      <li>Data feeds external systems</li>
+      <li>High availability is mandatory</li>
+    </ul>
+    <div className="flex gap-2 flex-wrap text-xs">
+      <span className="rounded-full bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5">Risk: High</span>
+      <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5">Overhead: Higher</span>
+    </div>
+  </div>
+</div>
+
+#### Production Principles
+
+Regardless of environment count, Production must:
+
+- **Deployment-only** - no manual development activity directly in Production
+- **Restricted write access** - direct data writes require the orchestrator service principal or break-glass
+- **CI/CD promotion** - all changes deployed via automated pipeline, never ad-hoc
+- **Audit logs** - immutable change history for every deployment and access event
+- **Monitoring and alerting** - pipeline health, data freshness, and SLA breach detection enabled
+- **Least-privilege access** - minimum permissions required; no standing write access for engineers

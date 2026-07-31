@@ -125,6 +125,8 @@
 
 ## 8. Optional — Before Public Release
 
+> If this is the service's first production launch, most of the infra/reliability side of "public release" is covered by the [Production Readiness Checklist](/templates/production-readiness) instead — the items below are the feature/code-level counterparts specific to this checklist.
+
 - [ ] Structured logging implemented on backend (JSON format)
 - [ ] Global error handler returns consistent error shapes — no stack traces to client in production
 - [ ] Frontend error tracking set up (Sentry or equivalent)

@@ -1,0 +1,400 @@
+---
+title: Dimensional Modelling
+description: Overview of Dimensional Modelling
+order: 2
+version: 1.0
+maturity: Standard
+---
+
+## Dimensional Modelling
+
+### Why Dimensional Modelling?
+
+#### The Problem with Operational Reporting
+
+Source systems are designed for transactions, not questions.
+
+An ERP captures invoices perfectly-every line item, every tax code, every posting date. But it's optimised for *recording* transactions, not *analysing* them. To answer "what's our revenue by customer cohort and product line for the last three years?", you need to join invoices to customers to products to dates, filter appropriately, handle currency conversion, exclude credits, and aggregate correctly.
+
+This is possible, but it's hard. The schema reflects operational needs (normalised for data integrity) rather than analytical needs (denormalised for query simplicity). Business users can't self-serve. Every question requires SQL expertise.
+
+#### Why Star Schema Wins for Analytics
+
+Dimensional modelling-specifically the star schema-solves this by restructuring data around how questions are asked.
+
+<div className="not-prose my-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div className="rounded-lg border-2 border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-900 overflow-hidden">
+    <div className="bg-blue-50 dark:bg-blue-950/30 px-4 py-3 border-b border-blue-200 dark:border-blue-800 flex items-center gap-2">
+      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0" />
+      <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Facts — What Happened</p>
+    </div>
+    <div className="p-4 space-y-3">
+      <p className="text-sm text-slate-600 dark:text-slate-400">Measurable business events with numeric values you aggregate.</p>
+      <ul className="space-y-1.5">
+        {["A sale happened", "An hour was worked", "A support ticket was raised"].map((item, i) => (
+          <li key={i} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />{item}
+          </li>
+        ))}
+      </ul>
+      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-wrap gap-1.5">
+          {["Revenue", "Quantity", "Hours", "Count"].map((tag, i) => (
+            <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-mono">{tag}</span>
+          ))}
+        </div>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Numeric measures · Aggregate with SUM, COUNT, AVG</p>
+      </div>
+    </div>
+  </div>
+
+  <div className="rounded-lg border-2 border-purple-200 dark:border-purple-800 bg-white dark:bg-slate-900 overflow-hidden">
+    <div className="bg-purple-50 dark:bg-purple-950/30 px-4 py-3 border-b border-purple-200 dark:border-purple-800 flex items-center gap-2">
+      <span className="w-2.5 h-2.5 rounded-full bg-purple-500 flex-shrink-0" />
+      <p className="text-sm font-semibold text-purple-800 dark:text-purple-300">Dimensions — The Context</p>
+    </div>
+    <div className="p-4 space-y-3">
+      <p className="text-sm text-slate-600 dark:text-slate-400">Descriptive attributes that let you slice, filter, and group facts.</p>
+      <ul className="space-y-1.5">
+        {["Who was the customer?", "What product was involved?", "When did it happen?", "Which region?"].map((item, i) => (
+          <li key={i} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 flex-shrink-0" />{item}
+          </li>
+        ))}
+      </ul>
+      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-wrap gap-1.5">
+          {["Customer", "Product", "Date", "Region"].map((tag, i) => (
+            <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-mono">{tag}</span>
+          ))}
+        </div>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Descriptive attributes · Filter and GROUP BY</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+The star schema is powerful because:
+
+| Benefit | Why it matters? |
+|---------|----------------|
+| **Intuitive structure** | Business users understand "sales by customer by month" without SQL expertise |
+| **Query performance** | Fewer joins, predictable patterns-query optimisers love star schemas |
+| **BI tool compatibility** | Power BI, Tableau, Looker are designed for this pattern |
+| **Metric consistency** | Calculations defined once in fact tables, not recreated per report |
+| **Self-serve enabled** | Drag-and-drop analytics becomes possible |
+
+#### Foundations
+
+This playbook assumes basic familiarity with dimensional modelling concepts. We focus on *why* and *how JMAN applies it*, not foundational education.
+
+For deeper learning on dimensional modelling fundamentals:
+- [The Data Warehouse Toolkit (Kimball)](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/) - The definitive guide
+- [Kimball Dimensional Modeling Techniques](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/) - Online reference
+
+### Core Concepts
+
+#### Facts: What Happened
+
+Fact tables capture measurable business events-the transactions, activities, and occurrences you want to analyse.
+
+| Characteristic | Description |
+|----------------|-------------|
+| **Grain** | Each row represents one event at a specific level of detail |
+| **Measures** | Numeric values you aggregate (revenue, hours, quantity) |
+| **Foreign keys** | Links to dimension tables for context |
+| **Typically large** | Millions to billions of rows |
+
+**Types of measures:**
+
+| Type | Description | Example | Aggregation |
+|------|-------------|---------|-------------|
+| **Additive** | Can be summed across all dimensions | Revenue, Quantity | SUM works everywhere |
+| **Semi-additive** | Can be summed across some dimensions | Account Balance | SUM across customers, not time (use snapshot) |
+| **Non-additive** | Cannot be summed | Ratios, Percentages | Must recalculate from components |
+
+**Example fact tables by business model:**
+
+| Business Model | Fact Table | Grain |
+|----------------|------------|-------|
+| SaaS | `fct_subscription_event` | One row per subscription change (new, renewal, churn, expansion) |
+| Professional Services | `fct_timesheet` | One row per fee-earner per day per project |
+| Retail | `fct_sales` | One row per line item per transaction |
+
+#### Dimensions: The Context
+
+Dimension tables provide the descriptive context for facts-the who, what, where, when, and why that make measures meaningful.
+
+| Characteristic | Description |
+|----------------|-------------|
+| **Attributes** | Descriptive text fields for filtering and grouping |
+| **Hierarchies** | Drill paths (Country → Region → City) |
+| **Surrogate keys** | Artificial keys for joining to facts |
+| **Relatively small** | Thousands to millions of rows |
+
+**Common dimension types:**
+
+| Dimension | Purpose | Key Attributes |
+|-----------|---------|----------------|
+| **Customer** | Who bought/used | Name, Segment, Industry, Geography, Cohort |
+| **Product** | What was bought/used | Name, Category, Family, Revenue Type |
+| **Date** | When it happened | Date, Month, Quarter, Year, Fiscal Period |
+| **Employee/Fee-Earner** | Who delivered | Name, Role, Grade, Department, Manager |
+| **Geography** | Where | Country, Region, Territory, Postcode |
+
+#### Grain: The Most Important Decision
+
+Grain defines what one row in a fact table represents. It is the single most important design decision and must be established before any other modelling work.
+
+**Getting grain wrong is expensive.** Too coarse, and you can't answer detailed questions. Too fine, and performance suffers with no analytical benefit.
+
+| Grain Level | Example | Trade-off |
+|-------------|---------|-----------|
+| **Too coarse** | One row per customer per month | Can't see individual transactions, daily patterns |
+| **Right level** | One row per invoice line item | Answers most questions, manageable volume |
+| **Too fine** | One row per API call | Massive volume, rarely needed detail |
+
+**Grain statement examples:**
+
+| Fact Table | Grain Statement |
+|------------|-----------------|
+| `fct_sales` | One row per line item per sales transaction |
+| `fct_timesheet` | One row per fee-earner per project per day |
+| `fct_subscription` | One row per subscription per status change event |
+| `fct_support_ticket` | One row per support ticket |
+
+Always document the grain. Include it in the table description, data dictionary, and dbt model documentation.
+
+#### Conformed Dimensions
+
+A conformed dimension is a dimension that means the same thing across all fact tables that reference it. Same keys, same attributes, same values.
+
+**Why this matters:**
+
+Without conformed dimensions, you can't analyse across business processes. "Show me revenue and support tickets by customer segment" requires that `dim_customer` is identical in both `fct_sales` and `fct_support_tickets`.
+
+| Scenario | Without Conformed Dimensions | With Conformed Dimensions |
+|----------|------------------------------|---------------------------|
+| Cross-process analysis | Impossible or manual reconciliation | Join naturally on shared dimension |
+| Metric consistency | Customer counts differ between reports | Single source of truth |
+| Self-serve | Users confused by duplicate dimensions | Intuitive, predictable model |
+
+**JMAN standard dimensions** (covered in next section) are conformed by default. Use them as the baseline for every engagement.
+
+### Good Practices
+
+#### Naming Conventions
+
+Consistent naming makes models self-documenting and reduces confusion.
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| **Dimension tables** | `dim_` prefix | `dim_customer`, `dim_product` |
+| **Fact tables** | `fct_` prefix | `fct_sales`, `fct_timesheet` |
+| **Aggregate tables** | `agg_` prefix | `agg_sales_monthly` |
+| **Snapshot tables** | `snap_` prefix | `snap_pipeline_weekly` |
+| **Surrogate keys** | `{entity}_key` | `customer_key`, `product_key` |
+| **Natural keys** | `{entity}_id` | `customer_id`, `product_id` |
+| **Columns** | `snake_case` | `first_order_date`, `total_revenue` |
+| **Measures** | Descriptive, no abbreviations | `billable_hours` not `bill_hrs` |
+
+**Business-friendly names are essential.** If a business user can't understand the column name without a data dictionary, rename it. `customer_acquisition_cost` is better than `cac`.
+
+#### Grain Documentation
+
+Every fact table must have a documented grain statement. This is non-negotiable.
+
+**Where to document:**
+- Table description in database
+- dbt model description in YAML
+- Data dictionary/catalogue
+- Confluence/documentation wiki
+
+**Grain statement format:**
+> "One row represents [what] at the level of [entities] for each [time period if applicable]."
+
+**Examples:**
+
+| Fact Table | Grain Statement |
+|------------|-----------------|
+| `fct_sales` | One row represents one line item on a sales transaction |
+| `fct_timesheet` | One row represents one fee-earner's time entry for one project on one day |
+| `fct_subscription_event` | One row represents one subscription status change (new, renewed, churned, expanded) |
+| `fct_pipeline_snapshot` | One row represents one opportunity's state on one weekly snapshot date |
+
+#### Surrogate Keys
+
+Always use surrogate keys in the Mart layer. Never use operational/source system IDs as primary keys.
+
+**Why surrogate keys?**
+
+| Reason | Explanation |
+|--------|-------------|
+| **Source systems change** | Customer IDs may change during system migrations |
+| **Multi-source integration** | Same customer in CRM and ERP has different IDs |
+| **Performance** | Integer keys join faster than string keys |
+| **SCD-2 support** | Multiple rows per natural key need unique identifiers |
+
+**Retain natural keys** alongside surrogates. They're essential for debugging and tracing back to source systems.
+
+#### Date Handling
+
+Never join facts directly to raw date columns. Always use a date dimension.
+
+**Date dimension requirements:**
+
+| Attribute Category | Examples |
+|-------------------|----------|
+| **Calendar** | date, day_of_week, month_name, quarter, year |
+| **Fiscal** | fiscal_month, fiscal_quarter, fiscal_year |
+| **Relative** | is_current_month, is_ytd, is_ltm, days_ago |
+| **Working days** | is_working_day, working_day_of_month |
+| **Descriptive** | month_year_label ("Jan 2026"), quarter_label ("Q1 2026") |
+
+**Pre-calculate relative periods.** Queries like "last 12 months" should filter on a flag (`is_ltm = TRUE`), not calculate date ranges at query time.
+
+**Build once, use everywhere.** The date dimension should cover:
+- 10+ years of history (for trend analysis)
+- 5+ years of future dates (for forecasting)
+- All fiscal calendar variations needed
+
+#### Null Handling
+
+Null foreign keys in fact tables break BI tool relationships and cause confusing results.
+
+**The rule:** No null foreign keys in facts. Create "Unknown" dimension records instead.
+
+**Unknown dimension records:**
+
+```sql
+-- dim_customer includes an Unknown record
+INSERT INTO dim_customer (customer_key, customer_id, customer_name, ...)
+VALUES (-1, 'UNKNOWN', 'Unknown Customer', ...);
+
+-- Facts reference -1 when customer is not identified
+SELECT
+    COALESCE(dim_customer.customer_key, -1) AS customer_key,
+    ...
+FROM fct_sales
+LEFT JOIN dim_customer ON ...
+```
+
+**Standard unknown key values:**
+- `-1` for integer keys
+- `'UNKNOWN'` or `'00000000-0000-0000-0000-000000000000'` for string/UUID keys
+
+**Document default handling.** When a fact references the Unknown dimension, it should be clear why and how often this occurs.
+
+#### Aggregate Tables
+
+Pre-built aggregates improve performance for common queries without forcing users to navigate large fact tables.
+
+**When to create aggregates:**
+
+| Scenario | Create Aggregate? |
+|----------|-------------------|
+| Fact table > 100M rows | Yes |
+| Common query rolls up to month | Yes, create monthly aggregate |
+| Dashboard always shows YTD summary | Yes, create YTD aggregate |
+| Ad-hoc detailed analysis needed | No, use fact table |
+
+**Aggregate naming:** `agg_{fact}_{grain}`
+
+| Base Fact | Aggregate | Grain |
+|-----------|-----------|-------|
+| `fct_sales` | `agg_sales_daily` | One row per date per product per customer |
+| `fct_sales` | `agg_sales_monthly` | One row per month per product per customer |
+| `fct_timesheet` | `agg_utilisation_monthly` | One row per fee-earner per month |
+
+**Document the relationship.** Make clear that `agg_sales_monthly` is derived from `fct_sales` and should produce identical totals.
+
+#### Metric Definitions
+
+Metrics belong in the model, not in BI tools.
+
+**The problem with BI-defined metrics:**
+- Different developers create different versions
+- Definitions drift over time
+- No version control
+- Logic hidden in tool-specific syntax
+
+**The solution:**
+
+| Approach | Implementation |
+|----------|----------------|
+| **Pre-calculated in fact** | Add `margin_amount` column to `fct_sales` |
+| **Metrics layer** | Use dbt metrics, Looker LookML, or similar |
+| **Semantic layer** | Tools like AtScale, Cube, or dbt Semantic Layer |
+| **Documentation** | At minimum, document calculations in data dictionary |
+
+**Metric documentation template:**
+
+| Metric | Definition | Calculation | Source Tables |
+|--------|------------|-------------|---------------|
+| Gross Margin % | Revenue minus COGS as percentage of revenue | (revenue - cogs) / revenue | fct_sales |
+| NRR | Net Revenue Retention | (Ending ARR from starting cohort) / Starting ARR | fct_subscription |
+
+### Dos and Don'ts
+
+<DosAndDonts
+  dos={[
+    { text: "Start with business questions, work backwards  What does the board need to know? What will investors ask?" },
+    { text: "Define and document grain before building  This is the most important decision" },
+    { text: "Use conformed dimensions across all facts  Same customer dimension everywhere" },
+    { text: "Document every metric calculation  No ambiguity about how numbers are derived" },
+    { text: "Reconcile to finance  Your revenue must match their revenue" },
+    { text: "Design for self-serve  Business users should understand the model intuitively" },
+    { text: "Use surrogate keys  Insulate from source system changes" },
+    { text: "Build a proper date dimension  With fiscal periods and relative flags" },
+    { text: "Plan for 3+ years of history  PE due diligence will require it" },
+    { text: "Version control metric changes  Definitions evolve; track that evolution" },
+  ]}
+  donts={[
+    { text: "Let BI tools own metric definitions  Logic scattered across tools is unmaintainable" },
+    { text: "Snowflake dimensions unnecessarily  Flatten hierarchies in Mart for simplicity" },
+    { text: "Use operational IDs as keys in Mart  Source systems change; surrogates don't" },
+    { text: "Build without understanding the business model  SaaS ≠ Services ≠ Retail" },
+    { text: "Skip the date dimension  'Just join on date' leads to pain" },
+    { text: "Assume analysts know the grain  Document it explicitly" },
+    { text: "Allow null foreign keys  Create Unknown dimension records" },
+    { text: "Build aggregates before proving need  Start with facts; aggregate when performance requires" },
+    { text: "Ignore reconciliation  If numbers don't match finance, nothing else matters" },
+  ]}
+/>
+
+### Anti-Patterns
+
+<AntiPatterns
+  patterns={[
+    {
+      title: "The BI Tool Metric Jungle",
+      problem: "Metrics are defined in Power BI measures, Tableau calculated fields, and Excel formulas. Each report developer creates their own interpretation. The same metric shows different numbers in different reports.",
+      example: "A PE-backed SaaS company had 'ARR' defined in 6 different Power BI reports. Values ranged from £4.2M to £5.1M depending on which report you viewed. The CFO maintained a 'correct' spreadsheet that nobody else could access. Due diligence took 3 months longer than planned because investors couldn't trust any number.",
+      prevention: "Define metrics in the dimensional model. BI tools visualise; they don't calculate. Use a semantic layer or pre-calculated fact columns. When the definition changes, it changes in one place.",
+    },
+    {
+      title: "The Wrong Grain",
+      problem: "Fact table is designed at the wrong level of detail. Either too coarse (can't answer detailed questions) or too fine (performance problems, unnecessary complexity).",
+      example: "A Professional Services firm built their timesheet fact at weekly grain to 'simplify' the model. When the CFO asked for daily utilisation analysis to identify Friday productivity drops, the data didn't exist. Rebuilding at daily grain required re-extracting 3 years of history.",
+      prevention: "Define grain explicitly before building anything. Validate with stakeholders: 'If we build at this grain, can we answer X, Y, Z questions?' Err toward finer grain  you can always aggregate up, but you can't drill down into data that doesn't exist.",
+    },
+    {
+      title: "The Snowflake Trap",
+      problem: "Dimensions are over-normalised into multiple levels (dim_customer → dim_region → dim_country → dim_continent). This mirrors 3NF design patterns but defeats the purpose of dimensional modelling.",
+      example: "A data team with strong OLTP background built a 'proper' normalised dimension structure with 8 tables to represent customer geography. BI tool performance was terrible (8-way joins on every query). Users couldn't understand the model. The team spent 6 weeks rebuilding as flattened star schema.",
+      prevention: "In Mart, flatten hierarchies into single dimension tables. dim_customer should contain country, region, and continent as attributes  not foreign keys to separate tables. The Core layer can be normalised; Mart is denormalised.",
+    },
+    {
+      title: "The Missing Conformed Dimension",
+      problem: "The same business entity (Customer, Product) exists in multiple fact tables with different keys, different attributes, or different grain. Cross-process analysis is impossible.",
+      example: "A retail client built separate customer dimensions for sales (dim_sales_customer) and support (dim_support_customer). When the CEO asked 'show me support ticket volume by customer revenue tier,' nobody could answer  the dimensions didn't share keys or attributes.",
+      prevention: "Design conformed dimensions first. All facts reference the same dim_customer with the same surrogate key. When a new fact table is built, it uses existing dimensions  it doesn't create new ones.",
+    },
+    {
+      title: "The Operational ID Leak",
+      problem: "Source system IDs (Salesforce Account ID, NetSuite Customer ID) are used as dimension keys in Mart. When the source system is migrated or IDs change, the dimensional model breaks.",
+      example: "A company migrated from Salesforce Classic to Salesforce Lightning, which changed Account ID formats. Every fact table that used Salesforce IDs as keys broke. The dimensional model required complete rebuild because there was no surrogate key layer to insulate from the change.",
+      prevention: "Always use surrogate keys. Retain natural/source IDs as attributes for debugging and lineage, but join on surrogates. When source systems change, only the dimension ETL needs updating  not every fact table.",
+    },
+  ]}
+/>

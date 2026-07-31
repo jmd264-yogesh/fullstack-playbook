@@ -2,6 +2,8 @@
 
 Consistency in repository layout allows engineers to switch between projects seamlessly without spending hours understanding where logic lives.
 
+> **Where this fits**: this is the structure the [Golden Path](/project-onboarding/create-project) scaffolds automatically when a new project is created — use it as a reference, not a from-scratch template to copy by hand.
+
 ## Monorepo Strategy (Turborepo / Nx)
 For tightly coupled full-stack applications, we prefer a Monorepo structure managed by Turborepo or Nx.
 

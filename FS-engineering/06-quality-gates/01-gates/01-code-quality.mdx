@@ -1,0 +1,38 @@
+---
+title: "Code Quality Gates"
+description: "We utilize SonarQube as our central static analysis engine to enforce code quality. Every repository must be integrated with the CoE SonarQube instance."
+order: 1
+version: 1.0
+disabled: false
+---
+
+## Code Quality Gates
+
+We utilize **SonarQube** as our central static analysis engine to enforce code quality. Every repository must be integrated with the CoE SonarQube instance.
+
+## The "Clean as You Code" Philosophy
+We focus strictly on **New Code**. While a legacy codebase might have existing technical debt, any new code added in a Pull Request must meet the highest standards.
+
+## Mandatory Quality Gate Criteria (SonarQube)
+The build pipeline will **FAIL** if any of the following conditions are met on New Code:
+
+### 1. Reliability & Maintainability
+- **Bugs**: > 0 (Grade must be 'A').
+- **Vulnerabilities**: > 0 (Grade must be 'A').
+- **Code Smells**: Maintainability Rating must be 'A' (Technical debt ratio < 5%).
+- **Cyclomatic Complexity**: No single function/method may exceed a cognitive complexity score of 15.
+
+### 2. Test Coverage
+- **Line Coverage**: Must be **>= 80%**.
+- **Condition/Branch Coverage**: Must be **>= 75%**.
+- *Note*: Dropping below these thresholds will block the PR from being merged.
+
+### 3. Duplication
+- **Duplicated Lines**: Must be **< 3%**.
+- *Exception*: Test files and specific configuration arrays may be excluded from duplication checks via `sonar-project.properties`.
+
+## PR Review Gates (GitHub / Azure DevOps)
+In addition to automated static analysis, repository branch protection rules enforce the following:
+- **Minimum Approvals**: 2 approved peer reviews.
+- **Code Owners**: Modifications to specific directories (e.g., `/infra`, `/security`) require mandatory review by the designated domain expert.
+- **Stale Reviews**: Pushing new commits to a PR automatically dismisses previous approvals.

@@ -9,13 +9,13 @@ Technologies are classified into four rings. Teams must select technologies from
 ### 1. Adopt (Golden Paths)
 Technologies proven at scale within the enterprise. Fully supported by the Platform and DevOps teams.
 - **Frontend**: React, Next.js, Tailwind CSS, Zustand, React Query.
-- **Backend**: Node.js (NestJS), PHP (Laravel).
-- **Database**: PostgreSQL, MongoDB, Redis.
+- **Backend**: Node.js (NestJS), PHP (Laravel), GraphQL (as an API layer alongside REST — see [API Standards](/architecture/api-standards) and [GraphQL Standards](/coding-standards/backend/graphql)).
+- **Database**: PostgreSQL, MySQL, MongoDB, Redis.
 - **Infrastructure**: Docker, Kubernetes, Terraform, AWS/Azure.
 
 ### 2. Trial
 Technologies currently being tested in low-risk production systems.
-- **Examples**: GraphQL, Apollo Federation, Go (Golang).
+- **Examples**: Apollo Federation, Go (Golang).
 - **Usage**: Requires ARB approval to use. Support from DevOps may be limited.
 
 ### 3. Assess

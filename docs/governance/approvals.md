@@ -8,8 +8,8 @@ The ARB ensures that new systems align with enterprise architecture, security po
 
 - **When is ARB required?**
   - Creating a brand new microservice or application.
-  - Introducing a technology that is not on the "Adopt" ring of the Tech Radar.
-  - Making a fundamental shift in architecture (e.g., moving from REST to GraphQL, or from Monolith to Microservices).
+  - Introducing a technology that is not on the "Adopt" ring of the [Technology Radar](/project-onboarding/tech-stack-selection) — e.g. Apollo Federation or Go, both currently in "Trial."
+  - Making a fundamental shift in architecture (e.g., moving from Monolith to Microservices, or adopting event-driven/choreography patterns for the first time).
 - **The Process**:
   1. The Architect submits a High-Level Design (HLD) document.
   2. The ARB (consisting of Principal Architects and InfoSec) reviews asynchronously.

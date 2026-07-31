@@ -1,0 +1,131 @@
+---
+title: Why dbt?
+description: Imported from Word
+version: 1.0
+order: 2
+---
+
+## Why dbt?
+
+dbt has emerged as the industry standard, especially for Transformation layer on modern data platforms.
+It allows anyone who knows SQL to engineer data pipelines with the
+rigour of a software engineer.
+
+#### Why not use the built-in tools?
+If we rely on native tools (like Azure Data Factory Data Flows, Snowflake Tasks, or Databricks Notebooks) for core transformation, we face two major risks:
+
+1. Fragmentation: A data engineer working on Project A (Azure) cannot easily switch to Project B (Snowflake) because the tooling is completely different.
+2. Vendor Lock-in: Migrating logic from a proprietary GUI or Stored Procedure to a new platform requires a complete rewrite.
+
+**dbt unifies this** By using standard SQL and Jinja, dbt allows us to develop transformations in the exact same way across any platform. It ensures that our engineering standards, testing frameworks, and deployment patterns remain consistent, regardless of whether the data lives in a Lakehouse or a Warehouse.
+
+
+````mermaid
+graph TD
+    subgraph NativeTools["The Native Tools"]
+        direction TB
+        TeamA[Team A] -->|Learns Proprietary UI| ADF[Microsoft Fabric]
+        TeamB[Team B] -->|Learns Stored Procs| SF[Snowflake Tasks]
+        TeamC[Team C] -->|Learns PySpark| DB[Databricks Notebooks]
+
+        style ADF fill:#FFE3EA,stroke:#E7166D
+        style SF fill:#FFE3EA,stroke:#E7166D
+        style DB fill:#FFE3EA,stroke:#E7166D
+    end
+
+    subgraph DbtStandard["The dbt Standard"]
+        direction TB
+        Eng[All Engineers] -->|Write Standard SQL + Jinja| DBT[dbt Core]
+
+        DBT -->|Compiles to| T1[("Microsoft Fabric")]
+        DBT -->|Compiles to| T2[("Snowflake")]
+        DBT -->|Compiles to| T3[("Databricks")]
+
+        style DBT fill:#CFF8F0,stroke:#18978E,stroke-width:2px
+    end
+
+    style NativeTools fill:#F3F3F7,stroke:#D1D0DC
+    style DbtStandard fill:#F3F3F7,stroke:#D1D0DC
+````
+
+
+### Why shouldn't you ignore dbt in Transformation?
+
+-   **SQL will NEVER die:** A SQL-first approach offers numerous
+    benefits (readability, ease of maintenance, a smoother learning
+    curve, ad hoc analytical capabilities, etc.). In the data &
+    analytics world, we would be surprised if there were people who did
+    not know at least the very basics of SQL.
+
+-   **Versioning of your SQL workflows:** Previously, developers tended
+    to use stored procedures in databases, which cannot be easily
+    version-controlled. SQL Database Projects partially resolve this
+    issue. However, how do we do this for AWS Redshift / Google BigQuery
+    / Databricks? This is where dbt becomes the industry standard for
+    making T easier in ELT, as it works on the most popular platforms.
+
+-   **Lineage during development:** dbt helps visualise how your data
+    assets (tables, views, etc.) are linked together, starting from your
+    raw layer to your consumption layer automatically. Debugging and
+    troubleshooting are much easier when you understand which tables
+    will be impacted downstream or know what caused an issue upstream.
+    This also helps you onboard new engineers more quickly and remove
+    key-person dependencies that often result from everyday dialogues
+    you hear from our clients (and your own team). Oh, that person built
+    this, so only they know how it works? And? Ah, right, that is
+    documented\.... in my head? Or the classic and simple? Sorry, there
+    is no documentation. Causing you to spend the next two sprints
+    unravelling the mystical enigma that they've written.
+
+-   **Automatic dependency management for Orchestration:** When we run
+    pipelines end-to-end, it is not clear which tables need to be
+    created or refreshed in the correct sequence. However, dbt can
+    auto-detect the dependency across tables and execute in the proper
+    order. It is worth noting that you can still control this manually
+    if you wish.
+
+-   **Productivity & Speed Gains:** Engineering teams need not worry
+    about managing stored procedures, creating/altering tables, SCD-2
+    logic, incremental loading, etc. dbt enables you with its core
+    features, such as
+
+    -   **JINJA templating** (Developers who've worked with Django would
+        know this all too well) to build dynamic SQL for highly concise
+        and readable code. For example, if you are building group-level
+        reporting, you don\'t need to write many UNIONS ALL statements
+        to conform your common entity (i.e., Company). You can leverage
+        JINJA templating to write SQL using a simple programmatic loop.
+
+    -   **Macros** which are very similar to \"Functions\" or? Methods
+        in other programming languages to support DRY (Don\'t Repeat
+        Yourself) principles.
+
+-   **Testing capability:** dbt provides built-in mechanisms to run
+    multiple types of data tests, ensuring data quality and delivering
+    outputs to your data consumers.
+
+-   **Developer Experience (DevEx):** dbt is a pioneer in this front and
+    is done by bringing Software engineering principes (which have never
+    been proliferated into data engineering and analytics at this
+    capacity before) such as version control with Git, unit testing
+    frameworks, code modularity, abstraction of everyday engineering
+    tasks, improving coding standards through linting, integration with
+    VS Code, CI/CD pipelines to ensure correct and successful
+    deployment.
+
+-   **dbt Docs:** You can smooth the process of data cataloguing and
+    documentation through dbt Docs and surface it in a dynamic and
+    readable format to your data teams and data consumers, containing
+    Interactive Lineage, Data dictionary and visibility on the business
+    rules and tests applied in code.
+
+-   **Growing community:** You will easily find help from online forums,
+    Slack community, Stack Overflow, ChatGPT, etc. Due to the popularity
+    of the tool. That\'s how we learnt it too!
+
+-   **Vendor Agnostic** dbt is the only framework that works natively
+    across Snowflake, Databricks, Redshift, BigQuery, and Microsoft
+    Fabric. By standardising on dbt, JMAN ensures that our engineering
+    talent is portable. An engineer can move from a Snowflake project to
+    a Databricks project without having to relearn how to build
+    pipelines.

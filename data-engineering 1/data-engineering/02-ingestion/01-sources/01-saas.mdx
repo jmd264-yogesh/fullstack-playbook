@@ -1,0 +1,162 @@
+---
+title: SaaS
+description: Ingestion guidance for SaaS application sources
+order: 1
+version: 1.0
+disabled: false
+---
+
+## SaaS Applications
+
+<Callout type="info">
+  **API-First, Always** - SaaS sources expose data through APIs, not direct database access. You are at the mercy of the vendor's API design, rate limits, pagination, and data model. Plan accordingly.
+</Callout>
+
+### What this covers
+
+CRM (Salesforce, HubSpot, Dynamics 365), ERP (NetSuite, SAP, Xero, Sage), HRIS (Workday, BambooHR), FMS, and any vendor-hosted application exposing data through APIs.
+
+### Characteristics
+
+| Characteristic | Detail |
+|----------------|--------|
+| **Access method** | REST APIs, SOAP (legacy), GraphQL (newer), Bulk APIs (high volume) |
+| **Authentication** | OAuth 2.0 (most modern), API keys (legacy), session-based (older ERP systems) |
+| **Schema control** | You don't own it. Custom fields appear without warning. API versions deprecate. |
+| **Rate limiting** | Every platform has API limits - daily caps, per-second throttles, concurrent session limits |
+| **Data model** | Denormalised for application UI, not for analytics. Junction objects, polymorphic relationships, nested structures. |
+| **Change detection** | Varies wildly - some offer `SystemModstamp`, others have no modified-date field at all |
+
+### Common Pain Points
+
+| Pain Point | Description | Example |
+|---|---|---|
+| **Rate limiting** | API enforces a cap on requests per time period. Exceeding it returns HTTP 429 or equivalent. | Salesforce: daily governor limit. HubSpot: 100 req/10s. NetSuite: concurrent session limits on lower-tier licences. |
+| **Pagination complexity** | Each platform implements pagination differently - cursor, offset, page-token. Getting it wrong means missing records. | Salesforce Bulk API 2.0: locator-based. HubSpot: `after` cursor. NetSuite SuiteQL: offset. |
+| **Schema changes** | Source admin adds/removes custom fields. API version deprecation changes response structure. | Salesforce admin adds `Revenue_Forecast__c` on Friday. Monday pipeline fails on unexpected JSON field. |
+| **Complex data model** | Junction objects, polymorphic relationships, nested structures need careful mapping. | Salesforce `OpportunityContactRole` junction table. NetSuite saved search vs SuiteQL returning different structures. |
+| **Authentication lifecycle** | OAuth tokens expire. API keys get rotated. Service accounts get disabled. | Workday: integration user security groups must be configured by client admin. |
+| **Bulk API limitations** | High-volume endpoints have batch size caps, concurrent job limits, result expiry. | Salesforce Bulk API 2.0: 10,000 batch limit per 24 hours. Large orgs exhaust this during initial load. |
+
+### Platform-Specific Guidance
+
+<PlatformTabs>
+
+<PlatformTabsFabric>
+
+**Tools:** Data Factory Copy Activity, Dataflows Gen2, Custom Notebooks
+
+**Key considerations:**
+- ADF has native connectors for Salesforce, Dynamics 365, SAP, and most major SaaS
+- Use Bulk API mode for tables > 10K rows (set `readBehavior: "queryAll"`)
+- Dataflows Gen2 is suitable for simple SaaS extracts with < 100K rows
+- For NetSuite, use SuiteQL via REST rather than legacy saved searches
+
+**Limitations:**
+- Custom fields require manual mapping updates when schema changes
+- No built-in schema drift detection - pipeline fails silently on missing fields
+- Rate limit retry is manual (configure retry policy on Copy Activity)
+
+</PlatformTabsFabric>
+
+<PlatformTabsDatabricks>
+
+**Tools:** Lakeflow Connect, Custom Notebooks (Python), Partner connectors (Fivetran, Airbyte)
+
+<Callout type="warning">
+  **Lakeflow Connect is a New Product** - Connector coverage is still growing. Verify that your specific SaaS source is supported before committing to Lakeflow Connect. For unsupported sources, use custom notebooks or partner connectors as a fallback.
+</Callout>
+
+**Key considerations:**
+- Lakeflow Connect is the preferred path for supported sources (Salesforce, HubSpot, etc.) - but check the [current connector list](https://docs.databricks.com/en/ingestion/lakeflow-connect/index.html) as coverage is expanding
+- For unsupported sources, use Python notebooks with appropriate client libraries
+- Always use Bulk API 2.0 for large volumes - REST API will exhaust governor limits
+- Store credentials in Databricks secrets, never in notebook code
+
+</PlatformTabsDatabricks>
+
+<PlatformTabsSnowflake>
+
+**Tools:** Snowpipe, External functions, Partner connectors (Fivetran, Airbyte)
+
+<Callout type="warning">
+  **Snowflake Has No Native SaaS Connectors** - Snowflake OpenFlow is in early stages and requires BYOC (Bring Your Own Cloud). For SaaS ingestion, you will need partner tools (Fivetran, Airbyte) or external functions. Do not plan around OpenFlow providing native SaaS connectivity today.
+</Callout>
+
+**Key considerations:**
+- Snowflake relies heavily on partner connectors (Fivetran, Airbyte) for SaaS ingestion
+- Native Snowpipe is for file-based ingestion, not SaaS APIs
+- Fivetran handles pagination, rate limits, and schema evolution automatically
+- Cost model: Fivetran charges per Monthly Active Row (MAR) - monitor closely for high-cardinality sources
+
+**Limitations:**
+- No native SaaS API connector - must use partner tools or external functions
+- External functions add latency and require API Gateway setup
+
+</PlatformTabsSnowflake>
+
+</PlatformTabs>
+
+### SaaS Source Discovery Template
+
+Before building any SaaS connector, capture these details:
+
+| Discovery Item | Example (Salesforce) |
+|----------------|---------------------|
+| API type | REST + Bulk API 2.0 |
+| Authentication | OAuth 2.0 (Connected App) |
+| Rate limits | 100,000 API calls/24h, 10 concurrent Bulk jobs |
+| Incremental field | `SystemModstamp` |
+| Bulk API available? | Yes - required for > 10K records |
+| Custom fields present? | Yes - 47 custom fields on Account |
+| Junction objects | `OpportunityContactRole`, `AccountContactRelation` |
+| Deletion behaviour | Soft delete (IsDeleted flag), 15-day recycle bin |
+| API version | v59.0 (check deprecation schedule) |
+| Sandbox available? | Yes - use for development and testing |
+
+<DosAndDonts
+  dos={[
+    { text: "Use Bulk APIs for tables over 10K rows - REST API will hit governor limits" },
+    { text: "Implement dynamic schema discovery - never hardcode field lists" },
+    { text: "Track API usage and alert at 70% of daily limit" },
+    { text: "Use the vendor's recommended incremental field (e.g., SystemModstamp for Salesforce)" },
+    { text: "Store OAuth tokens in Key Vault / secrets manager with automatic refresh" },
+    { text: "Test with sandbox/dev environment before touching production" },
+    { text: "Include soft-delete detection (IsDeleted, _fivetran_deleted) in every extract" }
+  ]}
+  donts={[
+    { text: "Hardcode SOQL/API queries with specific field names - they break on schema changes" },
+    { text: "Ignore governor limits - one greedy pipeline can block all integrations" },
+    { text: "Use REST API for bulk extracts - it's 100x slower and burns API calls" },
+    { text: "Assume pagination works the same across endpoints - test each object" },
+    { text: "Store API keys or tokens in notebook code or pipeline parameters" },
+    { text: "Skip the initial load plan - SaaS backfills can take days and exhaust limits" }
+  ]}
+/>
+
+<AntiPatterns patterns={[
+  {
+    title: "The Hardcoded SOQL Query",
+    problem: "ADF pipeline or notebook contains hardcoded field lists like `SELECT Id, Name, Amount FROM Opportunity`. When a Salesforce admin renames, removes, or adds a field, the pipeline breaks silently or drops data.",
+    example: "A team hardcoded 23 fields in their Opportunity extract. The Salesforce admin added `Revenue_Forecast__c` on Friday. Monday morning, the field was missing from the data. Downstream forecasting model used stale data for a week before anyone noticed.",
+    prevention: "Use dynamic schema discovery (`FIELDS(ALL)` in SOQL, or describe calls). Accept all fields, let downstream Stage layer handle column selection. New fields flow through automatically."
+  },
+  {
+    title: "Governor Limit Exhaustion",
+    problem: "Custom script uses REST API (not Bulk) for high-volume extraction. Exhausts daily governor limit early in the day. All other Salesforce integrations - marketing automation, support tools, mobile app - are blocked.",
+    example: "An engineer used the REST API to extract 2M Opportunity records. The extract consumed the entire 100K daily API limit by 7am. The client's marketing automation platform (Pardot) couldn't sync for the rest of the day, causing a missed campaign send to 50,000 contacts.",
+    prevention: "Always use Bulk API 2.0 for any extract over 10K records. Monitor API usage daily. Set alerts at 70% threshold. Coordinate with other Salesforce integrations to understand shared limits."
+  },
+  {
+    title: "The Forgotten Sandbox",
+    problem: "Team develops and tests ingestion pipelines against the production SaaS instance. Test runs consume API limits, trigger rate limiting, and risk accidentally modifying production data through write-enabled API scopes.",
+    example: "During development, an engineer ran their Salesforce connector 15 times in one day to debug pagination. Each run consumed 5,000 API calls. The 75,000 calls used for testing left insufficient quota for the production pipeline run at midnight.",
+    prevention: "Always develop against a sandbox or developer edition. Production API credentials should only be configured in the production pipeline. Gate production access through deployment process, not manual configuration."
+  },
+  {
+    title: "The Missing Delete Detection",
+    problem: "Incremental pipeline only captures inserts and updates. Records deleted in the SaaS system remain in the data warehouse as ghost records, inflating counts and corrupting reports.",
+    example: "A client's sales team regularly merged duplicate Accounts in Salesforce. The pipeline only tracked updates via SystemModstamp. After 6 months, the warehouse had 15,000 Account records while Salesforce had 11,000. Revenue reports were overstated by $2.3M due to duplicate counting.",
+    prevention: "Every SaaS extract must include delete detection. Use `IsDeleted` flag with `queryAll` (Salesforce), `_fivetran_deleted` (managed tools), or periodic full-load reconciliation for sources without delete tracking."
+  }
+]} />

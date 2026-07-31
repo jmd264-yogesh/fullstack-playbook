@@ -1,0 +1,64 @@
+---
+title: Language & Tooling
+description: Imported from Word
+version: 1.0
+order: 2
+---
+
+## Language & Tooling
+
+There are three primary ways to transform data within a modern data platform. At JMAN, we choose the approach based on the workload - not personal preference.
+
+```mermaid
+flowchart LR
+    subgraph SQL["SQL-Based"]
+        direction LR
+        SQL1["<b>The Standard</b><br/><i>80% of transformation workload</i>"]
+        SQL2["<b>dbt, Stored Procedures</b><br/><i>Declarative, set-based</i>"]
+        SQL3["<b>Joins, Aggregations, KPIs</b><br/><i>Business logic, Star Schema</i>"]
+    end
+
+    subgraph PYTHON["Python-Based"]
+        direction LR
+        PY1["<b>Advanced & ML Workloads</b><br/><i>Complex transformation, ingestion</i>"]
+        PY2["<b>PySpark, Snowpark, Pandas</b><br/><i>Distributed processing</i>"]
+        PY3["<b>Unstructured Data, ML Inference</b><br/><i>PDFs, APIs, Graph processing</i>"]
+    end
+
+    subgraph GUI["GUI-Based"]
+        direction LR
+        GUI1["<b>Low Code / No Code</b><br/><i>Prototyping only</i>"]
+        GUI2["<b>Alteryx, Matillion, Data Factory</b><br/><i>Drag-and-drop interfaces</i>"]
+        GUI3["<b>Rapid POC & Simple Movements</b><br/><i>Not for core data model</i>"]
+    end
+
+    SQL --> PYTHON --> GUI
+
+    classDef sqlBox fill:#E3F2FD,stroke:#2196F3,color:#0D47A1
+    classDef pyBox fill:#FFF3E0,stroke:#FF9800,color:#E65100
+    classDef guiBox fill:#F3E5F5,stroke:#9C27B0,color:#4A148C
+
+    class SQL1,SQL2,SQL3 sqlBox
+    class PY1,PY2,PY3 pyBox
+    class GUI1,GUI2,GUI3 guiBox
+
+    style SQL fill:none,stroke:#2196F3,stroke-width:2px
+    style PYTHON fill:none,stroke:#FF9800,stroke-width:2px
+    style GUI fill:none,stroke:#9C27B0,stroke-width:2px
+```
+
+### SQL - The Default (80% of Workloads)
+
+SQL is the universal language of data. Every modern cloud warehouse - Snowflake, Databricks SQL, BigQuery - runs on Massively Parallel Processing (MPP) engines that optimise SQL execution far better than most hand-written Python scripts. SQL is readable by engineers, analysts, and business users alike, making it the only language that genuinely breaks down silos between technical and commercial teams.
+
+At JMAN, SQL is the default choice for joining, aggregating, cleaning, and modelling structured data. We pair it with **dbt** as our transformation framework - dbt treats SQL like software by adding version control, automated testing, dependency management, and auto-generated documentation. Engineers write simple `SELECT` statements; dbt handles the rest.
+
+### Python - For Edge Workloads
+
+Python (via PySpark, Snowpark, or Pandas) is reserved for workloads where SQL hits its architectural limits. This includes ingestion pipelines with custom API connectors, unstructured data processing (parsing PDFs, images, deeply nested JSON), identity resolution, machine learning inference, and complex statistical simulations. Major platforms now support running Python and SQL on the same engine, so the two coexist without friction.
+
+The key discipline: Python is not a substitute for SQL in standard transformation. Using Python for simple `SELECT * WHERE` logic introduces unnecessary dependency management overhead and limits who can read and maintain the code.
+
+### GUI - For Prototyping Only
+
+GUI-based tools (Alteryx, Matillion, Fabric Data Flow) enable non-technical users to build insights quickly through drag-and-drop interfaces. They are valuable for rapid prototyping and proving business value early. However, they carry significant long-term debt: version control is difficult (binary files don't diff well in Git), reusability is limited, and complex workflows quickly become unmanageable "spaghetti bowls." At JMAN, GUI tools are strictly excluded from the core enterprise data model.

@@ -74,6 +74,19 @@ Establish a **minimum 80% line coverage** threshold and enforce it in CI. Covera
 
 ---
 
+## Contract Testing
+
+In a microservices architecture, Contract Testing ensures services don't break each other's expectations, without needing a full integration environment.
+
+- **Tools**: Pact.
+- **Rule**: Before deploying a consumer service, it must verify that the provider service's API still matches the agreed-upon contract.
+
+## Flaky Test Handling
+
+A flaky test (fails randomly, e.g. 1 out of 10 runs) destroys trust in the pipeline — if failures are "probably just flaky," engineers stop reading them.
+
+- **Rule**: A test flagged as flaky must be quarantined (skipped) immediately, with a ticket raised, until an engineer fixes the underlying race condition or async timing issue. It does not stay in the suite "for now."
+
 ## Detailed Standards
 
 - [Unit Testing](/coding-standards/testing/unit-testing) — Setup, writing tests, patterns, best practices

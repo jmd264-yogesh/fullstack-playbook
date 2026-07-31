@@ -1,6 +1,8 @@
 # Production Readiness Checklist
 
-Before any service goes live to customers for the first time, this checklist must be completed by the Tech Lead.
+Before any service goes live to customers **for the first time**, this checklist must be completed by the Tech Lead.
+
+> **Where this fits**: this is an addendum specific to a service's first-ever launch — reliability, security, and observability foundations that only need proving once. It's completed **alongside**, not instead of, the [Go-Live & Release Checklist](/coding-standards/checklists/release-checklist), which every subsequent major release also goes through.
 
 ## Reliability
 - [ ] Load testing completed (p95 latency within budget).

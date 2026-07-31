@@ -1,0 +1,109 @@
+---
+title: 3rd Party Provider
+description: Ingestion guidance for external data and third-party providers
+order: 5
+version: 1.0
+disabled: false
+---
+
+## External Data & 3rd Party
+
+<Callout type="info">
+  **Treat as Untrusted Input** - Third-party data is someone else's problem until it enters your platform. Validate, deduplicate, track freshness, and control cost. Every record has a price - sometimes literally.
+</Callout>
+
+### What this covers
+
+D&B (Dun & Bradstreet), Experian, ZoomInfo, market data feeds, exchange rates, credit scores, weather data, partner data shares, and any data sourced from an external commercial provider.
+
+### Characteristics
+
+| Characteristic | Detail |
+|----------------|--------|
+| **Access method** | API, SFTP file drops, cloud data sharing (Snowflake Share, Delta Sharing), email delivery |
+| **Schema control** | Provider-controlled - formats change with product updates and contract renewals |
+| **Cost model** | Per-record, per-API-call, per-dataset, or annual licence. Full reloads can be very expensive. |
+| **Delivery schedule** | Provider's schedule, not yours - delays are common during quarter-end and peak periods |
+| **Data quality** | Variable - duplicates, outdated info, inconsistent formatting. Treat as raw input requiring validation. |
+| **Licensing** | Data usage restrictions - may limit storage duration, downstream sharing, or geographic use |
+
+### Common Pain Points
+
+| Pain Point | Description | Example |
+|------------|-------------|---------|
+| **Cost per extraction** | Priced per record or API call. Full reloads are expensive. | D&B: full reload of 50K records costs significantly more than a 500-record delta. |
+| **Unpredictable delivery** | Provider's schedule, not yours. Delays during quarter-end are common. | Market data delayed 2 hours during quarter-end. Morning reports used stale data. |
+| **Variable quality** | Duplicates, outdated info, inconsistent formatting across deliveries. | ZoomInfo returns 3 records for the same company with different names and addresses. |
+| **Licensing restrictions** | Data usage terms limit how you store, process, and share the data. | Contract limits data retention to 12 months. Team discovers 3-year-old records still in warehouse during audit. |
+| **Format changes** | Provider changes file format, API schema, or delivery method during contract renewal. | D&B switched from SFTP file drop to API delivery at contract renewal. Three-week scramble to rebuild connector. |
+
+### Cost Control Framework
+
+<Callout type="warning">
+  **Full Reloads of Paid Data are Money on Fire** - If the daily change rate is less than 1%, a full reload is wasting 99% of the cost. Always use incremental for paid sources.
+</Callout>
+
+| Strategy | When to Use | Cost Impact |
+|----------|------------|-------------|
+| **Incremental only** | Change rate < 5%, per-record pricing | Reduces cost by 90-99% vs full reload |
+| **Change detection before request** | High per-record cost | Only request records that have actually changed |
+| **Cached enrichment** | Enrichment data with low volatility (company info, credit scores) | Cache locally, refresh on a schedule (weekly/monthly) |
+| **Tiered freshness** | Different data elements need different refresh rates | Company name: monthly. Credit score: weekly. Stock price: daily. |
+| **Usage-based alerting** | All paid sources | Alert at 70% of budget threshold. Kill switch at 90%. |
+
+### Data Sharing vs API
+
+When available, cloud data sharing is significantly cheaper and more reliable than API-based extraction:
+
+| Factor | API / SFTP | Cloud Data Sharing |
+|--------|-----------|-------------------|
+| **Latency** | Hours (batch) to minutes (API) | Near real-time (shared storage) |
+| **Cost** | Per-record or per-call charges | Included in data subscription (usually) |
+| **Maintenance** | Connector code, auth, pagination | Zero - provider maintains the share |
+| **Schema evolution** | Manual handling required | Automatic - new columns appear in the share |
+| **Platforms** | Any | Snowflake Share, Delta Sharing, Azure Data Share |
+
+<Callout type="note">
+  **Prefer Cloud Data Sharing** - When a provider offers Snowflake Share, Delta Sharing, or Azure Data Share, use it. Zero connector maintenance, zero API costs, near real-time freshness. Ask every provider: "Do you offer data sharing?"
+</Callout>
+
+<DosAndDonts
+  dos={[
+    { text: "Always use incremental extraction for paid-per-record sources - full reloads waste money" },
+    { text: "Track extraction cost per source per month - alert at 70% of budget threshold" },
+    { text: "Validate and deduplicate third-party data before merging with internal data" },
+    { text: "Cache enrichment data locally - refresh on schedule, not on every lookup" },
+    { text: "Ask every provider about cloud data sharing (Snowflake Share, Delta Sharing) - it eliminates connector maintenance" },
+    { text: "Document licensing restrictions - retention limits, usage restrictions, geographic constraints" },
+    { text: "Track data freshness per provider - alert when delivery is late" }
+  ]}
+  donts={[
+    { text: "Full-reload paid data sources nightly - if change rate is <1%, you're burning 99% of the cost" },
+    { text: "Trust third-party data quality - validate, deduplicate, and flag inconsistencies before downstream use" },
+    { text: "Ignore licensing terms - storing data beyond the retention limit creates compliance risk" },
+    { text: "Build custom connectors for providers that offer native data sharing" },
+    { text: "Assume provider delivery will be on time - build SLA monitoring and fallback logic for stale data" },
+    { text: "Merge third-party data directly into Core without a dedicated validation layer" }
+  ]}
+/>
+
+<AntiPatterns patterns={[
+  {
+    title: "Full Reload of Paid Data",
+    problem: "50K records reloaded nightly from a per-record-priced provider. Daily change rate is less than 1%. The team is paying for 50,000 records to get 200 changes.",
+    example: "A team configured nightly full-reload of 50K D&B company records at $0.05/record. Cost: $2,500/night, $75,000/month. Actual daily change rate: 0.4% (200 records). An incremental approach using D&B's change notification API would have cost $300/month - a 99.6% reduction.",
+    prevention: "For paid sources, always use incremental. Track what actually changed before re-requesting. If the provider doesn't support incremental, cache locally and use hash comparison to detect changes. Set budget alerts and review cost monthly."
+  },
+  {
+    title: "The Unvalidated Enrichment Merge",
+    problem: "Third-party enrichment data is joined directly into Core entities without validation. Duplicates, stale records, and formatting inconsistencies corrupt the master data.",
+    example: "ZoomInfo data was merged directly into the customer dimension. Three ZoomInfo records existed for the same company with different names ('Acme Corp', 'ACME Corporation', 'Acme Corp.'). The customer dimension tripled in size for that company. Revenue was split across three entities.",
+    prevention: "Always stage third-party data in a dedicated validation layer. Deduplicate using fuzzy matching. Flag low-confidence matches for manual review. Never merge directly into Core without validation and reconciliation."
+  },
+  {
+    title: "The Forgotten Licence Expiry",
+    problem: "Data licence expires or terms change at contract renewal. Existing data in the warehouse violates new terms (retention limits, usage restrictions). Compliance risk discovered during audit.",
+    example: "A market data licence required 12-month data retention maximum. The team kept 3 years of historical data. During a compliance audit, the violation was discovered. The team had to delete 2 years of data on 48-hour notice, breaking historical trend reports that stakeholders relied on.",
+    prevention: "Document licensing terms in a data catalogue entry for every third-party source. Set calendar reminders for renewal dates. Implement automated retention policies that enforce licence terms. Review terms at every renewal - they often change."
+  }
+]} />

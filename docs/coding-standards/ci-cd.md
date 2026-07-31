@@ -38,16 +38,21 @@ yarn audit --level high
 
 - Run SonarQube on every PR and on the main branch.
 - Quality Gate must pass before merge.
-- Key metrics: code coverage, duplications, code smells, security hotspots.
+- Key metrics: code coverage, duplications, code smells, security hotspots — see [Quality Gates: Code Quality](/quality-gates/code-quality) for the exact thresholds enforced.
 
 ---
 
 ## Deployment Stages
 
-| Branch / Trigger | Environment | Deploy Type |
+We follow [Trunk-Based Development](/engineering/git-branching): `main` is the only long-lived branch, and every environment is a **promotion of the same build**, not a separate branch. There is no persistent `dev` branch to push to — "Dev," "Staging," and "Production" are deploy targets, triggered in sequence off `main`.
+
+| Trigger | Environment | Deploy Type |
 |---|---|---|
-| Push to `dev` | Development | Auto-deploy |
-| PR merge to `main` | Production | Auto-deploy with release tag |
+| PR merge to `main` | Development | Auto-deploy immediately |
+| Dev deploy succeeds + smoke checks pass | Staging | Auto-deploy |
+| Staging E2E suite passes | Production | Auto-deploy with release tag (or manual CAB approval for [Major Changes](/governance/approvals)) |
+
+See [Deployment & Operations Overview](/operations/overview) for the full commit-to-production flow diagram this table maps to.
 
 ---
 
@@ -88,9 +93,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [main]
   push:
-    branches: [main, dev]
+    branches: [main]
 
 jobs:
   quality:

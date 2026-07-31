@@ -1,0 +1,215 @@
+---
+title: Raw Layer Standards
+description: Standards for the Raw ingestion layer
+order: 4
+version: 1.0
+disabled: false
+---
+
+## Raw Layer Standards
+
+<Callout type="info">
+  **The Full Raw Layer Reference** - Raw layer standards (metadata fields, naming conventions, schema evolution, and platform implementation) are documented in the Data Contracts page under Observability. This page provides a quick-reference summary.
+</Callout>
+
+### Quick Reference
+
+| Standard | Rule |
+|----------|------|
+| **Mutability** | Append-only. Never update or delete records in Raw. |
+| **Column names** | Preserve source names exactly. Renaming happens in Stage. |
+| **Schema evolution** | Additive-only. New columns accepted automatically. |
+| **Metadata** | Every record must have `__loaded_at`, `__source_system`, `__batch_id`. |
+| **Naming** | `raw.{source_system}.{source_object}` (e.g., `raw.salesforce.account`). |
+| **Format** | Delta Lake or Parquet. Never CSV. |
+| **Access** | Service accounts and data engineers only. No analyst access. |
+
+### Required Metadata Columns
+
+| Column | Type | Required |
+|---|---|---|
+| `__loaded_at` | TIMESTAMP | Always |
+| `__source_system` | STRING | Always |
+| `__batch_id` | STRING | Always |
+| `__source_file` | STRING | File sources only |
+| `__is_deleted` | BOOLEAN | CDC sources only |
+
+### Schema Evolution Rules
+
+| Change | Action | Alert |
+|--------|--------|-------|
+| New column | Accept automatically | Log only |
+| Removed column | Persist with NULLs | P2 alert |
+| Type change | Breaking - investigate | P1 alert |
+| Renamed column | Treat as remove + add | P2 alert |
+
+### Checklist
+
+| Assessment Item | Status |
+|-----------------|--------|
+| Metadata columns present (`__loaded_at`, `__source_system`, `__batch_id`) | |
+| Schema evolution configured (additive-only, `mergeSchema` enabled) | |
+| Raw tables are append-only (no updates or deletes) | |
+| Naming follows `raw.{source_system}.{source_object}` | |
+| Access restricted to service accounts and data engineers | |
+| Source column names preserved (no renaming in Raw) | |
+
+For the full reference including platform-specific implementation, anti-patterns, and dos and don'ts, see **Observability > Data Contracts**.
+
+### Raw Layer Environment Strategy
+
+<Callout type="info">
+  **Ingestion happens once. Transformation happens per environment.** - We recommend a Shared Production Raw Layer as the default architecture, with Non-Production environments granted read-only access to Production Raw data.
+</Callout>
+
+One of the most contentious architectural decisions in multi-environment data platforms is whether the Raw layer should be shared across environments or duplicated per environment. Teams that default to "dedicated Raw per environment" because it feels safer - complete isolation, no risk of Non-Prod affecting Production - pay a steep cost: source systems get hammered with duplicate extractions, data drifts between environments, and engineers debug phantom issues that exist in Dev but not Prod because the data is different.
+
+On the flip side, teams that share Raw without proper guardrails discover that a junior developer can accidentally scan petabytes of Production data from their Dev environment, or worse, export unmasked PII to a local CSV "for testing."
+
+### Shared Raw Layer (Recommended Default)
+
+Production owns the complete ingestion pipeline. Data flows from Source Systems → Production Ingestion → Production Raw. All environments (Dev, UAT, Pre-Prod) read from Production Raw with appropriate access controls.
+
+**What this enables:**
+- Engineers always work with real, current data
+- Source systems are queried once, not per environment
+- No data drift between environments - if it works in Dev, the data is identical in Prod
+- Storage efficiency through single copy (plus time-travel retention)
+
+**What this requires:**
+- Robust access controls at Production Raw layer
+- Dynamic masking for PII columns that applies to all readers
+- Query governors to prevent runaway scans from Non-Prod
+- Cost attribution to charge compute back to originating environment
+
+### Dedicated Raw Layer Per Environment
+
+Each environment has its own complete ingestion pipeline. Source systems are queried separately by Dev, UAT, and Production environments.
+
+**What this enables:**
+- Complete environment isolation - no cross-environment data access
+- Freedom to test destructive ingestion changes without risk
+- Simplified compliance for regulations requiring environment separation
+- Independent schema evolution per environment
+
+**What this costs:**
+- 3x extraction load on source systems
+- 3x storage costs for Raw data
+- Data drift between environments (different extraction times, potential schema mismatches)
+- "Works in Dev, fails in Prod" debugging nightmares
+
+### Comparison Matrix
+
+<ComparisonTable
+  data={{
+    headers: [
+      "Factor",
+      "Shared Raw (Recommended)",
+      "Dedicated Raw Per Environment"
+    ],
+    rows: [
+      {
+        header: "Source System Load",
+        cells: [
+          { content: "Single extraction", status: "above" },
+          { content: "Multiple extractions (N environments)", status: "below" }
+        ]
+      },
+      {
+        header: "Storage Cost",
+        cells: [
+          { content: "Single copy + time-travel", status: "above" },
+          { content: "Full duplication per environment", status: "below" }
+        ]
+      },
+      {
+        header: "Data Freshness in Non-Prod",
+        cells: [
+          { content: "Always current (real-time read)", status: "above" },
+          { content: "Depends on Non-Prod refresh schedule", status: "meets" }
+        ]
+      },
+      {
+        header: "Data Consistency",
+        cells: [
+          { content: "Guaranteed identical across environments", status: "above" },
+          { content: "Risk of drift between environments", status: "below" }
+        ]
+      },
+      {
+        header: "Environment Isolation",
+        cells: [
+          { content: "Logical (access controls)", status: "meets" },
+          { content: "Physical (separate data stores)", status: "above" }
+        ]
+      },
+      {
+        header: "PII Risk",
+        cells: [
+          { content: "Requires masking at Raw or strict column security", status: "meets" },
+          { content: "Naturally isolated (Non-Prod can use synthetic data)", status: "above" }
+        ]
+      },
+      {
+        header: "Ingestion Testing",
+        cells: [
+          { content: "Limited - must test in Production or use separate integration environment", status: "below" },
+          { content: "Full testing capability per environment", status: "above" }
+        ]
+      },
+      {
+        header: "Operational Overhead",
+        cells: [
+          { content: "Lower (single pipeline to maintain)", status: "above" },
+          { content: "Higher (N pipelines to maintain)", status: "below" }
+        ]
+      }
+    ]
+  }}
+/>
+
+### Decision Framework
+
+<SideBySideComparison
+    leftTitle="Use Shared Raw Layer When:"
+    rightTitle="Use Dedicated Raw Layer When:"
+    leftColor="blue"
+    rightColor="orange"
+    leftItems={[
+        { text: "Source systems have limited capacity. API rate limits, database connection pools, or network bandwidth constraints make multiple extractions impractical." },
+        { text: "Data volumes are significant (>1TB). Duplicating large datasets across environments is cost-prohibitive and wasteful." },
+        { text: "Data freshness matters for testing. Developers need to work with current data, not last week's snapshot." },
+        { text: "Your team is mature enough to manage access controls. Shared Raw requires discipline around security policies, query governance, and cost attribution." },
+        { text: "You're using a modern cloud platform. Snowflake, Databricks, and Fabric provide the necessary guardrails (dynamic masking, resource monitors, fine-grained access control)." }
+    ]}
+    rightItems={[
+        { text: "Regulatory requirements mandate environment isolation. Some industries (healthcare, finance) require physical separation of Production data from lower environments." },
+        { text: "Source systems can handle the load. If extraction is cheap and source systems are robust, duplication may be simpler than managing shared access." },
+        { text: "You need to test destructive ingestion changes. If ingestion pipelines require frequent iteration, dedicated environments enable safer testing." },
+        { text: "PII handling is particularly sensitive. If your organisation cannot risk any Production PII in Non-Prod (even with masking), complete isolation is safer." },
+        { text: "Team is less experienced with security controls. If you can't guarantee proper access control implementation, isolation is a safer default." }
+    ]}
+/>
+
+### Handling Edge Cases
+
+<Callout type="note">
+  **New Source Onboarding** - Build and test ingestion logic in Non-Prod against a source system sandbox or with limited sample extracts. Once validated, promote ingestion code to Production. Production ingestion writes to Production Raw, and all environments immediately have access to the new source data.
+</Callout>
+
+<Callout type="note">
+  **Schema-Breaking Change** - Source system changes a column type. Update transformation logic in Dev to handle the new schema, test against current Production Raw (old schema still works), deploy transformation changes, then when the source schema changes, Production Raw reflects it immediately. This requires coordination - transformation code must be deployed before the source schema changes.
+</Callout>
+
+<Callout type="warning">
+  **GDPR Right to Erasure** - Identify all records for the customer across Production Raw tables and execute deletion (an exception to append-only). Deletion automatically propagates to all environments reading from Production Raw. Your Raw layer time-travel/retention policy must accommodate GDPR - if time-travel retains deleted data for 90 days, you're not compliant. Configure retention appropriately or implement hard-delete procedures.
+</Callout>
+
+### Common Objections
+
+| Objection | Response |
+|-----------|----------|
+| "What if someone in Dev accidentally deletes Production data?" | Non-Prod has **READ-ONLY** access. They cannot delete, update, or insert into Production Raw. This is enforced at the platform level, not by convention. |
+| "Our security team won't allow Production data in Non-Prod." | Clarify the concern. If it's PII exposure, dynamic masking addresses this - Non-Prod never sees real PII values. If it's regulatory (physical isolation required), Dedicated Raw may be necessary, but document the trade-offs. |
+| "We need to test with specific data scenarios that don't exist in Production." | Use seed files or synthetic data generators for scenario-specific testing. Shared Raw provides the realistic baseline; supplement with test fixtures for edge cases. Alternatively, use Zero-Copy Cloning for point-in-time snapshots that can be modified. |
+| "If Production Raw has an issue, all environments are affected." | This is also a feature. If there's a data quality issue in Raw, you want it visible in Dev immediately so engineers can fix it. With Dedicated Raw, the issue might exist only in Production while Dev looks fine - leading to delayed detection. |

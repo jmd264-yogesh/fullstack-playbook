@@ -1,0 +1,197 @@
+---
+title: Storage
+description: Platform capabilities for data formats, ACID, versioning, and cloning
+order: 0
+version: 1.0
+disabled: false
+---
+
+## Storage
+
+**Storage** is where your data physically lives - the databases, data lakes, and warehouses that hold everything from raw source extracts to polished business-ready tables. Storage decisions have long-lasting implications: data format choices affect portability, versioning affects audit capability, and architecture affects cost at scale.
+
+In simple terms: **storage answers the question, "Where does the data live?"**
+
+```mermaid
+flowchart TB
+    subgraph INGESTION["Ingestion"]
+        I1["<b>Batch & CDC</b>"]
+        I2["<b>Real-time</b>"]
+    end
+
+    subgraph STORAGE["Storage"]
+        direction TB
+        subgraph LAYERS["Data Layers"]
+            direction LR
+            LZ["<b>Landing Zone</b><br/><i>As-Is</i>"]
+            RAW["<b>Raw</b><br/><i>Immutable</i>"]
+            STG["<b>Stage</b><br/><i>Cleaned</i>"]
+            CORE["<b>Core</b><br/><i>Enriched</i>"]
+            MART["<b>Mart</b><br/><i>Star Schema</i>"]
+            PROD["<b>Product</b><br/><i>KPIs</i>"]
+        end
+
+        subgraph TYPES["Storage Types"]
+            direction LR
+            ST1["<b>Lakehouse</b><br/><i>Delta / Iceberg</i>"]
+            ST2["<b>Warehouse</b><br/><i>High-Performance SQL</i>"]
+            ST3["<b>Feature Store</b><br/><i>Curated Features</i>"]
+            ST4["<b>Vector Store</b><br/><i>Embeddings</i>"]
+        end
+    end
+
+    INGESTION --> STORAGE
+    LZ --> RAW --> STG --> CORE --> MART --> PROD
+
+    classDef redBox fill:#FCE4EC,stroke:#E91E63,color:#880E4F
+    classDef bronze fill:#f7f4e4,stroke:#A67C52,stroke-width:2px,color:#000
+    classDef silver fill:#f2f3f5,stroke:#8B9BAE,stroke-width:2px,color:#000
+    classDef gold fill:#fef3b7,stroke:#D4AF37,stroke-width:2px,color:#000
+    classDef yellowBox fill:#FFF8E1,stroke:#FFC107,color:#F57F17
+
+    class I1,I2 redBox
+    class LZ,RAW bronze
+    class STG,CORE silver
+    class MART,PROD gold
+    class ST1,ST2,ST3,ST4 yellowBox
+
+    style INGESTION fill:none,stroke:#E91E63,stroke-width:2px
+    style STORAGE fill:none,stroke:#FFC107,stroke-width:2px
+    style LAYERS fill:none,stroke:#FFC107,stroke-width:1px,stroke-dasharray:5 5
+    style TYPES fill:none,stroke:#FFC107,stroke-width:1px,stroke-dasharray:5 5
+```
+
+### Overview
+
+**The Foundation Layer** - Storage decisions have long-lasting implications. Data format choices affect portability, versioning affects audit capability, and architecture affects cost at scale.
+
+The storage layer persists data with reliability, efficiency, and appropriate governance. Modern platforms have evolved beyond simple file storage to include ACID transactions, time travel, and zero-copy cloning.
+
+<Callout type="question">How do we store data efficiently, reliably, and in a way that supports future flexibility?</Callout>
+
+### Key Capabilities
+
+| Capability | What it measures? | Why it matters? |
+|------------|-----------------|----------------|
+| **Data Format Support** | Breadth of support for structured, semi-structured, and unstructured data formats | • Structured data is the foundation of analytics and reporting <br/> • Semi-structured (JSON, XML, Avro) is critical for modern APIs and event data <br/> • Unstructured (images, PDFs, audio) enables AI/ML and GenAI use cases |
+| **Separation of Storage and Compute** | Architectural separation allowing independent scaling | • Enables cost optimisation <br/> • Flexible scaling strategies <br/> • Pay for compute only when processing |
+| **Versioning & Time Travel** | Native support for accessing historical versions of data | • Enables debugging and root cause analysis <br/> • Supports audit compliance <br/> • Recovery from errors without backups |
+| **Cloning & Data Sharing** | Ability to create zero-copy or low-cost copies of datasets | • Efficient dev/test environments <br/> • Experimentation without storage cost multiplication |
+| **ACID Transactions** | Ability to support concurrent reads and writes with transactional guarantees | • Prevents data corruption from concurrent operations <br/> • Critical for multi-user, multi-workload environments |
+
+
+### Scoring Template
+
+#### Capability Matrix
+
+<CapabilityMatrix component="storage" />
+
+#### Adjusting Weights for Client Context
+
+| Client Profile | Adjust Weights |
+|----------------|----------------|
+| **AI/ML & unstructured data** | Data Format Support + 35% |
+| **Heavy dev/test needs / Data Sharing** | Cloning & Data Sharing + 25% |
+| **Regulatory / Audit** | Time Travel + 30% |
+| **Cost-sensitive** | Storage/Compute Separation + 30% |
+### Platform Comparison
+
+<PlatformTabs>
+
+<PlatformTabsFabric>
+
+**Tools:** OneLake, Delta format, BLOB Storage
+
+| Strengths | Limitations |
+|-----------|-------------|
+| OneLake provides unified storage across all Fabric workloads | OneLake is Azure-only (multi-cloud limited) |
+| Delta format enables ACID and time travel | Versioning retention tied to capacity |
+| Automatic data discovery and cataloging | External sharing capabilities still maturing |
+| Shortcuts enable access to external data without copying | |
+
+**Best for:** Microsoft-unified analytics, Power BI integration, Azure-first organisations
+
+| Sub-Capability | Score | Rationale |
+|----------------|-------|-----------|
+| Data Format Support | 5 | Strong structured and semi-structured support; unstructured via OneLake + Azure services |
+| ACID Transactions | 5 | Full ACID support through Delta |
+| Time Travel | 4 | Supported via Delta; retention tied to capacity |
+| Cloning | 4 | Supported; less mature than competitors |
+| Storage/Compute Separation | 5 | OneLake separates storage; compute tied to capacity |
+
+</PlatformTabsFabric>
+
+<PlatformTabsDatabricks>
+
+**Tools:** Delta Lake on ADLS/S3/GCS
+
+| Strengths | Limitations |
+|-----------|-------------|
+| Delta Lake is open source and portable | More complex architecture to configure |
+| Best-in-class time travel with configurable retention | |
+| Zero-copy clones for efficient dev/test | |
+| Multi-cloud support (Azure, AWS, GCP) | |
+
+**Best for:** Open data lakehouse, multi-cloud, maximum portability
+
+| Sub-Capability | Score | Rationale |
+|----------------|-------|-----------|
+| Data Format Support | 5 | Excellent across all formats; native support for structured, semi-structured, and unstructured in Unity Catalog volumes |
+| ACID Transactions | 5 | Full ACID with Delta Lake |
+| Time Travel | 5 | Configurable retention, efficient versioning |
+| Cloning | 5 | Zero-copy clones, shallow clones for dev/test |
+| Storage/Compute Separation | 5 | True separation; data on cloud storage, compute on clusters |
+
+</PlatformTabsDatabricks>
+
+<PlatformTabsSnowflake>
+
+**Tools:** Snowflake-managed storage
+
+| Strengths | Limitations |
+|-----------|-------------|
+| Fully managed storage with no infrastructure concerns | Proprietary storage format (not directly portable) |
+| Excellent time travel (up to 90 days on Enterprise) | Data must be loaded into Snowflake (no external tables until recently) |
+| Zero-copy cloning built-in | Cross-cloud data sharing has limitations |
+| Native data sharing with Snowflake Marketplace | |
+| Automatic clustering and optimisation | |
+
+**Best for:** Managed simplicity, data sharing use cases, SQL-centric workloads
+
+| Sub-Capability | Score | Rationale |
+|----------------|-------|-----------|
+| Data Format Support | 4 | Strong structured and semi-structured (VARIANT type); unstructured support via directory tables and file URLs |
+| ACID Transactions | 5 | Full ACID, production-proven |
+| Time Travel | 5 | Up to 90 days; Fail-safe adds 7 days |
+| Cloning | 5 | Zero-copy cloning is best-in-class |
+| Storage/Compute Separation | 5 | True separation; virtual warehouses scale independently |
+
+</PlatformTabsSnowflake>
+
+</PlatformTabs>
+
+### Key Considerations
+
+#### Lock-in vs Portability
+
+| Platform | Lock-in Risk | Portability Path |
+|----------|--------------|------------------|
+| **Fabric** | <RatingBadge rating="Medium" /> | Data in Delta on ADLS; tooling is Microsoft-specific |
+| **Databricks** | <RatingBadge rating="Low" /> | Delta Lake is open; data portable to any Parquet reader |
+| **Snowflake** | <RatingBadge rating="High" /> | Data must be exported; internal format not directly readable |
+
+#### Cost of Data Versioning
+
+| Platform | Time Travel Storage | Cost Implication |
+|----------|---------------------|------------------|
+| **Fabric** | <RatingBadge rating="Low" /> Included in capacity | Predictable but capacity-limited |
+| **Databricks** | <RatingBadge rating="Medium" /> Configurable | Pay for storage; can optimise retention |
+| **Snowflake** | <RatingBadge rating="Medium" /> Automatic (1-90 days) | Included but adds to storage cost |
+
+#### Cross-Workspace / Cross-Tenant Access
+
+| Platform | Internal Sharing | External Sharing |
+|----------|------------------|------------------|
+| **Fabric** | <RatingBadge rating="Medium" /> OneLake shortcuts | <RatingBadge rating="Hard" /> Maturing |
+| **Databricks** | <RatingBadge rating="Easy" /> Unity Catalog | <RatingBadge rating="Easy" /> Delta Sharing (open protocol) |
+| **Snowflake** | <RatingBadge rating="Easy" /> Native sharing | <RatingBadge rating="Easy" /> Snowflake Marketplace, secure sharing |

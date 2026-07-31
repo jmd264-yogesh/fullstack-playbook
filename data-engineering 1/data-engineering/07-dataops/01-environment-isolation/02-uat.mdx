@@ -1,0 +1,44 @@
+---
+title: UAT
+description: Overview of UAT
+order: 2
+version: 1.0
+maturity: Standard
+---
+
+## UAT
+
+The UAT environment is a stable staging area where business stakeholders validate that data meets their requirements before it reaches Production.
+
+#### Purpose
+
+While Pre-Prod tests for **technical correctness** (did the pipeline
+fail?), <Term>UAT</Term> tests for **Business correctness**:
+
+-   Semantic Validation: Do the calculations for \"Churn\" or \"Gross
+    Margin\" match the Finance team\'s definitions?
+-   BI/Dashboard Integration: Can Tableau/Power BI/Looker connect to
+    this schema and render reports correctly?
+-   Performance: Do queries return within acceptable timeframes when accessed through dashboards?
+
+### Refresh frequency
+
+-  **Cadence:** Daily or weekly, depending on testing cycle requirements
+-  **Source:** UAT pipelines run against the Production Raw Layer, ensuring realistic data volumes and variance
+-  **Data Freeze:** During critical sign-off windows (e.g., quarterly releases), pause the refresh. This prevents a **moving target** problem where stakeholders cannot distinguish between code bugs and data changes
+-  **Review Alignment:** To maintain a consistent baseline for UAT, we must manage the release schedule carefully. Concurrent pushes of multiple changes can shift the data results, making it difficult for business users to validate their specific numbers
+
+> A successful sign-off in UAT (via PR approval or written confirmation)
+is the prerequisite gate for promoting code to Production.
+
+### FAQ
+
+##### How do multiple simultaneous releases to UAT impact business reviewers?
+UAT Review - Pushing multiple changes to the UAT environment simultaneously can negatively impact the review process by creating an unstable testing environment.
+
+- **Prioritize planned releases** - We aim to stick to a planned release schedule. This ensures that the "baseline" (the stable reference point for testing) remains consistent. If multiple developers change data logic simultaneously, business users cannot tell which release impacted their results, leading to confusion and invalid testing
+- **Handling exceptions <Term>Hotfix</Term>** In some cases, hotfixes are unavoidable, such as when we need to deploy a Hotfix.
+- **Team alignment** is key to managing this overlap; communication is critical. Before raising a Pull Request (PR) for UAT deployment, always check if other PRs are already open or pending.
+- **Check the queue:** Look in the repository to see if a colleague has an open PR for the same data model or pipeline.
+- **Coordinate:** If another release is in progress, coordinate with that team member to avoid overwriting their table updates.
+- **Notify:** Inform business users if a hotfix might temporarily change the data they are currently validating.

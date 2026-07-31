@@ -1,0 +1,41 @@
+---
+title: "Vision & Principles"
+description: "The Full Stack Center of Excellence operates on a core set of engineering principles."
+order: 2
+version: 1.0
+disabled: false
+---
+
+## Vision & Principles
+
+The Full Stack Center of Excellence operates on a core set of engineering principles. These are not just guidelines; they are the fundamental decision filters we use when designing, building, and operating software.
+
+## 1. Ship Small, Ship Often
+We favor small, incremental updates over massive, big-bang releases. 
+- **Why?** Smaller diffs are easier to review, drastically reduce the risk of catastrophic failure, and allow for much faster MTTR (Mean Time to Recovery) if a rollback is necessary.
+- **Rule**: A Pull Request should ideally not exceed 400 lines of code.
+
+## 2. Automation First
+If a human has to repeat a task more than twice, it must be automated.
+- **Why?** Manual processes (deployments, QA testing, infrastructure provisioning) introduce human error and slow down delivery velocity.
+- **Rule**: No code reaches production without passing automated CI/CD Quality Gates.
+
+## 3. Everything Observable
+You cannot fix what you cannot see.
+- **Why?** When a production incident occurs, engineers need immediate insight into the blast radius.
+- **Rule**: Every microservice must emit structured logs, every request must have a tracing Correlation ID, and core business functions must trigger alerts when they deviate from baseline SLIs.
+
+## 4. Security by Default (Shift Left)
+Security is not a gate at the end of the SDLC; it is baked into the developer's daily workflow.
+- **Why?** Finding a critical CVE in production is vastly more expensive than blocking it in a pre-commit hook.
+- **Rule**: All repositories must use SAST/SCA scanning. Hardcoded secrets will instantly fail the build.
+
+## 5. Documentation Lives with Code
+Outdated documentation in external wikis is dangerous.
+- **Why?** If the documentation is not coupled to the codebase, it will drift from reality.
+- **Rule**: Architecture Decision Records (ADRs) and service Runbooks must be checked into the Git repository alongside the code they describe.
+
+## 6. No Manual Production Changes
+Production is immutable.
+- **Why?** SSHing into a production server or running manual SQL updates on a live database destroys the audit trail and leads to configuration drift.
+- **Rule**: All infrastructure changes must be done via Terraform (IaC). All database schema changes must be done via automated migrations.

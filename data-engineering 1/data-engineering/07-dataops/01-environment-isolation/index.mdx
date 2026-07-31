@@ -1,0 +1,90 @@
+---
+title: Environment Isolation
+description: Overview of Environment Isolation
+order: 1
+version: 1.0
+---
+
+## Environment Isolation
+
+Data platforms require multiple environments to safely support development, testing, and production workloads. Unlike traditional software, where engineers run applications locally, data engineering operates in a "Cloud Local" hybrid: code lives on the engineer's machine, but compute and storage live in the cloud. This section defines the purpose, configuration, and governance of each environment.
+
+An environment is an isolated stage in the software lifecycle (e.g., Development, UAT, Pre-Production, Production) with its own configuration, access controls, and deployment process.
+
+Different environments are required to:
+
+* **Prevent development** or testing changes from impacting live systems
+* **Validate functionality** and performance before production release
+* **Enforce access control** and separation of duties
+* **Reduce risk** and ensure production stability
+* Environment isolation enables **controlled promotion of changes** while protecting business-critical workloads.
+
+Typical environments include:
+
+* **Development (Dev)** – Feature development, experimentation, sandbox testing
+* **User Acceptance Testing (UAT)** – Business validation and functional verification
+* **Pre-Production (Pre-Prod)** – Production-like validation under realistic conditions
+* **Production (Prod)** – Live environment serving business users and downstream systems
+
+<EnvironmentFlow />
+
+| Aspect | Development | UAT | Pre-Prod (Ephemeral) | Production |
+|--------|-------------|-----|----------------------|------------|
+| **Purpose** | Day-to-day engineering work | Business validation and sign-off | Technical validation before release | Live system powering business decisions |
+| **Nature** | Isolated sandboxes | Stable staging | Ephemeral mirror of Production | Protected single source of truth |
+| **Who accesses** | Data Engineers | Business Stakeholders, Analysts | Tech Leads, Senior Engineers | All authorised consumers |
+| **Write access** | Engineers (own sandbox only) | CI/CD Service Principal only | CI/CD Service Principal only | Orchestrator Service Principal only |
+
+> Key Principle: Code flows forward through environments. Data (specifically the Raw Layer) is shared from Production backwards to ensure testing uses realistic volumes.
+
+### Security Principles (All Environments)
+Before detailing each environment, these security principles apply universally:
+
+#### Service Principals for Automation
+All automated data movement - whether refreshing UAT, running Pre-Prod validation, or executing Production pipelines - must be performed by service principals, not human accounts. This ensures auditability and prevents credential sharing.
+
+#### PII Protection through Masking
+Sensitive data (PII) must be masked or anonymised in all non-Production environments. Even when service principals process raw data, any engineer accessing the environment must see only masked values. This applies to Development, UAT, and Pre-Prod equally.
+
+####  Read-Only engineer access (Post-Development)
+Outside of Development sandboxes, engineers should have read-only access. No manual writes to UAT, Pre-Prod, or Production. Changes flow only through version-controlled, automated pipelines.
+
+### FAQ
+
+##### What is Business Validation?
+- Does the output answer the business question? 
+- Do calculations match business definitions (e.g., "Gross Margin" per Finance)?
+- Can downstream consumers (dashboards, reports) use this data correctly?
+- Does the data make sense to a domain expert?
+
+##### What is Technical Validation?
+- Does the code compile and run without errors?
+- Do unit tests pass?
+- Are naming conventions and coding standards followed?
+- Are there security vulnerabilities in dependencies?
+- Does the pipeline complete within acceptable time/cost thresholds?
+
+<SectionIndex
+  items={[
+    {
+      title: "Development",
+      description: "Sandbox strategies, shared vs isolated schemas, and developer environment setup.",
+      href: "development"
+    },
+    {
+      title: "UAT",
+      description: "Business validation, data refresh strategy, and sign-off governance.",
+      href: "uat"
+    },
+    {
+      title: "Pre-Production",
+      description: "Ephemeral regression testing against production-clone data before release.",
+      href: "pre-production"
+    },
+    {
+      title: "Production",
+      description: "Access control, break-glass procedures, and environment scoring.",
+      href: "production"
+    }
+  ]}
+/>

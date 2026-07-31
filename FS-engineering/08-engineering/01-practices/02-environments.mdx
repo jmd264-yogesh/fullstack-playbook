@@ -1,0 +1,29 @@
+---
+title: "Environment Strategy"
+description: "Properly segregated environments prevent experimental code from impacting production systems and secure customer data."
+order: 2
+version: 1.0
+disabled: false
+---
+
+## Environment Strategy
+
+Properly segregated environments prevent experimental code from impacting production systems and secure customer data.
+
+## 1. The Environment Pipeline
+Code promotes sequentially through the following environments:
+1. **Local**: Developer's machine (Docker Compose).
+2. **Preview (Ephemeral)**: Spun up automatically per Pull Request. Used for UX review.
+3. **Dev**: Continuous Integration target. The bleeding edge of `main`.
+4. **Staging**: Exact replica of Production. Used for E2E, Load Testing, and UAT. Data is sanitized.
+5. **Production**: Live customer traffic. Highly restricted access.
+
+## 2. Secrets Management
+- **Rule**: NEVER commit `.env` files or hardcode secrets in the repository.
+- **Local**: Use `.env.local` (ignored by git) or a local Vault instance.
+- **Deployed Environments**: Secrets must be injected at runtime via AWS Secrets Manager, Azure Key Vault, or HashiCorp Vault.
+
+## 3. Feature Flags
+To decouple *Deployment* from *Release*, we utilize Feature Flags (e.g., LaunchDarkly, Unleash).
+- Deploying code to production should be a non-event. The feature remains disabled via a flag until the business is ready to toggle it on for specific user segments.
+- **Cleanup**: Flags must be removed from the codebase within one sprint of being fully rolled out to 100% of users.

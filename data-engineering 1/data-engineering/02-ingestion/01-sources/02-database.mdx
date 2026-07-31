@@ -1,0 +1,165 @@
+---
+title: Database
+description: Ingestion guidance for database sources
+order: 2
+version: 1.0
+disabled: false
+---
+
+## Databases
+
+<Callout type="warning">
+  **Production Impact is Real** - A poorly written extract can lock tables, spike CPU, and degrade the production application. Always understand the source system's workload profile before running any query.
+</Callout>
+
+### What this covers
+
+PostgreSQL, SQL Server, MySQL, Oracle, Azure SQL, Amazon RDS, and any relational database serving a transactional application.
+
+### Characteristics
+
+| Characteristic | Detail |
+|----------------|--------|
+| **Access method** | JDBC/ODBC, read replicas, CDC (WAL/binlog/redo log), database-native export (COPY, BCP) |
+| **Schema control** | Shared with application team - migrations can change schema without warning |
+| **Concurrency** | Analytical queries compete with transactional workloads unless isolated |
+| **Change detection** | CDC (best), `updated_at` columns (common), increasing ID (inserts only) |
+| **Delete handling** | Hard deletes are invisible without CDC - records simply disappear |
+| **Data types** | Rich type system - `MONEY`, `JSONB`, `GEOMETRY`, `ARRAY` require careful mapping |
+
+### Common Pain Points
+
+| Pain Point | Description | Example |
+|---|---|---|
+| **Source system impact** | Analytical queries compete with transactional workloads, causing application slowdowns. | 30-minute full extract against production PostgreSQL caused the web application to timeout during peak hours. |
+| **CDC configuration complexity** | Log-based CDC requires database-level settings, often needing DBA and a restart. | PostgreSQL: `wal_level = logical` requires restart. SQL Server: CDC enabled per table. Oracle: supplemental logging + LogMiner. |
+| **Replication slot management** | CDC state must be managed. Abandoned slots cause disk bloat. | Postgres replication slot unconsumed for 3 days. WAL files grew to 200GB. Disk full, production outage. |
+| **Schema migration conflicts** | Application deployments change schema. CDC pipeline breaks if it doesn't handle evolution. | App added `NOT NULL` column. CDC pipeline received rows with new column but target didn't have it. Ingestion failed. |
+| **Data type mismatches** | Database types don't map cleanly to target platform types. | SQL Server `MONEY` extracted as string. Oracle `NUMBER(38,0)` overflows `INT`. PostgreSQL `JSONB` loses structure. |
+| **Network and firewall** | Production databases are behind firewalls, VPNs, or private networks. | Self-hosted SQL Server on-premises required VPN tunnel + firewall rule change. Two-week lead time from client IT. |
+
+### CDC Configuration by Database
+
+<Callout type="info">
+  **CDC is the Gold Standard for Databases** - Log-based CDC captures inserts, updates, and deletes with minimal source impact. It should be your default strategy for any production database.
+</Callout>
+
+| Database | CDC Method | Setup Requirement | Restart? | Key Gotcha |
+|----------|-----------|-------------------|----------|------------|
+| **PostgreSQL** | Logical replication (WAL) | `wal_level = logical` | Yes | Replication slots grow unbounded if consumer stops |
+| **SQL Server** | Change Tracking or CDC tables | Enable per database + per table | No | CDC cleanup job must be configured or log grows |
+| **MySQL** | Binary log (binlog) | `binlog_format = ROW` | Yes | `binlog_row_image = full` required for all columns |
+| **Oracle** | LogMiner / GoldenGate | Supplemental logging enabled | No | LogMiner is slow on large redo logs; GoldenGate is licensed |
+| **Azure SQL** | Change Tracking | Enable per database + per table | No | Only tracks which rows changed, not old values |
+
+### Platform-Specific Guidance
+
+<PlatformTabs>
+
+<PlatformTabsFabric>
+
+**Tools:** Data Factory Copy Activity, Dataflows Gen2, On-premises Data Gateway
+
+**Key considerations:**
+- Use On-premises Data Gateway for databases behind firewalls
+- ADF supports parallel partitioned reads for large tables - partition by ID or date range
+- For SQL Server, prefer Change Tracking over CDC tables (simpler, lower overhead)
+- Dataflows Gen2 is suitable for small reference tables (< 100K rows)
+
+</PlatformTabsFabric>
+
+<PlatformTabsDatabricks>
+
+**Tools:** Lakeflow Connect, JDBC via Spark, Auto Loader (for database exports to files), Debezium (CDC)
+
+<Callout type="warning">
+  **Lakeflow Connect is a New Product** - Database CDC support via Lakeflow Connect is still being expanded. For production CDC pipelines today, use Debezium + Kafka or partner connectors. Evaluate Lakeflow Connect's maturity for your specific database engine before adopting.
+</Callout>
+
+**Key considerations:**
+- Always use `partitionColumn` + `numPartitions` for tables over 1M rows - single-thread JDBC is extremely slow
+- `fetchsize` of 5,000-10,000 reduces round trips significantly
+- For CDC, Debezium + Kafka is the proven approach; Lakeflow Connect is adding database CDC support but is still new - verify maturity for your engine
+- Use read replicas when available - never point Spark JDBC at a production primary unless volume is small
+
+</PlatformTabsDatabricks>
+
+<PlatformTabsSnowflake>
+
+**Tools:** Snowpipe (file-based), External stages, Partner connectors (Fivetran, Airbyte, HVR)
+
+<Callout type="warning">
+  **Snowflake OpenFlow Requires BYOC** - Snowflake's OpenFlow framework is early stage and requires Bring Your Own Connector (BYOC). For database ingestion into Snowflake today, use partner tools (Fivetran, HVR) or self-managed Snowpipe from file exports.
+</Callout>
+
+**Key considerations:**
+- Snowflake has no native JDBC connector - data must come via files or partner tools
+- For CDC, Fivetran or HVR are the standard choices
+- Snowpipe auto-ingest is excellent for database-to-file-to-Snowflake patterns
+- Use `MATCH_BY_COLUMN_NAME` to handle column ordering differences between exports
+
+</PlatformTabsSnowflake>
+
+</PlatformTabs>
+
+### Database Source Discovery Template
+
+| Discovery Item | Example (PostgreSQL) |
+|----------------|---------------------|
+| Database engine & version | PostgreSQL 15.4 |
+| Hosting | AWS RDS, Azure Database, self-hosted |
+| Read replica available? | Yes - use for all extracts |
+| CDC possible? | Yes - needs `wal_level = logical` (restart required) |
+| DBA available? | Client DBA, 2-week lead time for changes |
+| Network access | Private subnet, VPN required |
+| Largest table | `orders` - 85M rows, 42GB |
+| Schema change frequency | Monthly app deployments, 2-3 column changes per quarter |
+| Deletion behaviour | Hard deletes on `users`, soft deletes on `orders` (is_active flag) |
+| Time zone | UTC (verify - some databases use local time) |
+
+<DosAndDonts
+  dos={[
+    { text: "Use read replicas for all analytical extracts - never query production primary for large reads" },
+    { text: "Default to CDC for production databases - lowest impact, captures deletes" },
+    { text: "Partition JDBC reads by ID or date range - single-thread JDBC is unacceptably slow for large tables" },
+    { text: "Monitor replication slot lag and alert if unconsumed for 24 hours" },
+    { text: "Map source data types explicitly - never rely on auto-inference for MONEY, JSONB, GEOMETRY types" },
+    { text: "Ask 'Can we enable CDC?' on day 1 of discovery - DBA changes take weeks" },
+    { text: "Schedule extracts during off-peak hours if CDC is not available" }
+  ]}
+  donts={[
+    { text: "Run full table scans against production during business hours without a read replica" },
+    { text: "Leave replication slots running without a consumer - WAL files will fill the disk" },
+    { text: "Assume all databases support CDC out of the box - each engine requires specific configuration" },
+    { text: "Use single-partition JDBC reads for tables over 1M rows - it will take hours instead of minutes" },
+    { text: "Ignore time zones - a 5-hour offset creates phantom duplicates and missing records" },
+    { text: "Skip the network/firewall discovery - VPN and firewall changes can take 2+ weeks from client IT" }
+  ]}
+/>
+
+<AntiPatterns patterns={[
+  {
+    title: "Extracting from Production Primary",
+    problem: "Team points analytical extract directly at the production database primary. Full table scan on a large table causes table-level locks, spikes CPU, and degrades the application for end users.",
+    example: "A 30-minute full extract of a 50GB orders table ran during peak hours on production PostgreSQL. The web application timed out for 200+ users. The client raised an urgent P1 ticket. The data team was banned from production access, causing a two-week project delay while a read replica was provisioned.",
+    prevention: "Never run analytical queries against a production primary for tables over 10K rows. Use read replicas, CDC pipelines, or scheduled exports during maintenance windows. If no replica exists, raise it as a blocker in discovery - not after the first production incident."
+  },
+  {
+    title: "The Abandoned Replication Slot",
+    problem: "CDC is configured during development. Project pauses or the consumer stops. The replication slot continues accumulating WAL files because no consumer is draining it. Disk fills up. Production database crashes.",
+    example: "A team set up PostgreSQL logical replication for CDC during sprint 2. The project paused for two weeks during a client holiday. The replication slot was left active. WAL files grew to 200GB. Disk reached 95% capacity. The production database went read-only, causing a 4-hour outage for the client's application.",
+    prevention: "Monitor replication slot lag with alerts (alert if unconsumed > 24h). Drop slots immediately when CDC is decommissioned. Never leave a slot active without an active consumer. Include slot cleanup in project offboarding checklists."
+  },
+  {
+    title: "The Single-Thread JDBC Trap",
+    problem: "Engineer uses default JDBC settings to read a large table. Spark reads the entire table through a single JDBC connection, taking hours instead of minutes. The extract blocks the pipeline schedule.",
+    example: "A 100M-row SQL Server table was read via Spark JDBC without partitioning. The extract took 4 hours with a single thread. After adding `partitionColumn`, `numPartitions=16`, and `fetchsize=10000`, the same extract completed in 12 minutes.",
+    prevention: "Always configure parallel reads for tables over 1M rows. Set `partitionColumn` (use primary key or indexed column), `numPartitions` (8-16 for most cases), and `fetchsize` (5,000-10,000). Test with EXPLAIN to ensure the partition column is indexed."
+  },
+  {
+    title: "CDC Without DBA Alignment",
+    problem: "Team plans CDC for production database. Development proceeds for weeks assuming CDC will be available. Week 4 discovery: the required database setting isn't enabled and requires a restart that needs DBA approval and a maintenance window.",
+    example: "Team planned CDC for production PostgreSQL. Sprint 3: discovered `wal_level` was `replica`, not `logical`. Change required a restart. DBA was unavailable for 2 weeks. Maintenance window scheduled for 3 weeks out. Total delay: 5 weeks. Team had to fall back to watermark-based incremental, missing all hard deletes.",
+    prevention: "'Can we enable CDC?' is a day-1 discovery question. Get DBA confirmation in writing during the first week. Have a fallback plan (watermark + periodic reconciliation) documented before development starts."
+  }
+]} />

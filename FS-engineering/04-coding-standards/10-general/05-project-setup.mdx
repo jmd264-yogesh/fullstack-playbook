@@ -1,0 +1,221 @@
+---
+title: "Project Setup Guide"
+description: "> Use this guide when starting any new full-stack project, or when onboarding to an existing one."
+order: 5
+version: 1.0
+disabled: false
+---
+
+## Project Setup Guide
+
+> Use this guide when starting any new full-stack project, or when onboarding to an existing one. Follow each section in order. Use the [Project Start Checklist](/coding-standards/checklists/project-start) alongside this guide to track completion.
+
+---
+
+## 0. Tech Stack Selection
+
+Before writing any code, the right technology choices must be made. Tech stack selection is a formal design activity — not an ad-hoc decision.
+
+> **See the [Solution Design Phase](/delivery-lifecycle/design-phase)** for the full tech stack selection guide, architecture comparisons (Enterprise Web, Rapid SaaS, Content-Rich), and justification templates.
+
+Key decisions to make and document (as ADRs) before setup:
+
+| Decision | Options | Guidance |
+|---|---|---|
+| Frontend framework | Next.js, React, Vue, Svelte | See [Solution Design](/delivery-lifecycle/design-phase) |
+| Backend framework | NestJS, Laravel, Express, FastAPI | See [Solution Design](/delivery-lifecycle/design-phase) |
+| Database | PostgreSQL, MySQL, MongoDB | See [Database Overview](/coding-standards/database/overview) |
+| ORM | Prisma, Eloquent, Mongoose, Drizzle | See [Database Overview](/coding-standards/database/overview) |
+| Auth strategy | JWT, Sessions, OAuth2/SSO | See Section 3 below |
+
+---
+
+## 1. Frontend
+
+- Choose a framework: **React / Vue / Svelte / Solid** — use TypeScript from day one.
+- Choose a meta-framework if needed: **Next.js / Nuxt / SvelteKit / Remix**, or set up a router manually (React Router, Vue Router).
+- Choose a styling approach: **Tailwind CSS / CSS Modules / styled-components** — agree as a team and do not mix.
+- Add a Prettier plugin for Tailwind class ordering (`prettier-plugin-tailwindcss`).
+- Set up state management **only if needed**: Zustand, Pinia, Redux Toolkit. Do not add it speculatively.
+
+---
+
+## 2. Backend
+
+- Choose a framework: **NestJS / Express / Fastify / Django / FastAPI / Laravel**.
+- Enable strict typing from the start (TypeScript `strict: true`, Python type hints, PHP strict_types).
+- Follow the backend [Folder Structure](/coding-standards/backend/folder-structure) and [Naming Conventions](/coding-standards/backend/naming-conventions) standards.
+
+---
+
+## 3. Database
+
+Database setup should be done before writing any feature code. See the [Database Overview](/coding-standards/database/overview) for full guidance on selecting the right database and ORM.
+
+### Choose a Database
+
+| Database | Best For | ORM / Query Layer |
+|---|---|---|
+| **PostgreSQL** | Relational data, ACID compliance, complex queries | Prisma, TypeORM, Drizzle |
+| **MySQL** | Rapid SaaS products, Laravel monoliths | Eloquent (Laravel), Prisma |
+| **MongoDB** | Flexible / semi-structured documents, event data | Mongoose |
+
+### Setup Steps
+
+1. **Choose your ORM** — see [Database Overview](/coding-standards/database/overview) for the ORM comparison.
+2. **Configure connection pooling** — never open a new DB connection per request. Use PgBouncer/RDS Proxy for PostgreSQL, or configure Prisma's connection pool.
+3. **Set up migrations from day one** — schema changes go through migration scripts, never manual edits.
+   ```bash
+   # Prisma
+   npx prisma migrate dev --name init
+   # Laravel
+   php artisan migrate
+   ```
+4. **Seed test data** — create seed scripts for local development.
+5. **Never commit connection strings** — use `.env` and inject secrets via CI.
+
+### Environment Variables for Database
+
+```dotenv
+# PostgreSQL / MySQL
+DATABASE_URL=postgresql://user:password@localhost:5432/mydb
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/mydb
+```
+
+---
+
+## 4. Authentication & Authorisation
+
+- Decide on a strategy: **JWT (stateless)**, **Sessions (stateful)**, or **OAuth2 / SSO** (third-party).
+- Implement auth as middleware or guards — not repeated logic inside route handlers.
+- Separate **authentication** (who are you?) from **authorisation** (what can you do?).
+- Never store passwords in plain text. Use `bcrypt` or `argon2`.
+- Tokens must expire. Implement refresh token rotation for long-lived sessions.
+
+---
+
+## 5. Input Validation
+
+All external input — API request bodies, query params, path params — must be validated server-side.
+
+| Language | Recommended Library |
+|---|---|
+| TypeScript / Node.js | Zod |
+| PHP / Laravel | Form Requests + `class-validator` |
+| Python | Pydantic |
+
+> Client-side validation improves UX. Server-side validation is non-negotiable security. You need both.
+
+---
+
+## 6. Environment Variables
+
+- Create a `.env.example` file listing every key with placeholder values. Commit this to version control.
+- Never commit `.env` files with real secrets.
+- Use a CI secrets store (GitHub Actions Secrets, Azure Key Vault) for production values.
+- Each environment (dev, staging, production) must have its own isolated config.
+
+---
+
+## 7. Package Manager & Engine Lock
+
+- Agree on one package manager: **npm**, **pnpm**, or **yarn**. Do not mix.
+- Lock the Node version in `package.json` (`engines` field).
+- Use a `.nvmrc` or `.tool-versions` file so all developers use the same runtime version.
+
+---
+
+## 8. TypeScript Configuration
+
+- Enable `strict: true` in `tsconfig.json` — no exceptions.
+- Configure path aliases to avoid deep relative imports:
+  - `@/` → `src/` (application code)
+  - `@@/` → project root (config, e2e fixtures)
+- Set module resolution to `bundler` mode to match how your bundler resolves imports.
+- Enable incremental compilation.
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES6",
+    "moduleResolution": "bundler",
+    "incremental": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@@/*": ["./*"]
+    }
+  }
+}
+```
+
+---
+
+## 9. Code Quality Tooling
+
+Set up all three layers before writing any feature code. See the dedicated pages for full configuration.
+
+### ESLint
+See [ESLint Standards](/coding-standards/code-quality/eslint) for the full rule set.
+
+```bash
+npm install --save-dev eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser
+npm install --save-dev eslint-plugin-react-hooks eslint-plugin-jsx-a11y
+npm install --save-dev eslint-plugin-simple-import-sort eslint-config-prettier
+```
+
+### Prettier
+See [Prettier Standards](/coding-standards/code-quality/prettier) for the full config.
+
+```bash
+npm install --save-dev prettier prettier-plugin-tailwindcss
+```
+
+### Git Hooks
+See [Git Hooks](/coding-standards/code-quality/git-hooks) for full setup.
+
+```bash
+npm install --save-dev husky lint-staged @commitlint/cli @commitlint/config-conventional
+npx husky init
+```
+
+---
+
+## 10. API Client
+
+- Create a single, shared HTTP client (Axios instance or `fetch` wrapper) with a configured `baseURL`.
+- Add interceptors to handle:
+  - **Auth token attachment** — inject the `Authorization` header on every outgoing request.
+  - **401 handling** — redirect to login when a token expires.
+- Use **TanStack Query** (React) for server state management. Avoids writing repetitive loading/error/cache boilerplate.
+
+---
+
+## 11. Documentation
+
+Set up documentation scaffolding at project start, not as an afterthought.
+
+| Doc | Purpose |
+|---|---|
+| `README.md` | Project overview, setup steps, how to run tests, environment links |
+| `docs/adr/` | Architecture Decision Records for significant technical decisions |
+| `CONTRIBUTING.md` | Branch naming, PR process, code review checklist |
+| `.env.example` | All required environment variables with placeholder values |
+
+See [Project Documents](/coding-standards/documentation/project-documents) for what each document must contain.
+
+---
+
+## 12. CI/CD Pipeline
+
+Set up the pipeline before the first PR is merged. See [CI/CD Pipeline Standards](/coding-standards/ci-cd) for full configuration.
+
+Minimum pipeline on day one:
+1. ESLint (`--max-warnings 0`)
+2. TypeScript type check (`tsc --noEmit`)
+3. Unit tests with coverage gate
+4. Build verification
+5. Dependency vulnerability scan
+
+Add security scanning (SonarQube) before the first staging deployment.

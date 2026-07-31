@@ -1,0 +1,177 @@
+---
+title: Operations
+description: CI/CD, IaC, environment strategy, observability, and cost management
+order: 0
+version: 1.0
+disabled: false
+---
+
+## Platform Operations
+
+**Running the Platform** - A platform that can't be deployed reliably, monitored effectively, or cost-controlled is a platform that will fail in production. Operations capabilities determine whether your data platform is a prototype or a product.
+
+Platform operations encompasses the practices and capabilities needed to deploy, monitor, and optimise your data platform. This is where DataOps meets platform engineering-ensuring that the platform itself is treated as a product with proper CI/CD, infrastructure as code, and operational visibility.
+
+<Callout type="question">Can we deploy changes safely, monitor platform health, and control costs without heroic effort?</Callout>
+
+### Key Capabilities
+
+| Capability | Description | Why it matters? |
+|------------|-------------|----------------|
+| **CI/CD** | Automated deployment pipelines with testing | Changes reach production safely and quickly |
+| **Infrastructure as Code** | Declarative platform resource management | Reproducible, auditable, version-controlled infrastructure |
+| **Environment Strategy** | Dev/Test/Prod separation and promotion | Safe experimentation without production risk |
+| **Observability** | Monitoring, alerting, and debugging | Problems detected and resolved quickly |
+| **Cost Management** | Spend tracking, forecasting, optimisation | Platform remains financially sustainable |
+
+### Scoring Template
+
+<CapabilityMatrix component="operations" />
+
+### Platform Comparison
+
+<PlatformTabs>
+
+<PlatformTabsFabric>
+
+**Approach:** Git integration, deployment pipelines, Azure DevOps/GitHub
+
+| Strengths | Limitations |
+|-----------|-------------|
+| Native Git integration for version control | Terraform support limited |
+| Deployment pipelines between workspaces | Some resources not yet Git-enabled |
+| Familiar to Azure DevOps users | Environment management evolving |
+| Capacity-based cost (predictable) | |
+
+**Best for:** Azure DevOps teams, visual deployment pipelines, predictable cost model
+
+</PlatformTabsFabric>
+
+<PlatformTabsDatabricks>
+
+**Approach:** Repos, Terraform provider, APIs, Asset Bundles
+
+| Strengths | Limitations |
+|-----------|-------------|
+| Comprehensive Terraform provider | Requires platform engineering skills |
+| API-driven automation | More complex setup |
+| Asset Bundles for deployment | Cost monitoring requires attention |
+| Mature CI/CD patterns | |
+
+**Best for:** Full IaC requirements, platform engineering maturity, API-driven automation
+
+</PlatformTabsDatabricks>
+
+<PlatformTabsSnowflake>
+
+**Approach:** dbt-centric DevOps, Terraform (partial), external tooling
+
+| Strengths | Limitations |
+|-----------|-------------|
+| dbt-centric DevOps well-established | Terraform provider less comprehensive |
+| Resource monitors for cost control | IaC for governance limited |
+| Simple environment separation (databases) | More reliance on external tooling |
+| Account usage views for monitoring | |
+
+**Best for:** dbt-centric operations, simple environment strategy, strong cost controls
+
+</PlatformTabsSnowflake>
+
+</PlatformTabs>
+
+### Operations Capability Details
+
+#### CI/CD & Release Management
+
+Automated promotion of code and pipelines across environments with testing gates.
+
+| Platform | Native CI/CD | External Integration | Testing Support |
+|----------|--------------|---------------------|-----------------|
+| **Fabric** | Deployment Pipelines | Azure DevOps, GitHub | Validation on deploy |
+| **Databricks** | Workflows | GitHub Actions, Azure DevOps, Jenkins | dbt tests, notebook tests |
+| **Snowflake** | Limited (Tasks) | dbt Cloud, GitHub Actions, Airflow | dbt tests |
+
+#### Infrastructure as Code
+
+Declarative management of platform resources for consistency and repeatability.
+
+| Platform | Terraform Support | Native IaC | Maturity |
+|----------|-------------------|------------|----------|
+| **Fabric** | Limited | ARM/Bicep partial | <RatingBadge rating="Developing" /> |
+| **Databricks** | Comprehensive | Asset Bundles | <RatingBadge rating="Mature" /> |
+| **Snowflake** | Partial | Schemachange, dbt | <RatingBadge rating="Moderate" /> |
+
+**Terraform Coverage:**
+
+| Resource Type | Fabric | Databricks | Snowflake |
+|---------------|--------|------------|-----------|
+| Compute | ○ Partial | ● Full | ● Full |
+| Storage | ○ Partial | ● Full | ● Full |
+| Security/IAM | ○ Partial | ● Full | ○ Partial |
+| Pipelines | ○ Partial | ● Full | ○ Limited |
+| Governance | ○ Limited | ● Full | ○ Partial |
+
+#### Environment Strategy
+
+Clear separation and management of dev, test, and production environments.
+
+| Platform | Separation Mechanism | Promotion Path | Data Isolation |
+|----------|---------------------|----------------|----------------|
+| **Fabric** | Workspaces | Deployment Pipelines | Workspace-level |
+| **Databricks** | Workspaces | Terraform/API | Catalog-level |
+| **Snowflake** | Databases/Accounts | dbt/Scripts | Database-level |
+
+**Environment Patterns:**
+
+```
+Fabric:     Dev Workspace → UAT Workspace → Prod Workspace
+Databricks: Dev Workspace → UAT Workspace → Prod Workspace
+Snowflake:  DEV Database → UAT Database → PROD Database
+            (or separate accounts for full isolation)
+```
+
+#### Observability
+
+Visibility into platform health, performance, and failures.
+
+| Platform | Native Monitoring | Logs | Metrics | Alerting |
+|----------|-------------------|------|---------|----------|
+| **Fabric** | Admin Portal, Capacity Metrics | Activity logs | Capacity utilisation | Email, Teams |
+| **Databricks** | Ganglia, Spark UI | Cluster logs | System tables | Webhooks, PagerDuty |
+| **Snowflake** | Account Usage | Query history | Warehouse metrics | Email, Webhooks |
+
+**Key Metrics to Monitor:**
+
+| Category | Metrics |
+|----------|---------|
+| **Performance** | Query duration, job runtime, queue time |
+| **Reliability** | Success rate, failure count, SLA compliance |
+| **Cost** | Compute spend, storage growth, cost per pipeline |
+| **Capacity** | Utilisation, concurrency, throttling |
+
+### Cost Management
+
+Tools and practices to monitor, forecast, and optimise platform spend.
+
+| Platform | Cost Visibility | Budget Controls | Optimisation Tools |
+|----------|-----------------|-----------------|-------------------|
+| **Fabric** | Capacity metrics | Capacity limits | Pause/resume |
+| **Databricks** | DBU tracking | Cluster policies | Spot instances, auto-terminate |
+| **Snowflake** | Credit tracking | Resource monitors | Auto-suspend, warehouse sizing |
+
+**Cost Control Mechanisms:**
+
+| Platform | Preventive | Detective | Corrective |
+|----------|------------|-----------|------------|
+| **Fabric** | Capacity tier | Utilisation alerts | Scale capacity |
+| **Databricks** | Cluster policies | DBU alerts | Spot, terminate |
+| **Snowflake** | Resource monitors | Credit alerts | Suspend, resize |
+
+### Decision Guidance
+
+| Fabric | Databricks | Snowflake |
+|--------|------------|-----------|
+| Azure DevOps already in use | Full IaC (Terraform) required | dbt-centric operations model |
+| Team prefers visual deployment pipelines | Platform engineering maturity exists | Simple environment strategy sufficient |
+| IaC requirements are moderate | Complex multi-environment requirements | Strong cost controls needed |
+| Capacity-based cost model preferred | API-driven automation valued | Less IaC complexity acceptable |

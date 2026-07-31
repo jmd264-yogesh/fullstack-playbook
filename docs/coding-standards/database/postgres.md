@@ -41,6 +41,27 @@ PostgreSQL is our primary relational database. Proper schema design, indexing, a
 
 ## Security & Maintenance
 
+### Principle of Least Privilege
+- The application's database user must only hold `SELECT`, `INSERT`, `UPDATE`, `DELETE` on application tables — never `DROP`, `CREATE`, `TRUNCATE`, or `GRANT`.
+- Run migrations with a separate **migration role** that holds DDL privileges; the application connects with a different, more restricted role at runtime.
+- **Example**:
+  ```sql
+  CREATE ROLE app_runtime LOGIN PASSWORD '...';
+  GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_runtime;
+  REVOKE CREATE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM app_runtime;
+  ```
+
+### Row-Level Security (RLS) for Multi-Tenant Data
+- For multi-tenant tables, enable Postgres's native Row-Level Security instead of relying solely on `WHERE tenant_id = ...` in application code — it's a second, database-enforced layer that still protects data even if a query forgets the filter.
+  ```sql
+  ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY tenant_isolation ON orders
+    USING (tenant_id = current_setting('app.current_tenant')::uuid);
+  ```
+
+### Injection Prevention
+- Never build a query with string concatenation, including in raw `$queryRawUnsafe` calls. Always use parameterized queries or the ORM's tagged-template raw query helper (see the `$queryRaw` example above) — Postgres treats parameters strictly as data, not executable SQL.
+
 ### Soft Deletes & Unique Constraints
 - **Warning**: If you use a `deleted_at` column (soft deletes), traditional `UNIQUE` constraints will break (e.g., a user deletes their account and tries to sign up again with the same email, but the DB blocks it).
 - **Solution**: Use a partial unique index: `CREATE UNIQUE INDEX unique_active_email ON users (email) WHERE deleted_at IS NULL;`.
