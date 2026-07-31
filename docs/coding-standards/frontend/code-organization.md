@@ -27,7 +27,7 @@ function CustomerCard({ customer }: { customer: TCustomer | null }) {
 Never define multiple exported components in a single file.
 
 ### Open-Closed Principle
-Components should be open for extension via props/composition, and closed for modification. Avoid internal `if` conditions that fundamentally change behaviour — use component variants or composition instead.
+Components should be open for extension via props/composition, and closed for modification. Avoid internal `if` conditions that fundamentally change behaviour - use component variants or composition instead.
 
 ### Prefer Named Exports
 Export components directly rather than using default export. Named exports make refactoring and IDE navigation more reliable.
@@ -55,12 +55,13 @@ Follow this order when deciding where to manage state. Prefer options higher in 
 
 | Priority | State Type | When to Use |
 |---|---|---|
-| 1 | **React Query Cache** | Server state — API responses, mutations, real-time sync |
-| 2 | **URL / Query Params** | Navigation state, panel open/close, filter values — for shareability and deep linking |
+| 1 | **React Query Cache** | Server state - API responses, mutations, real-time sync |
+| 2 | **URL / Query Params** | Navigation state, panel open/close, filter values - for shareability and deep linking |
 | 3 | **Local Component State** | UI-only state (open/close toggles, local form input) |
 | 4 | **Zustand Store** | Cross-component client state that cannot be derived from server data or URL |
-| 5 | **React Context** | Avoid unless absolutely necessary — only to prevent extreme prop drilling |
+| 5 | **React Context** | Avoid unless absolutely necessary - only to prevent extreme prop drilling |
 
+>[!Note]
 > Adding global state prematurely is one of the most common architecture mistakes. Start with local state and promote to global only when genuinely needed across multiple unrelated components.
 
 ---
@@ -93,7 +94,7 @@ import { cn } from '@/common/util/classnames'
 - **Avoid premature memoisation.** Do not add `useMemo` or `useCallback` without a measured performance problem.
 - **Avoid `useEffect` waterfalls.** Fetch data in parallel where possible; use React Query's parallel queries.
 - **Avoid God Components.** A component that manages dozens of state variables and renders hundreds of lines of JSX needs to be split.
-- **Avoid `useEffect` for derived state.** Compute derived values inline during render — only use `useEffect` for genuine side effects (timers, subscriptions, external system sync).
+- **Avoid `useEffect` for derived state.** Compute derived values inline during render - only use `useEffect` for genuine side effects (timers, subscriptions, external system sync).
 
 ```tsx
 // ❌ useEffect for derived state

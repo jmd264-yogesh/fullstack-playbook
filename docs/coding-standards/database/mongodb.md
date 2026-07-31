@@ -129,7 +129,7 @@ const users = await User.find({ status: 'active' })
   .sort({ createdAt: -1 })
   .skip((page - 1) * pageSize)
   .limit(pageSize)
-  .lean()  // Returns plain JS objects — faster, no Mongoose overhead for read-only
+  .lean()  // Returns plain JS objects - faster, no Mongoose overhead for read-only
 
 // Atomic update (prevents race conditions)
 const updated = await User.findByIdAndUpdate(
@@ -149,7 +149,7 @@ const dailySales = await Order.aggregate([
 ### Middleware (Hooks)
 
 ```ts
-// Pre-save hook — hash password before persisting
+// Pre-save hook - hash password before persisting
 UserSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, 12)
@@ -157,7 +157,7 @@ UserSchema.pre('save', async function (next) {
   next()
 })
 
-// Post-find hook — strip sensitive fields
+// Post-find hook - strip sensitive fields
 UserSchema.post('find', function (docs) {
   docs.forEach((doc: IUser) => {
     doc.password = undefined
@@ -197,17 +197,17 @@ export class UsersService {
 }
 ```
 
-### TTL Index — Auto-Expiring Documents
+### TTL Index - Auto-Expiring Documents
 
 ```ts
-// Tokens, sessions, reset links expire automatically — no cron job needed
+// Tokens, sessions, reset links expire automatically - no cron job needed
 const PasswordResetSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   token:  { type: String, required: true, unique: true },
   createdAt: { type: Date, default: Date.now },
 })
 
-// TTL index — MongoDB drops the document 1 hour after createdAt
+// TTL index - MongoDB drops the document 1 hour after createdAt
 PasswordResetSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 })
 
 export const PasswordReset = model('PasswordReset', PasswordResetSchema)
@@ -220,12 +220,12 @@ SessionSchema.index({ lastActivity: 1 }, { expireAfterSeconds: 2_592_000 })
 
 ---
 
-### Pre-Aggregated Reports — Computed Pattern
+### Pre-Aggregated Reports - Computed Pattern
 
 Never run a `$group` aggregation over millions of documents on every page load. Maintain a pre-aggregated summary document.
 
 ```ts
-// daily_sales collection — one document per day
+// daily_sales collection - one document per day
 const DailySalesSchema = new Schema({
   date:        { type: String, required: true },   // '2024-07-15'
   totalAmount: { type: Number, default: 0 },
@@ -236,7 +236,7 @@ export const DailySales = model('DailySales', DailySalesSchema)
 ```
 
 ```ts
-// Every time an order is placed — O(1) update, not a full aggregation
+// Every time an order is placed - O(1) update, not a full aggregation
 async function recordSale(orderId: string, amount: number) {
   const today = new Date().toISOString().slice(0, 10)  // '2024-07-15'
 

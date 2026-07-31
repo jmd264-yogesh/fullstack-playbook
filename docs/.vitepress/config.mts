@@ -11,9 +11,9 @@ export default withMermaid(defineConfig({
       { text: 'Getting Started', link: '/getting-started' },
       { text: 'Basics', link: '/basics/overview' },
       { text: 'Delivery Lifecycle', link: '/delivery-lifecycle/overview' },
-      { text: 'Coding Standards', link: '/coding-standards/overview' },
+      { text: 'Development & Coding Standards', link: '/coding-standards/overview' },
       { text: 'Deployment & Operations', link: '/operations/overview' },
-      { text: 'Security Guardrails', link: '/security/security-guardrails' }
+      { text: 'Testing & Security Guardrails', link: '/security/testing/overview' }
     ],
 
     sidebar: [
@@ -29,26 +29,66 @@ export default withMermaid(defineConfig({
         collapsed: false,
         items: [
           { text: 'Overview', link: '/basics/overview' },
-          { text: 'Full-Stack Architecture 101', link: '/basics/full-stack-architecture' },
-          { text: 'Git & Version Control', link: '/basics/git-version-control' },
-          { text: 'APIs & HTTP', link: '/basics/apis-http' },
-          { text: 'Databases 101', link: '/basics/databases' },
-          { text: 'Containers & Docker', link: '/basics/docker' },
-          { text: 'CI/CD 101', link: '/basics/ci-cd' },
-          { text: 'Environments & Cloud Basics', link: '/basics/environments-cloud' },
-          { text: 'Testing 101', link: '/basics/testing' },
-          { text: 'Security 101', link: '/basics/security' },
+          { text: 'Full-Stack Architecture', link: '/basics/full-stack-architecture' },
+          {
+            text: 'Git & Version Control',
+            collapsed: false,
+            items: [
+              { text: 'Overview', link: '/basics/git-version-control/overview' },
+              { text: 'Types of VCS (Local, Centralized, DVCS)', link: '/basics/git-version-control/vcs-types' },
+              { text: 'Git vs GitHub', link: '/basics/git-version-control/git-vs-github' },
+              { text: 'Git Core & The 3 Areas', link: '/basics/git-version-control/core-concepts-three-areas' },
+              { text: 'Branching & Team Workflow', link: '/basics/git-version-control/branching-workflow' },
+              { text: 'Handling Merge Conflicts', link: '/basics/git-version-control/merge-conflicts' }
+            ]
+          },
+          {
+            text: 'APIs & HTTP',
+            collapsed: false,
+            items: [
+              { text: 'Overview', link: '/basics/apis-http/overview' },
+              { text: 'Request & Response Anatomy', link: '/basics/apis-http/request-response-anatomy' },
+              { text: 'HTTP Methods', link: '/basics/apis-http/http-methods' },
+              { text: 'HTTP Status Codes', link: '/basics/apis-http/http-status-codes' },
+              { text: 'API Architectures & Types', link: '/basics/apis-http/architectures-types' },
+              { text: 'Advanced HTTP Concepts', link: '/basics/apis-http/advanced-concepts' },
+              { text: 'Integration & Testing Tools', link: '/basics/apis-http/integration-tools' }
+            ]
+          },
+          {
+            text: 'Databases',
+            collapsed: false,
+            items: [
+              { text: 'Overview', link: '/basics/databases/overview' },
+              { text: 'Database Types & Structures', link: '/basics/databases/database-types' },
+              { text: 'SQL vs NoSQL Decision Guide', link: '/basics/databases/sql-vs-nosql' },
+              { text: 'Modern Trends & Architecture', link: '/basics/databases/database-architecture-trends' },
+              { text: 'Querying, ORMs & Migrations', link: '/basics/databases/querying-migrations-orms' }
+            ]
+          },
+          { text: 'Environments', link: '/basics/environments' },
+          {
+            text: 'Cloud Computing',
+            collapsed: false,
+            items: [
+              { text: 'Overview', link: '/basics/cloud/overview' },
+              { text: 'Architecture & Characteristics', link: '/basics/cloud/architecture-characteristics' },
+              { text: 'Service & Deployment Models', link: '/basics/cloud/service-deployment-models' },
+              { text: 'Security & Shared Responsibility', link: '/basics/cloud/security-shared-responsibility' },
+              { text: 'Cloud Providers', link: '/basics/cloud/providers' }
+            ]
+          },
           { text: 'Glossary', link: '/basics/glossary' }
         ]
       },
-      {
-        text: 'Project Onboarding',
-        items: [
-          { text: 'Create Project', link: '/project-onboarding/create-project' },
-          { text: 'Tech Stack Selection', link: '/project-onboarding/tech-stack-selection' },
-          { text: 'Templates', link: '/project-onboarding/templates' }
-        ]
-      },
+      // {
+      //   text: 'Project Onboarding',
+      //   items: [
+      //     { text: 'Create Project', link: '/project-onboarding/create-project' },
+      //     { text: 'Tech Stack Selection', link: '/project-onboarding/tech-stack-selection' },
+      //     { text: 'Templates', link: '/project-onboarding/templates' }
+      //   ]
+      // },
       {
         text: 'Delivery Lifecycle',
         items: [
@@ -68,12 +108,12 @@ export default withMermaid(defineConfig({
           { text: 'Agile Board Standards', link: '/delivery-lifecycle/agile-board-standards' },
           { text: 'Development', link: '/delivery-lifecycle/development-phase' },
           { text: 'Testing', link: '/delivery-lifecycle/testing-phase' },
-          { text: 'Monitoring & Hypercare', link: '/delivery-lifecycle/monitoring-phase' },
-          { text: 'Release tags', link: '/delivery-lifecycle/releases' }
+          { text: 'Release Automation', link: '/delivery-lifecycle/releases' },
+          { text: 'Monitoring & Hypercare', link: '/delivery-lifecycle/monitoring-phase' }
         ]
       },
       {
-        text: 'Coding Standards',
+        text: 'Development & Coding Standards',
         items: [
           { text: 'Overview', link: '/coding-standards/overview' },
           { text: 'Project Setup Guide', link: '/coding-standards/project-setup' },
@@ -122,16 +162,6 @@ export default withMermaid(defineConfig({
             ]
           },
           {
-            text: 'Testing',
-            collapsed: false,
-            items: [
-              { text: 'Testing Strategy', link: '/coding-standards/testing/overview' },
-              { text: 'Unit Testing', link: '/coding-standards/testing/unit-testing' },
-              { text: 'Integration Testing', link: '/coding-standards/testing/integration-testing' },
-              { text: 'E2E Testing', link: '/coding-standards/testing/e2e-testing' },
-            ]
-          },
-          {
             text: 'Performance',
             collapsed: true,
             items: [
@@ -147,16 +177,16 @@ export default withMermaid(defineConfig({
           },
         ]
       },
-      {
-        text: 'Architecture & Engineering Practices',
-        items: [
-          { text: 'Architecture Standards', link: '/architecture/standards' },
-          { text: 'API Standards', link: '/architecture/api-standards' },
-          { text: 'Git & Branching Strategy', link: '/engineering/git-branching' },
-          { text: 'Environment Strategy', link: '/engineering/environments' },
-          { text: 'Developer Experience (DX)', link: '/engineering/developer-experience' }
-        ]
-      },
+      // {
+      //   text: 'Architecture & Engineering Practices',
+      //   items: [
+      //     { text: 'Architecture Standards', link: '/architecture/standards' },
+      //     { text: 'API Standards', link: '/architecture/api-standards' },
+      //     { text: 'Git & Branching Strategy', link: '/engineering/git-branching' },
+      //     { text: 'Environment Strategy', link: '/engineering/environments' },
+      //     { text: 'Developer Experience (DX)', link: '/engineering/developer-experience' }
+      //   ]
+      // },
       {
         text: 'Deployment & Operations',
         items: [
@@ -172,58 +202,68 @@ export default withMermaid(defineConfig({
         ]
       },
       {
-        text: 'Security Guardrails',
+        text: 'Testing & Security Guardrails',
         items: [
-          { text: 'Playbook Coverage', link: '/security/security-guardrails' },
+          {
+            text: 'Testing',
+            collapsed: false,
+            items: [
+              { text: 'Testing Strategy', link: '/security/testing/overview' },
+              { text: 'Unit Testing', link: '/security/testing/unit-testing' },
+              { text: 'Integration Testing', link: '/security/testing/integration-testing' },
+              { text: 'E2E Testing', link: '/security/testing/e2e-testing' },
+            ]
+          },
+          { text: 'Security Guardrails', link: '/security/security-guardrails' },
           { text: 'General Security Checklist', link: '/security/security-checklist' }
         ]
       },
-      {
-        text: 'Documentation',
-        items: [
-          { text: 'Documentation Standards', link: '/engineering/documentation' },
-          { text: 'Project Documents', link: '/coding-standards/documentation/project-documents' },
-          { text: 'Technical Document', link: '/coding-standards/documentation/technical-document' },
-          { text: 'Handover Document', link: '/coding-standards/documentation/handover-document' },
-          { text: 'AI-Assisted Development', link: '/coding-standards/ai-assisted-development' },
-        ]
-      },
-      {
-        text: 'Quality Gates',
-        items: [
-          { text: 'Overview', link: '/quality-gates/overview' },
-          { text: 'Code Quality', link: '/quality-gates/code-quality' },
-          { text: 'Testing Gates', link: '/quality-gates/testing-gates' }
-        ]
-      },
-      {
-        text: 'Governance',
-        items: [
-          { text: 'Overview', link: '/governance/overview' },
-          { text: 'Roles & Responsibilities', link: '/governance/roles-and-responsibilities' },
-          { text: 'Approvals', link: '/governance/approvals' },
-          { text: 'Compliance Model', link: '/governance/compliance-model' }
-        ]
-      },
-      {
-        text: 'KPIs',
-        items: [
-          { text: 'Engineering Metrics', link: '/kpis/engineering-metrics' },
-          { text: 'Delivery Performance', link: '/kpis/delivery-performance' },
-          { text: 'Quality Metrics', link: '/kpis/quality-metrics' }
-        ]
-      },
-      {
-        text: 'Checklists',
-        items: [
-          { text: 'Project Kickoff Checklist', link: '/templates/project-kickoff' },
-          { text: 'Project Start Checklist', link: '/coding-standards/checklists/project-start' },
-          { text: 'Project Completion Checklist', link: '/coding-standards/checklists/project-completion' },
-          { text: 'JQAA Review Checklist', link: '/coding-standards/checklists/jqaa-review' },
-          { text: 'Production Readiness Checklist', link: '/templates/production-readiness' },
-          { text: 'Release Checklist', link: '/coding-standards/checklists/release-checklist' },
-        ]
-      },
+      // {
+      //   text: 'Documentation',
+      //   items: [
+      //     { text: 'Documentation Standards', link: '/engineering/documentation' },
+      //     { text: 'Project Documents', link: '/coding-standards/documentation/project-documents' },
+      //     { text: 'Technical Document', link: '/coding-standards/documentation/technical-document' },
+      //     { text: 'Handover Document', link: '/coding-standards/documentation/handover-document' },
+      //     { text: 'AI-Assisted Development', link: '/coding-standards/ai-assisted-development' },
+      //   ]
+      // },
+      // {
+      //   text: 'Quality Gates',
+      //   items: [
+      //     { text: 'Overview', link: '/quality-gates/overview' },
+      //     { text: 'Code Quality', link: '/quality-gates/code-quality' },
+      //     { text: 'Testing Gates', link: '/quality-gates/testing-gates' }
+      //   ]
+      // },
+      // {
+      //   text: 'Governance',
+      //   items: [
+      //     { text: 'Overview', link: '/governance/overview' },
+      //     { text: 'Roles & Responsibilities', link: '/governance/roles-and-responsibilities' },
+      //     { text: 'Approvals', link: '/governance/approvals' },
+      //     { text: 'Compliance Model', link: '/governance/compliance-model' }
+      //   ]
+      // },
+      // {
+      //   text: 'KPIs',
+      //   items: [
+      //     { text: 'Engineering Metrics', link: '/kpis/engineering-metrics' },
+      //     { text: 'Delivery Performance', link: '/kpis/delivery-performance' },
+      //     { text: 'Quality Metrics', link: '/kpis/quality-metrics' }
+      //   ]
+      // },
+      // {
+      //   text: 'Checklists',
+      //   items: [
+      //     { text: 'Project Kickoff Checklist', link: '/templates/project-kickoff' },
+      //     { text: 'Project Start Checklist', link: '/coding-standards/checklists/project-start' },
+      //     { text: 'Project Completion Checklist', link: '/coding-standards/checklists/project-completion' },
+      //     { text: 'JQAA Review Checklist', link: '/coding-standards/checklists/jqaa-review' },
+      //     { text: 'Production Readiness Checklist', link: '/templates/production-readiness' },
+      //     { text: 'Release Checklist', link: '/coding-standards/checklists/release-checklist' },
+      //   ]
+      // },
     ],
 
     search: {

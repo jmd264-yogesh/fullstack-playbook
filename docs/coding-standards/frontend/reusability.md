@@ -7,7 +7,7 @@
 Shared UI primitives (Button, Input, Dialog, Select) go in `common/components/ui/` and are built on **Radix UI** headless components. These provide full accessibility out of the box with zero styling opinion.
 
 - Style them with Tailwind CSS + CVA (class-variance-authority) for variant management.
-- Never import a UI primitive from the `shadcn/ui` source directly — copy it into your `common/components/ui/` and own it.
+- Never import a UI primitive from the `shadcn/ui` source directly - copy it into your `common/components/ui/` and own it.
 - Never mix UI libraries (e.g., Material UI + Radix). Choose one headless primitive layer and own it.
 
 ---
@@ -37,11 +37,11 @@ useEffect(() => {
 
 ---
 
-## Zod Schemas — Single Definition, Dual Purpose
+## Zod Schemas - Single Definition, Dual Purpose
 
 Zod schemas serve two purposes simultaneously:
-1. **API response validation** — parse and validate what the server returns
-2. **Form validation** — pass to React Hook Form via the Zod resolver
+1. **API response validation** - parse and validate what the server returns
+2. **Form validation** - pass to React Hook Form via the Zod resolver
 
 Define the schema once, derive the TypeScript type from it:
 
@@ -72,7 +72,7 @@ const form = useForm<TCustomer>({
 
 ---
 
-## Forms — React Hook Form + Zod
+## Forms - React Hook Form + Zod
 
 Use **React Hook Form** with Zod resolvers for all forms. Never manage form state manually with `useState`.
 
@@ -82,11 +82,11 @@ Use **React Hook Form** with Zod resolvers for all forms. Never manage form stat
 
 ---
 
-## The Rule of Three
+### The Rule of Three
+> [!Important]
+> **Avoid premature abstraction.** Wait until a pattern appears in **3+ places** before extracting it.
 
-> **Avoid premature abstraction.** Wait until a pattern appears in 3+ places before extracting it.
-
-A component or function that exists in only one or two places should stay where it is. Extract it when the third use appears — that is when the abstraction is validated by real usage, not hypothetical future needs.
+A component or function that exists in only one or two places should stay where it is. Extract it when the third use appears - that is when the abstraction is validated by real usage, not hypothetical future needs.
 
 ---
 

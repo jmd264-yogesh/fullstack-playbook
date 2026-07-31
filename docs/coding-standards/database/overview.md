@@ -22,19 +22,19 @@ See [Solution Design Phase](/delivery-lifecycle/design-phase) for the full archi
 
 | Stack | ORM / Query Layer | When to Use |
 |---|---|---|
-| **Node.js (NestJS / Express)** | **Prisma** | New projects — type-safe, migration-first, excellent DX |
+| **Node.js (NestJS / Express)** | **Prisma** | New projects - type-safe, migration-first, excellent DX |
 | **Node.js (NestJS / Express)** | **TypeORM** | Existing projects using TypeORM decorators |
 | **Node.js (NestJS / Express)** | **Drizzle** | Lightweight, SQL-first ORM preference |
-| **PHP (Laravel)** | **Eloquent** | All Laravel projects — built-in, battle-tested ActiveRecord ORM |
+| **PHP (Laravel)** | **Eloquent** | All Laravel projects - built-in, battle-tested ActiveRecord ORM |
 | **MongoDB + Node.js** | **Mongoose** | Schema validation, middleware hooks, population |
 
 ---
 
-## Core Principles — All Databases
+## Core Principles - All Databases
 
 ### 1. Migrations First
 
-Schema changes **must** go through migration files — never apply manual changes to a shared database.
+Schema changes **must** go through migration files - never apply manual changes to a shared database.
 
 ```bash
 # Prisma
@@ -46,9 +46,9 @@ php artisan migrate
 ```
 
 Every migration must be:
-- **Reversible** — include a `down` method (Laravel) or maintain backward compatibility (Prisma)
-- **Tested** — run migrations in CI against a real test database
-- **Reviewed** — migrations are part of the PR diff, reviewed like code
+- **Reversible** - include a `down` method (Laravel) or maintain backward compatibility (Prisma)
+- **Tested** - run migrations in CI against a real test database
+- **Reviewed** - migrations are part of the PR diff, reviewed like code
 
 ### 2. Connection Pooling is Mandatory
 
@@ -215,6 +215,6 @@ return UserResource::collection($users);
 
 ## Detailed Standards
 
-- [PostgreSQL](/coding-standards/database/postgres) — Indexing, pooling, Prisma setup
-- [MySQL](/coding-standards/database/mysql) — Setup, Prisma, Eloquent
-- [MongoDB](/coding-standards/database/mongodb) — Schema design, indexing, Mongoose
+- [PostgreSQL](/coding-standards/database/postgres) - Indexing, pooling, Prisma setup
+- [MySQL](/coding-standards/database/mysql) - Setup, Prisma, Eloquent
+- [MongoDB](/coding-standards/database/mongodb) - Schema design, indexing, Mongoose

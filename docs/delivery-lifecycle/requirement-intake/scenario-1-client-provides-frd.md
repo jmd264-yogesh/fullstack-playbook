@@ -1,5 +1,7 @@
 # Scenario 1: Client Provides FRD
 
+> **Intake Scenarios:** [← Back to Requirement Intake Overview](../requirement-intake.md) | [Scenario 2: No FRD](./scenario-2-no-frd.md) | [Scenario 3: UI Mockup](./scenario-3-ui-mockup.md) | [Variations & Edge Cases](./variations-edge-cases.md)
+
 When the client provides a Functional Requirements Document (FRD) or a similar specification document, the first phase of the project focuses on **requirements validation, analysis, and planning**. The objective is to ensure that both business and technical teams have a shared understanding of the requirements before development begins.
 
 ## 1. Kickoff & Requirements Review
@@ -227,3 +229,16 @@ Requirements documents may omit:
 ## Summary
 
 When an FRD is provided by the client, the project team's primary objective is to validate, refine, and operationalize the requirements. Through structured reviews, backlog creation, acceptance criteria definition, testing preparation, and change control processes, the team ensures that development begins with a clear, agreed-upon understanding of the project scope and expected outcomes.
+
+---
+
+## Related Scenarios
+
+| Scenario | When to Use |
+|---|---|
+| 📋 **You are here** — Scenario 1: Client Provides FRD | Full requirements document exists |
+| [🔍 Scenario 2: No FRD](./scenario-2-no-frd.md) | No formal requirements — needs discovery |
+| [🎨 Scenario 3: UI Mockup](./scenario-3-ui-mockup.md) | Visual designs are the primary reference |
+| [⚡ Variations & Edge Cases](./variations-edge-cases.md) | Partial FRD, POC, API-only, legacy |
+
+> **Next Phase:** [Solution Design →](../design-phase.md)

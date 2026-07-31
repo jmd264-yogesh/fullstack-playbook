@@ -22,7 +22,7 @@ npm install --save-dev @types/passport-jwt
 
 ## Generating Code with the CLI
 
-Always use the NestJS CLI — never create module files by hand.
+Always use the NestJS CLI - never create module files by hand.
 
 ```bash
 # Generate a full CRUD resource (module + controller + service + DTO + entity)
@@ -43,7 +43,7 @@ nest g decorator current-user
 
 ## Module Structure
 
-Every feature is a self-contained module. Register everything through the IoC container — never use `new`.
+Every feature is a self-contained module. Register everything through the IoC container - never use `new`.
 
 ```ts
 // src/modules/users/users.module.ts
@@ -62,7 +62,7 @@ export class UsersModule {}
 ```
 
 ```ts
-// src/app.module.ts — Root module
+// src/app.module.ts - Root module
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -77,7 +77,7 @@ export class AppModule {}
 
 ---
 
-## Controllers — HTTP Routing Only
+## Controllers - HTTP Routing Only
 
 Controllers accept requests, validate input via DTOs, and call services. No business logic here.
 
@@ -135,7 +135,7 @@ export class UsersController {
 
 ---
 
-## Services — Business Logic
+## Services - Business Logic
 
 Services hold all business logic. They are injected, testable, and framework-agnostic.
 
@@ -224,7 +224,7 @@ export class CreateUserDto {
 ```
 
 ```ts
-// src/main.ts — register global validation pipe
+// src/main.ts - register global validation pipe
 import { ValidationPipe } from '@nestjs/common'
 
 async function bootstrap() {
@@ -390,7 +390,7 @@ app.useGlobalFilters(new AllExceptionsFilter())
 ## Security Setup
 
 ```ts
-// src/main.ts — full security configuration
+// src/main.ts - full security configuration
 import * as helmet from 'helmet'
 import { ThrottlerModule } from '@nestjs/throttler'
 
@@ -400,7 +400,7 @@ async function bootstrap() {
   // Security headers
   app.use(helmet())
 
-  // CORS — explicitly list allowed origins
+  // CORS - explicitly list allowed origins
   app.enableCors({
     origin: [process.env.FRONTEND_URL],
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
@@ -480,12 +480,12 @@ app.useGlobalInterceptors(new LoggingInterceptor())
 Every service method that reads or modifies a resource must verify ownership.
 
 ```ts
-// ❌ Vulnerable — user can read any order by guessing the ID
+// ❌ Vulnerable - user can read any order by guessing the ID
 async findOrder(orderId: string) {
   return this.prisma.order.findUnique({ where: { id: orderId } })
 }
 
-// ✅ Secure — user can only read their own orders
+// ✅ Secure - user can only read their own orders
 async findOrder(orderId: string, userId: string) {
   const order = await this.prisma.order.findFirst({
     where: { id: orderId, userId },   // Ownership check in the query
@@ -543,7 +543,7 @@ describe('UsersService', () => {
 
 ---
 
-## ConfigService — Environment Variables
+## ConfigService - Environment Variables
 
 Never access `process.env` directly outside config files. Use `ConfigService` for type-safe, injectable configuration.
 
@@ -706,7 +706,7 @@ export class UsersController {
 
 ---
 
-## Event Emitter — Domain Events
+## Event Emitter - Domain Events
 
 Decouple side effects (emails, notifications, audit logs) from business logic using the built-in event emitter.
 
@@ -735,7 +735,7 @@ export class UserCreatedEvent {
   ) {}
 }
 
-// users.service.ts — emit the event
+// users.service.ts - emit the event
 import { EventEmitter2 } from '@nestjs/event-emitter'
 
 @Injectable()
@@ -752,7 +752,7 @@ export class UsersService {
   }
 }
 
-// src/modules/notifications/listeners/user-created.listener.ts — side effect
+// src/modules/notifications/listeners/user-created.listener.ts - side effect
 import { OnEvent } from '@nestjs/event-emitter'
 
 @Injectable()

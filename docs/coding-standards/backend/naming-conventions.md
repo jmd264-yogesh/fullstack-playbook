@@ -36,23 +36,23 @@ Consistent naming in backend code makes the codebase navigable and self-document
 ### Methods & Properties
 
 ```ts
-// ✅ Service methods — verb + noun, camelCase
+// ✅ Service methods - verb + noun, camelCase
 async findById(id: string): Promise<User> {}
 async createUser(dto: CreateUserDto): Promise<User> {}
 async deleteUser(id: string): Promise<void> {}
 
-// ✅ Controller routes — HTTP verb-aligned, camelCase
+// ✅ Controller routes - HTTP verb-aligned, camelCase
 @Get(':id')
 async getUser(@Param('id') id: string) {}
 
 @Post()
 async createUser(@Body() dto: CreateUserDto) {}
 
-// ✅ Constants — UPPER_SNAKE_CASE
+// ✅ Constants - UPPER_SNAKE_CASE
 const MAX_LOGIN_ATTEMPTS = 5
 const DEFAULT_PAGE_SIZE = 20
 
-// ✅ Enums — PascalCase enum name, PascalCase members
+// ✅ Enums - PascalCase enum name, PascalCase members
 enum UserStatus { Active = 'ACTIVE', Inactive = 'INACTIVE', Suspended = 'SUSPENDED' }
 ```
 
@@ -71,7 +71,7 @@ model User {
 ```
 
 - **Prisma schema fields**: camelCase (`firstName`, `createdAt`)
-- **Database columns**: snake_case (`first_name`, `created_at`) — use `@map` or `@@map`
+- **Database columns**: snake_case (`first_name`, `created_at`) - use `@map` or `@@map`
 - **Table names**: plural snake_case (`users`, `orders`, `payment_methods`)
 
 ---
@@ -96,17 +96,17 @@ model User {
 ### Methods
 
 ```php
-// ✅ Model scopes — camelCase, prefixed with `scope`
+// ✅ Model scopes - camelCase, prefixed with `scope`
 public function scopeActive(Builder $query): Builder {}
 public function scopeByStatus(Builder $query, string $status): Builder {}
 
-// ✅ Action classes — single public method named `execute` or `handle`
+// ✅ Action classes - single public method named `execute` or `handle`
 class CreateUserAction
 {
     public function execute(StoreUserRequest $request): User {}
 }
 
-// ✅ Controller methods — RESTful resource naming
+// ✅ Controller methods - RESTful resource naming
 public function index()   {}   // GET /users
 public function store()   {}   // POST /users
 public function show()    {}   // GET /users/{id}
@@ -127,13 +127,13 @@ public function destroy() {}   // DELETE /users/{id}
 | Timestamp columns | `_at` suffix | `created_at`, `deleted_at`, `verified_at` |
 
 ```php
-// ✅ Eloquent model — property naming
+// ✅ Eloquent model - property naming
 class User extends Model
 {
     protected $table = 'users';           // Explicit table name (optional if it follows convention)
     protected $primaryKey = 'id';
 
-    // Accessors/Mutators — camelCase via get/set prefix
+    // Accessors/Mutators - camelCase via get/set prefix
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";

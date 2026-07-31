@@ -11,7 +11,7 @@ This is the baseline security posture any full-stack application should meet, in
 | :---: | :---: | :---: |
 | **8** | **8 layers** | **10 controls** |
 
-## 2.1 Frontend / Client
+## 3.1 Frontend / Client
 
 - **XSS:** never render untrusted HTML directly (avoid `dangerouslySetInnerHTML`, `v-html`, `innerHTML`); rely on framework auto-escaping; sanitize any rich-text/user-generated HTML with a vetted library (DOMPurify) if raw HTML must be rendered.
 - **Content Security Policy:** strict CSP header disallowing inline scripts/eval; nonce or hash-based script allowlisting.
@@ -21,7 +21,7 @@ This is the baseline security posture any full-stack application should meet, in
 - **Dependency hygiene:** audit npm packages for known vulnerabilities and unmaintained/typosquatted packages; lockfiles committed.
 - **Sensitive data exposure:** don't log tokens/PII to browser console; disable source maps in production or restrict access to them.
 
-## 2.2 Backend / API
+## 3.2 Backend / API
 
 - **Input validation everywhere:** validate type, length, format, and range server-side even if the client already validates — client-side validation is UX only, never a security control.
 - **Injection prevention:** parameterized queries/ORMs for SQL; avoid `eval`/dynamic code execution; escape shell arguments if shelling out; validate/allowlist for NoSQL query operators to prevent NoSQL injection.
@@ -34,7 +34,7 @@ This is the baseline security posture any full-stack application should meet, in
 - **Rate limiting & abuse controls:** throttle auth, password-reset, and other sensitive endpoints separately from general API limits.
 - **Business-logic abuse:** think beyond OWASP's technical list — check for race conditions in payment/coupon flows, price manipulation, workflow bypass (e.g. skipping a required approval step via direct API call).
 
-## 2.3 Authentication & Session Management
+## 3.3 Authentication & Session Management
 
 - Prefer delegating to a proven IdP (OAuth2/OIDC via Azure AD, Okta, Auth0, Cognito) over building custom auth.
 - **Passwords:** bcrypt/argon2/scrypt hashing with per-user salt; enforce reasonable minimum length/complexity; check against known-breached password lists (e.g. HaveIBeenPwned range API) where feasible.
@@ -44,7 +44,7 @@ This is the baseline security posture any full-stack application should meet, in
 - **Account-recovery flows:** are a common weak point: rate-limit reset requests, expire reset tokens quickly (minutes, not days), never reveal whether an email/username exists via response timing or messaging.
 - Lock out or exponentially back off after repeated failed logins; alert on impossible-travel / anomalous login patterns for sensitive accounts.
 
-## 2.4 Data & Database
+## 3.4 Data & Database
 
 - Encrypt data at rest (managed disk/DB encryption) and in transit (TLS 1.2+ everywhere, HSTS enabled).
 - **Principle of Least Privilege:** for DB accounts — app runtime user should never hold DDL rights or superuser.
@@ -53,7 +53,7 @@ This is the baseline security posture any full-stack application should meet, in
 - **Backups:** encrypted, access-restricted, and periodically tested for restore — a backup nobody can restore isn't a control.
 - **Data residency & retention:** honor GDPR/CCPA data-subject requests (export/delete); define and enforce retention/deletion schedules instead of keeping data indefinitely.
 
-## 2.5 Infrastructure, Containers & Network
+## 3.5 Infrastructure, Containers & Network
 
 - **Infrastructure as Code:** (Terraform/CloudFormation/Pulumi) — no manual production changes; all changes reviewed via PR.
 - **Containers:** run as non-root, minimal base images (distroless/Alpine), read-only root filesystem where possible, image scanning in CI (Trivy/Grype/ECR scanning) blocking on critical CVEs.
@@ -63,7 +63,7 @@ This is the baseline security posture any full-stack application should meet, in
 - **Patch management:** define and track SLAs for critical/high vulnerabilities (e.g. 48h critical / 14d high) across both application dependencies and base OS/images.
 - Just-in-time, logged, time-boxed access to production — no standing SSH/DB credentials for engineers.
 
-## 2.6 CI/CD & Supply Chain
+## 3.6 CI/CD & Supply Chain
 
 - **SAST:** (SonarQube, Semgrep, CodeQL) on every PR, blocking on high/critical findings.
 - **SCA / dependency scanning:** (Snyk, Dependabot, `npm audit`/`pip-audit`) on a schedule and every build; don't allow audit suppression flags in CI.
@@ -73,7 +73,7 @@ This is the baseline security posture any full-stack application should meet, in
 - **Least-privilege CI credentials:** pipeline service accounts scoped to only what that pipeline needs, rotated regularly.
 - **Branch protection:** required reviews, no direct pushes to main, mandatory status checks including security gates.
 
-## 2.7 Observability, Incident Response & Compliance
+## 3.7 Observability, Incident Response & Compliance
 
 - Immutable audit logs for sensitive actions (who/what/when), shipped to a system engineers can't tamper with from the app itself.
 - Centralized logging/alerting for auth failures, privilege escalation attempts, and anomalous traffic patterns.
@@ -83,7 +83,7 @@ This is the baseline security posture any full-stack application should meet, in
 - Map applicable compliance regimes early (GDPR, SOC2, HIPAA, PCI-DSS depending on data handled) — retrofitting compliance is far more expensive than designing for it upfront.
 - **Threat modeling:** during design, not after: identify trust boundaries, data flows, and abuse cases (e.g. STRIDE) before writing code for anything handling sensitive data or money.
 
-## 2.8 OWASP Top 10 (2021) Quick Reference
+## 3.8 OWASP Top 10 (2021) Quick Reference
 
 | # | Category | Core Mitigation |
 | :---: | :--- | :--- |

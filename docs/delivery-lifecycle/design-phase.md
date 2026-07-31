@@ -61,7 +61,7 @@ Every new service or major architectural change must go through a lightweight th
 | Trust boundary example | Question to ask | Typical mitigation |
 |---|---|---|
 | Client → API Gateway | Can an unauthenticated request reach a protected endpoint? | AuthGuard on every route by default, not opt-in |
-| API → Database | Can user input reach a query unparameterized? | ORM/parameterized queries only — see [Security 101](/basics/security) |
+| API → Database | Can user input reach a query unparameterized? | ORM/parameterized queries only — see [Security Guardrails](/security/security-guardrails) |
 | Service → Service (async) | Can a malicious/duplicate event be replayed? | Idempotent consumers — see [Architecture Standards](/architecture/standards) |
 
 This output feeds directly into the [ARB review](/governance/approvals) for any change that requires one.

@@ -1,118 +1,109 @@
 # Folder Structure & Architecture
 
-A well-organised folder structure is critical for developer productivity and long-term maintainability. The recommended architecture follows a **feature-based (bounded context)** pattern combined with a shared common layer.
+A well-organised folder structure is critical for developer productivity, team scalability, and long-term maintainability. This architecture follows a **feature-based (bounded context)** design combined with a shared common layer.
 
 ---
 
-## Top-Level Structure
+## Code Organization & Structure
 
-```text
-project-root/
-├── src/
-│   ├── app/                    # Next.js App Router (pages, layouts, routes only)
-│   ├── common/                 # Shared components, hooks, utils, types
-│   │   ├── components/
-│   │   │   └── ui/             # Base UI primitives (Button, Input, Select)
-│   │   ├── hooks/
-│   │   ├── util/
-│   │   ├── store/              # Global state (Zustand)
-│   │   ├── data/               # Shared API fetching
-│   │   ├── types/
-│   │   ├── schemas/            # Shared Zod schemas
-│   │   ├── _domain/            # Domain models & enums
-│   │   └── constants.ts
-│   ├── context.<feature>/      # Feature-based bounded contexts
-│   │   ├── components/
-│   │   ├── _domain/
-│   │   │   ├── model.types.<name>.ts
-│   │   │   ├── model.schemas.<name>.ts
-│   │   │   └── model.enums.<name>.ts
-│   │   ├── data/
-│   │   ├── hooks/
-│   │   ├── _utils/
-│   │   └── __tests__/
-│   └── ...
-├── e2e/                        # End-to-End tests (Playwright + BDD)
-│   ├── features/               # Gherkin .feature files
-│   ├── steps/                  # Step definitions
-│   ├── common/                 # Page objects & utilities
-│   └── support/                # Test data, mocks, helpers
-├── public/                     # Static assets
-├── docs/                       # Project documentation
-├── __mocks__/                  # Global test mocks
-└── scripts/                    # Build & utility scripts
-```
+Code organization should reflect **domain ownership** rather than technical classifications. Grouping files by what they do for the user-rather than whether they are a hook, a utility, or a component-minimizes context switching and keeps dependencies isolated.
+
+## Frontend Folder Structures
+
+Explore the recommended folder structures for popular frontend frameworks.
+
+<FrameworkTabs />
+
+## Folder Responsibilities
+
+Understanding where code belongs keeps the codebase clean and prevents circular dependencies[cite: 1].
+
+| Directory / File | Scope | Primary Responsibility |
+| :--- | :--- | :--- |
+| **`src/app/` or `src/routes/`** | Infrastructure | Routes, layouts, error boundary setups, and parameter parsing[cite: 1]. No raw business logic[cite: 1]. |
+| **`src/common/`** | Global Shared | Agnostic UI components, core HTTP clients, shared global stores, and utility functions[cite: 1]. |
+| **`src/context.<feature>/`** | Bounded Feature | Self-contained domain modules containing all logic, hooks, data fetching, and feature-specific UI[cite: 1]. |
+| **`_domain/`** | Feature Internal | Types, Zod validation schemas, domain interfaces, and enums[cite: 1]. |
+| **`_components/`** | Feature Internal | Components that are used exclusively within the parent feature domain[cite: 1]. |
+| **`data/`** | Data Access | API queries, mutation hooks (e.g., TanStack Query), and server action handlers[cite: 1]. |
+
+> [!Note]
+> Prefixing folders with an underscore (`_components/`, `_domain/`, `_hooks/`, `_utils/`) signals that these modules are **internal to the feature**[cite: 1]. They should not be imported directly by other feature domains[cite: 1].
 
 ---
 
-## Key Architectural Principles
+## Component Architecture & Reusability
 
-### Feature-Based Organisation
+To keep components maintainable, follow a **2-Tier Component Hierarchy**:
 
-Group code by feature domain (`context.<name>`) rather than by technical role. Each context folder is self-contained with its own components, hooks, utilities, domain models, and tests.
+1. **Base UI Primitives (`common/components/ui`)**
+   - Headless, pure, and decoupled from business logic[cite: 1].
+   - Highly reusable UI foundations (e.g., Radix UI, Tailwind primitives)[cite: 1].
+   - Configured through explicit, type-safe props.
 
-**Do this:**
-```text
-src/context.customer/
-  components/
-  _domain/
-  hooks/
-  data/
-  __tests__/
-```
+2. **Feature Components (`context.<feature>/_components`)**
+   - Encapsulate business logic, data fetching, and state management[cite: 1].
+   - Composed using Base UI Primitives.
+   - Tailored to specific domain requirements[cite: 1].
 
-**Not this:**
-```text
-src/components/
-src/hooks/
-src/services/
-src/types/
-```
-
-### Shared Common Layer
-
-Reusable components, hooks, and utilities that span multiple features live in `src/common/`. Base UI primitives (Input, Button, Select, Dialog) go in `common/components/ui/` and are built on Radix UI headless components.
-
-### App Router for Routing Only
-
-The `src/app/` directory should only contain Next.js route files:
-- `page.tsx`
-- `layout.tsx`
-- `loading.tsx`
-- `error.tsx`
-
-All UI logic and components come from `context.*` or `common` folders. The app directory is the entry point, not the feature implementation.
-
-### Private Folders
-
-Prefix internal/private folders with an underscore to indicate they should not be imported from outside their context:
-- `_domain/` — type definitions, schemas, enums
-- `_hooks/` — context-internal hooks
-- `_utils/` — context-internal utilities
-- `_components/` — context-internal components
-
-### Domain Layer
-
-Each context has a `_domain/` folder containing:
-
-| File | Purpose |
-|---|---|
-| `model.types.<name>.ts` | TypeScript type definitions |
-| `model.schemas.<name>.ts` | Zod validation schemas |
-| `model.enums.<name>.ts` | Enums for the domain |
+> [!Important]
+> **Do not prematurely optimize for reusability.** Keep components private inside `context.<feature>/_components/`[cite: 1]. Elevate a component to `common/components/` **only** when it is needed by two or more independent feature domains.
 
 ---
 
-## Barrel Files
+## Practical Examples
 
-> **Avoid barrel files (`index.ts` re-exports).** Import directly from the source file.
+### 1. Base UI Primitive Component
 
-Barrel files slow down builds and create circular dependency issues. They also obscure where a module actually lives, making refactoring harder.
+Base UI components are completely stateless regarding business logic and rely on standard props for behavior and styling.
 
-```ts
-// ❌ Avoid
-import { CustomerForm } from '@/context.customer'
+```tsx
+// src/common/components/ui/Button.tsx
+import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/common/util/cn';
 
-// ✅ Correct
-import { CustomerForm } from '@/context.customer/components/CustomerForm'
-```
+const buttonVariants = cva(
+  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:opacity-50',
+  {
+    variants: {
+      variant: {
+        default: 'bg-slate-900 text-white hover:bg-slate-800',
+        outline: 'border border-slate-200 bg-transparent hover:bg-slate-100',
+        danger: 'bg-red-600 text-white hover:bg-red-700',
+      },
+      size: {
+        sm: 'h-8 px-3 text-xs',
+        md: 'h-10 px-4',
+        lg: 'h-12 px-6 text-lg',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'md',
+    },
+  }
+);
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  isLoading?: boolean;
+}
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, isLoading, children, disabled, ...props }, ref) => {
+    return (
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={disabled || isLoading}
+        {...props}
+      >
+        {isLoading ? <span className="loader mr-2" /> : null}
+        {children}
+      </button>
+    );
+  }
+);
+Button.displayName = 'Button';

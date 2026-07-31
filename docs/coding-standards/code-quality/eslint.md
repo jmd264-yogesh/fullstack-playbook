@@ -1,6 +1,6 @@
 # ESLint Standards
 
-> ESLint automatically catches bugs, dead code, and style violations before they reach code review. Reviewers spend time on logic and architecture — not on unused variables or missing imports.
+> ESLint automatically catches bugs, dead code, and style violations before they reach code review. Reviewers spend time on logic and architecture - not on unused variables or missing imports.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ESLint statically analyses source code and flags issues a human reviewer might miss: unused imports, unsafe TypeScript patterns, accessibility violations, and formatting inconsistencies. It runs without executing the code, so problems are caught at development time, not in production.
 
-In this project, **all violations are treated as errors, not warnings**. A single unresolved ESLint error fails the build. Warnings accumulate and get ignored — errors demand resolution.
+In this project, **all violations are treated as errors, not warnings**. A single unresolved ESLint error fails the build. Warnings accumulate and get ignored - errors demand resolution.
 
 ---
 
@@ -16,7 +16,7 @@ In this project, **all violations are treated as errors, not warnings**. A singl
 
 ### Formatting Consistency
 
-All formatting must conform to the project's Prettier configuration. ESLint is configured to treat any Prettier deviation as a hard error. Formatting is not personal preference — it is enforced by tooling.
+All formatting must conform to the project's Prettier configuration. ESLint is configured to treat any Prettier deviation as a hard error. Formatting is not personal preference - it is enforced by tooling.
 
 The practical outcome: formatting is never a topic in code review. If it looks wrong, the developer's editor is not configured correctly.
 
@@ -37,15 +37,15 @@ Variables declared but never used are flagged as errors. This prevents dead code
 `console.log` must not appear in committed code. It pollutes browser consoles and may leak sensitive runtime information.
 
 **Permitted console methods:**
-- `console.warn` — non-critical issues that should be surfaced
-- `console.error` — errors for monitoring and log aggregation
-- `console.group` / `console.groupEnd` — structured diagnostic output (remove before merging)
+- `console.warn` - non-critical issues that should be surfaced
+- `console.error` - errors for monitoring and log aggregation
+- `console.group` / `console.groupEnd` - structured diagnostic output (remove before merging)
 
 > `console.log` during local development is fine. The pre-commit hook blocks it before it reaches the repository. A `console.log` in a PR is a signal the developer did not run the linter. Do not approve until it is removed.
 
 ### Unused Expressions
 
-Expressions that are evaluated but whose result is neither used nor assigned are flagged as errors. These typically indicate a logic mistake — a function called but its return value discarded.
+Expressions that are evaluated but whose result is neither used nor assigned are flagged as errors. These typically indicate a logic mistake - a function called but its return value discarded.
 
 **Allowed exceptions:**
 - Short-circuit: `condition && doSomething()`
@@ -59,20 +59,71 @@ The rule flagging empty object types (`{}`) is disabled. Empty object types appe
 
 ## Rule Hierarchy
 
-The ESLint configuration is built in layers. **Order matters.**
+Think of the ESLint config as a stack of layers, applied in order, where each later layer can refine or override what came before it. Order matters because the last layer to touch a rule wins - that's why the Prettier layer has to sit at the very bottom of the stack.
 
-1. **Base JavaScript rules** — fundamental issues: variables used before declaration, unreachable code, duplicate object keys.
-2. **Framework-specific rules** — JSX correctness, React hook dependency arrays, Next.js performance patterns.
-3. **TypeScript-specific rules** — implicit `any`, unsafe member access, missing return types.
-4. **Prettier compatibility layer** — **must always be last.** Disables every ESLint formatting rule that conflicts with Prettier output.
+**Layer 1 - Base JavaScript rules.** The foundation. Catches fundamental correctness issues that have nothing to do with any framework: variables used before they're declared, unreachable code, duplicate object keys. These rules apply to any JavaScript, anywhere.
 
-> If someone moves the Prettier entry away from the last position in the `extends` array, it will introduce formatting conflicts that manifest as flaky or environment-specific lint failures. Flag this immediately.
+**Layer 2 - Framework-specific rules.** Adds awareness of the tools this project actually uses: JSX correctness, React hook dependency arrays, Next.js performance patterns. A plain-JavaScript linter has no opinion on whether a `useEffect` dependency array is missing a value - this layer teaches it to care.
+
+**Layer 3 - TypeScript-specific rules.** Adds type-awareness on top of the previous two layers: implicit `any`, unsafe member access, missing return types. This layer needs the TypeScript parser to already be in place, which is why it comes after the base rules.
+
+**Layer 4 - Prettier compatibility layer.** Always last. Its only job is to *disable* any ESLint formatting rule from the earlier layers that would conflict with Prettier's output. It adds no rules of its own - it's a rules-eraser, not a rules-adder.
+
+> [!note] 
+**The order matters:** if the Prettier layer moved anywhere earlier in the array, a later layer could re-enable a formatting rule it was supposed to turn off. The result isn't a clean error - it's a flaky, environment-specific lint failure that looks like a bug in someone's editor. If someone reorders the `extends` array and moves Prettier away from the last position, flag it immediately.
+
+---
+
+## How Linting Flows Through the Project
+
+Linting isn't a single checkpoint - it's a pipeline with five stages, each catching what the previous stage missed.
+
+```
+Editor  →  ESLint  →  TypeScript  →  Git Hooks  →  CI/CD
+(write)   (analyse)   (type-check)   (gate)        (gate)
+```
+
+1. **Editor.** On every file save, the ESLint editor extension analyses the file in real time. This is the fastest, cheapest place to catch a mistake - before it's even saved to disk in a meaningful way.
+2. **ESLint (CLI).** Running `eslint .` or `eslint --fix` applies the full layered rule set described above against the codebase, or a subset of it, outside the editor's live-feedback loop. This is what CI and the pre-commit hook actually invoke.
+3. **TypeScript.** ESLint's TypeScript layer flags *lint*-level type issues (implicit `any`, unsafe access), but it does not replace the TypeScript compiler. `tsc --noEmit` still runs to catch full type errors ESLint doesn't attempt to reason about, such as incompatible function signatures across files.
+4. **Git Hooks.** The pre-commit hook runs ESLint (via lint-staged) against only the staged files, auto-fixing what it can and blocking the commit on anything it can't. See `git-hooks.md` for the full flow.
+5. **CI/CD.** The final, non-negotiable gate. CI lints the entire project, not just the diff, so it also catches pre-existing issues a narrow pre-commit run wouldn't touch. A failure here blocks the merge.
+
+Each stage exists because the one before it can be skipped, bypassed, or simply not run - a developer can commit with `--no-verify`, but they can't merge a PR that fails CI.
+
+### Practical Example
+
+Say a developer writes:
+
+```tsx
+import { useState, useEffect } from 'react'
+
+function ProfileCard({ userId }) {
+  const [name, setName] = useState()
+
+  useEffect(() => {
+    fetchName(userId).then(setName)
+  }, [])
+
+  console.log(name)
+
+  return <div>{name}</div>
+}
+```
+
+Walking it through the pipeline:
+
+- **Editor:** immediately underlines `useEffect`'s dependency array (missing `userId`) and the `console.log`.
+- **ESLint (CLI):** `no-console` fires as a hard error; `react-hooks/exhaustive-deps` warns about the missing dependency.
+- **TypeScript:** flags `userId` as implicitly `any` since no prop types were declared.
+- **Git Hooks:** pre-commit runs `eslint --fix`, which can't auto-fix the console statement or the missing prop type - commit is blocked.
+- **CI/CD:** never even reached, because the commit didn't happen. If it *had* been forced through with `--no-verify`, CI would catch it here instead.
 
 ---
 
 ## Enforcement Points
 
-ESLint runs at three stages — all three must remain active:
+ESLint runs at three stages - all three must remain active:
 
 | Stage | When It Runs | Effect |
 |---|---|---|

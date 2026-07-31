@@ -24,9 +24,42 @@ Engineering must define NFRs alongside functional requirements. These include:
 - **Security & Compliance**: Data residency, PII handling, GDPR/SOC2 compliance.
 - **Accessibility**: Minimum WCAG 2.1 AA compliance required.
 
+---
 
+## Decision: Which Intake Scenario Applies?
 
+Before selecting a scenario, use the decision flowchart below to determine which intake path to follow based on what the client has provided:
 
+```mermaid
+flowchart TD
+    START([🚀 New Project / Feature Request]) --> Q1{Has the client provided\na formal requirements document?}
+
+    Q1 -- Yes --> Q2{Is the document a full\nFunctional Requirements Document?}
+    Q1 -- No --> Q3{Has the client provided\nUI Mockups or Visual Designs?}
+
+    Q2 -- Yes --> S1["📋 Scenario 1: Client Provides FRD\nValidate, break down, estimate\nand control changes"]
+    Q2 -- No / Partial --> EDGE["⚡ Variations & Edge Cases\nPartial FRD, API-only, POC,\nLegacy Integration etc."]
+
+    Q3 -- Yes --> S3["🎨 Scenario 3: UI Mockup Provided\nExtract assets, map components,\nidentify implied business logic"]
+    Q3 -- No --> S2["🔍 Scenario 2: No FRD\nDiscovery workshops, stakeholder\ninterviews, user story mapping"]
+
+    S1 --> BACKLOG["✅ Prioritised Backlog\n+ Acceptance Criteria\n+ Sprint Plan"]
+    S2 --> BACKLOG
+    S3 --> BACKLOG
+    EDGE --> BACKLOG
+
+    BACKLOG --> NEXT([➡️ Solution Design Phase])
+
+    style START fill:#19105b,color:#fff,stroke:none
+    style NEXT fill:#19105b,color:#fff,stroke:none
+    style BACKLOG fill:#28a745,color:#fff,stroke:none
+    style S1 fill:#0d6efd,color:#fff,stroke:none
+    style S2 fill:#6f42c1,color:#fff,stroke:none
+    style S3 fill:#fd7e14,color:#fff,stroke:none
+    style EDGE fill:#6c757d,color:#fff,stroke:none
+```
+
+---
 
 ## Requirement Intake Scenarios
 
@@ -55,3 +88,18 @@ Depending on the format and completeness of requirements provided at the start o
   * Legacy System Integration
   * Proof of Concept (POC) / MVP
   * Third-Party Vendor Dependencies
+
+---
+
+## Quick Navigation
+
+| Scenario | When to Use | Link |
+|---|---|---|
+| 📋 Scenario 1: Client Provides FRD | Full requirements document exists | [→ View](./requirement-intake/scenario-1-client-provides-frd.md) |
+| 🔍 Scenario 2: No FRD | No formal requirements — needs discovery | [→ View](./requirement-intake/scenario-2-no-frd.md) |
+| 🎨 Scenario 3: UI Mockup | Visual designs are the primary reference | [→ View](./requirement-intake/scenario-3-ui-mockup.md) |
+| ⚡ Variations & Edge Cases | Partial FRD, POC, API-only, legacy | [→ View](./requirement-intake/variations-edge-cases.md) |
+
+---
+
+> **Next Phase:** After completing Requirement Intake, proceed to [Solution Design](./design-phase.md) where the architecture and technical approach are defined.

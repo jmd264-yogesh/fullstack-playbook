@@ -18,7 +18,18 @@ Our daily development lifecycle follows a disciplined workflow to ensure code qu
 ### 2. Branching & Naming Conventions
 We adhere strictly to structured branching models to prevent integration issues:
 - **Trunk-Based Development**: Developers merge small, frequent updates into the integration branch daily, using feature flags to hide incomplete features.
-- **Branch Naming**: Branches must follow the format `type/JIRA-ID-description` (e.g., `feat/AUTH-101-add-sso-login`, `fix/PAY-202-checkout-crash`).
+- **Branch Naming**: Branches must follow the format below:
+
+```
+type/JIRA-ID-description
+```
+
+**Examples:**
+```
+feat/AUTH-101-add-sso-login
+fix/PAY-202-checkout-crash
+chore/INFRA-55-upgrade-node-version
+```
 
 ### 3. Local Development & Feedback Loop
 - **Code Quality Tools**: Configure your IDE with ESLint and Prettier to catch syntax and formatting issues as you write code.
@@ -27,7 +38,22 @@ We adhere strictly to structured branching models to prevent integration issues:
 
 ### 4. Committing Code
 Commit messages must act as a clean, historical ledger:
-- **Conventional Commits**: Commit messages must follow the standard: `<type>(<scope>): <subject>` (e.g., `feat(auth): integrate OAuth2 with Okta`, `fix(checkout): resolve null pointer on empty cart`).
+- **Conventional Commits**: Commit messages must follow the Conventional Commits standard format:
+
+```
+<type>(<scope>): <subject>
+```
+
+**Real Examples:**
+```
+feat(auth): integrate OAuth2 with Okta
+fix(checkout): resolve null pointer on empty cart
+chore(deps): upgrade axios to v1.6.0
+refactor(api): extract user validation to service layer
+docs(readme): update local setup instructions
+```
+
+> **Valid types:** `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`, `perf`, `ci`, `build`, `revert`
 
 ### 5. Collaborative Code Reviews (Pull Requests)
 Code review is our primary mechanism for knowledge sharing and quality control:

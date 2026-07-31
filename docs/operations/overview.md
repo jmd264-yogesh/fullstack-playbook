@@ -2,7 +2,7 @@
 
 Shipping code is not the finish line — it's the start of that code's life in production. This section covers everything that happens **after a Pull Request is approved**: how code gets packaged, how it moves through environments, how we watch it once it's live, and how we respond when something breaks.
 
-If you're new to any of the underlying concepts (what a container is, what a pipeline is), read [Basics: Containers & Docker](/basics/docker) and [Basics: CI/CD](/basics/ci-cd) first.
+If you're new to any of the underlying concepts (what a container is, what a pipeline is), read [Docker Standards](/coding-standards/infrastructure/docker) and [CI/CD Pipeline](/coding-standards/ci-cd) first.
 
 ## The path from commit to production
 

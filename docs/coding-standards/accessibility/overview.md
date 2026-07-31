@@ -1,10 +1,10 @@
 # Accessibility Standards
 
-Accessibility (a11y) work is already enforced piecemeal across this playbook — an Axe-core gate in [Testing Gates](/quality-gates/testing-gates), an ESLint plugin in [Project Setup](/coding-standards/project-setup), a mention in requirement intake — but there hasn't been one canonical page to point a designer or engineer to. This is that page.
+Accessibility (a11y) work is already enforced piecemeal across this playbook - an Axe-core gate in [Testing Gates](/quality-gates/testing-gates), an ESLint plugin in [Project Setup](/coding-standards/project-setup), a mention in requirement intake - but there hasn't been one canonical page to point a designer or engineer to. This is that page.
 
 ## The baseline: WCAG 2.1 AA
 
-All customer-facing applications must meet **WCAG 2.1 Level AA**. This isn't a "nice to have" — it's a legal requirement in many jurisdictions and a [testing gate](/quality-gates/testing-gates) that blocks release.
+All customer-facing applications must meet **WCAG 2.1 Level AA**. This isn't a "nice to have" - it's a legal requirement in many jurisdictions and a [testing gate](/quality-gates/testing-gates) that blocks release.
 
 ## The four practices that catch most issues
 
@@ -13,15 +13,15 @@ All customer-facing applications must meet **WCAG 2.1 Level AA**. This isn't a "
 | **Semantic HTML** | Use the element built for the job, not a styled `<div>` | `<button>` not `<div onClick={...}>`; `<nav>`, `<main>`, `<header>` instead of generic `<div>`s |
 | **Labels for every input** | A screen reader must be able to announce what a field is for | `<label htmlFor="email">Email</label><input id="email" />`, or `aria-label` when a visible label isn't in the design |
 | **Keyboard navigability** | Every interactive element must be reachable and operable without a mouse | No `tabIndex={-1}` on clickable elements; visible focus outlines are never removed with `outline: none` alone |
-| **Color contrast** | Text must be readable against its background | Minimum 4.5:1 contrast ratio for normal text, 3:1 for large text — check with the browser DevTools contrast checker before shipping a design |
+| **Color contrast** | Text must be readable against its background | Minimum 4.5:1 contrast ratio for normal text, 3:1 for large text - check with the browser DevTools contrast checker before shipping a design |
 
 ## A concrete before/after
 
 ```tsx
-// ✗ Inaccessible — a screen reader announces nothing useful, not keyboard-operable
+// ✗ Inaccessible - a screen reader announces nothing useful, not keyboard-operable
 <div className="button" onClick={handleSubmit}>Submit</div>
 
-// ✓ Accessible — semantic, keyboard-operable, announced correctly
+// ✓ Accessible - semantic, keyboard-operable, announced correctly
 <button type="submit" onClick={handleSubmit}>Submit</button>
 ```
 
@@ -37,12 +37,12 @@ All customer-facing applications must meet **WCAG 2.1 Level AA**. This isn't a "
 
 | Tool | Where it runs | What it catches |
 |---|---|---|
-| `eslint-plugin-jsx-a11y` | Every commit (see [ESLint Standards](/coding-standards/code-quality/eslint)) | Missing `alt` text, missing labels, invalid ARIA usage — caught before the PR is even opened |
-| Axe-core | CI, as an [E2E/testing gate](/quality-gates/testing-gates) | Automated WCAG violations on rendered pages — contrast, missing landmarks, focus traps |
-| Manual keyboard walkthrough | Before merging any new interactive component | Automated tools only catch ~30-40% of real issues — tab through the feature yourself before requesting review |
+| `eslint-plugin-jsx-a11y` | Every commit (see [ESLint Standards](/coding-standards/code-quality/eslint)) | Missing `alt` text, missing labels, invalid ARIA usage - caught before the PR is even opened |
+| Axe-core | CI, as an [E2E/testing gate](/quality-gates/testing-gates) | Automated WCAG violations on rendered pages - contrast, missing landmarks, focus traps |
+| Manual keyboard walkthrough | Before merging any new interactive component | Automated tools only catch ~30-40% of real issues - tab through the feature yourself before requesting review |
 
 ## Where this leads next
 
-- [Testing Gates](/quality-gates/testing-gates) — the automated Axe-core gate this feeds into
-- [React](/coding-standards/frontend/react) and [shadcn/ui](/coding-standards/frontend/shadcn) — component-level patterns that are accessible by default
-- [Requirement Intake](/delivery-lifecycle/requirement-intake) — where a11y requirements should be captured up front, not bolted on later
+- [Testing Gates](/quality-gates/testing-gates) - the automated Axe-core gate this feeds into
+- [React](/coding-standards/frontend/react) and [shadcn/ui](/coding-standards/frontend/shadcn) - component-level patterns that are accessible by default
+- [Requirement Intake](/delivery-lifecycle/requirement-intake) - where a11y requirements should be captured up front, not bolted on later

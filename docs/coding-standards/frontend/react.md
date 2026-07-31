@@ -1,13 +1,51 @@
 # React Best Practices & Standards
 
+<Callout type="note">
+Use this guide as a practical reference: component patterns first, then the Hook decision matrix and state-management guidance below.
+</Callout>
+
 React is our primary UI library. This guide covers setup, core patterns, state management, forms, and the enterprise-level decisions developers must follow on every project.
 
 ---
 
+## Overview
+
+React builds user interfaces from composable components. Prefer local state and composition; introduce shared state only when the UI has a demonstrated cross-feature need.
+
+## Hook decision matrix
+
+| Need | Hook | Do not use it for |
+|---|---|---|
+| Independent UI value | `useState` | Complex related transitions |
+| Named local transitions | `useReducer` | One simple field |
+| External system sync | `useEffect` | Derived render data |
+| DOM or mutable non-UI value | `useRef` | Data that should rerender |
+| Stable tree-wide value | `useContext` | High-frequency global state |
+| Measured expensive work | `useMemo` / `useCallback` | Premature optimisation |
+
+### Built-in Hook reference
+
+| Hook | Purpose / when to use | Common mistake and performance note |
+|---|---|---|
+| `useState` | Own a local, independent UI value. | Never mutate objects; use functional updates from previous state. |
+| `useEffect` | Connect to timers, subscriptions, browser APIs, or other external systems. | Clean up and keep dependencies correct; do not use it for computed values. |
+| `useContext` | Share theme, locale, or stable user information. | Split fast-changing context values to limit rerenders. |
+| `useReducer` | Model related transitions as explicit actions. | Keep reducers pure; use `useState` for simple cases. |
+| `useRef` | Focus a DOM node or retain non-rendering mutable data. | `ref.current` changes do not update the screen. |
+| `useMemo` / `useCallback` | Cache expensive work or callback identity after profiling. | Both add overhead; do not apply by default. |
+
+<details><summary>Common Hook mistakes</summary>
+
+- Calling hooks conditionally or from a non-React function.
+- Using an effect to copy props into state or own server data.
+- Disabling `exhaustive-deps` instead of redesigning dependencies.
+- Memoizing every value before measuring a rendering problem.
+</details>
+
 ## Quick Start
 
 ```bash
-# New project — use Next.js (preferred) or Vite
+# New project - use Next.js (preferred) or Vite
 npx create-next-app@latest my-app --typescript --tailwind --eslint --app
 # or Vite (SPA only)
 npm create vite@latest my-app -- --template react-ts
@@ -24,17 +62,17 @@ npm install --save-dev @testing-library/react @testing-library/user-event jest
 
 ### Single Responsibility
 
-Every component does one thing. If a component is hard to name, it is doing too much. The 250-line rule is a hard cap — split anything larger.
+Every component does one thing. If a component is hard to name, it is doing too much. The 250-line rule is a hard cap - split anything larger.
 
 ```tsx
-// ❌ God component — manages data, renders layout, handles forms
+// ❌ God component - manages data, renders layout, handles forms
 export function Dashboard() {
   const [users, setUsers] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   // 300 lines of mixed logic and JSX...
 }
 
-// ✅ Composed — each part does one job
+// ✅ Composed - each part does one job
 export function Dashboard() {
   return (
     <DashboardLayout>
@@ -50,10 +88,10 @@ export function Dashboard() {
 Pass components as `children` rather than drilling data 3+ levels deep.
 
 ```tsx
-// ❌ Prop drilling — Card doesn't need to know about user data
+// ❌ Prop drilling - Card doesn't need to know about user data
 <Card userId={user.id} userName={user.name} userAvatar={user.avatar} />
 
-// ✅ Composition — Card is a generic container
+// ✅ Composition - Card is a generic container
 <Card>
   <UserAvatar src={user.avatar} />
   <span>{user.name}</span>
@@ -63,7 +101,7 @@ Pass components as `children` rather than drilling data 3+ levels deep.
 ### Early Returns for Guards
 
 ```tsx
-// ✅ Guard at the top — main logic stays unindented
+// ✅ Guard at the top - main logic stays unindented
 export function OrderCard({ order }: { order: TOrder | null }) {
   if (!order) return null
   if (order.status === 'cancelled') return <CancelledBadge />
@@ -80,10 +118,10 @@ export function OrderCard({ order }: { order: TOrder | null }) {
 ### Named Exports Always
 
 ```tsx
-// ✅ Named export — reliable IDE navigation and refactoring
+// ✅ Named export - reliable IDE navigation and refactoring
 export function CustomerForm() { ... }
 
-// ❌ Default export — causes naming drift across imports
+// ❌ Default export - causes naming drift across imports
 export default function CustomerForm() { ... }
 ```
 
@@ -94,7 +132,7 @@ export default function CustomerForm() { ... }
 ### Use `type`, Never `interface`
 
 ```ts
-// ✅ Consistent — type aliases for everything
+// ✅ Consistent - type aliases for everything
 type TUser = {
   id: string
   email: string
@@ -116,7 +154,7 @@ interface User { ... }
 type TCustomerCardProps = {
   customer: TCustomer
   onSelect: (id: string) => void
-  isSelected?: boolean        // Optional props — always give a default
+  isSelected?: boolean        // Optional props - always give a default
   className?: string
 }
 
@@ -139,7 +177,7 @@ const UserSchema = z.object({
   role: z.enum(['admin', 'user', 'viewer']),
 })
 
-type TUser = z.infer<typeof UserSchema>  // Type derived from schema — single source of truth
+type TUser = z.infer<typeof UserSchema>  // Type derived from schema - single source of truth
 
 // Validate API response at the boundary
 const parsed = UserSchema.safeParse(apiResponse)
@@ -156,10 +194,10 @@ const user = parsed.data  // TypeScript knows this is TUser
 
 ### Rules of Hooks
 
-- Call hooks only at the **top level** of a component or custom hook — never inside loops, conditions, or nested functions.
+- Call hooks only at the **top level** of a component or custom hook - never inside loops, conditions, or nested functions.
 - Custom hook names must start with `use`.
 
-### Custom Hooks — Move Logic Out of Components
+### Custom Hooks - Move Logic Out of Components
 
 Every `useEffect`, `useQuery`, or complex logic block belongs in a custom hook, not a component.
 
@@ -173,7 +211,7 @@ export function useCustomers(filters: TCustomerFilters) {
   })
 }
 
-// CustomerList.tsx — component is now pure presentation
+// CustomerList.tsx - component is now pure presentation
 export function CustomerList({ filters }: { filters: TCustomerFilters }) {
   const { data, isLoading, isError } = useCustomers(filters)
 
@@ -184,7 +222,7 @@ export function CustomerList({ filters }: { filters: TCustomerFilters }) {
 }
 ```
 
-### useEffect — Use Sparingly
+### useEffect - Use Sparingly
 
 `useEffect` is for **synchronizing with external systems** (WebSockets, browser APIs, third-party libraries). It is NOT for:
 
@@ -196,18 +234,18 @@ export function CustomerList({ filters }: { filters: TCustomerFilters }) {
 | Responding to events | Use event handlers directly |
 
 ```tsx
-// ❌ useEffect for derived state — causes double render
+// ❌ useEffect for derived state - causes double render
 const [fullName, setFullName] = useState('')
 useEffect(() => {
   setFullName(`${firstName} ${lastName}`)
 }, [firstName, lastName])
 
-// ✅ Derive inline — no effect needed
+// ✅ Derive inline - no effect needed
 const fullName = `${firstName} ${lastName}`
 ```
 
 ```tsx
-// ✅ Legitimate useEffect — syncing with an external system
+// ✅ Legitimate useEffect - syncing with an external system
 useEffect(() => {
   const socket = io(WS_URL)
   socket.on('order:update', (order) => setLatestOrder(order))
@@ -215,7 +253,7 @@ useEffect(() => {
 }, [])
 ```
 
-### useMemo / useCallback — Sparingly
+### useMemo / useCallback - Sparingly
 
 Only memoize when you have a measured performance problem:
 
@@ -226,13 +264,13 @@ Only memoize when you have a measured performance problem:
 | `useEffect` dependency that would re-run constantly | Memoized object/array dependency |
 
 ```tsx
-// ✅ Justified — expensive sort with many records
+// ✅ Justified - expensive sort with many records
 const sortedOrders = useMemo(
   () => [...orders].sort((a, b) => b.total - a.total),
   [orders]
 )
 
-// ❌ Unjustified — simple string computation has no performance benefit
+// ❌ Unjustified - simple string computation has no performance benefit
 const label = useMemo(() => `Hello ${name}`, [name])
 ```
 
@@ -240,20 +278,20 @@ const label = useMemo(() => `Hello ${name}`, [name])
 
 ## State Management
 
-Follow this priority order — choose the lowest number that solves the problem:
+Follow this priority order - choose the lowest number that solves the problem:
 
 | Priority | Type | Tool | When |
 |---|---|---|---|
 | 1 | **Server state** | TanStack Query | API data, mutations, caching |
-| 2 | **URL state** | Next.js router / `useSearchParams` | Filters, pagination, tabs — shareable via URL |
+| 2 | **URL state** | Next.js router / `useSearchParams` | Filters, pagination, tabs - shareable via URL |
 | 3 | **Local state** | `useState` | UI toggles, form input, modal open/close |
 | 4 | **Global client state** | Zustand | Cross-component client state not in the server or URL |
-| 5 | **Context** | React Context | Theme, locale, auth — near the root only |
+| 5 | **Context** | React Context | Theme, locale, auth - near the root only |
 
-### TanStack Query — Server State
+### TanStack Query - Server State
 
 ```ts
-// query-keys.ts — centralized key factory
+// query-keys.ts - centralized key factory
 export const customerKeys = {
   all: ['customers'] as const,
   list: (filters: TCustomerFilters) => [...customerKeys.all, 'list', filters] as const,
@@ -286,7 +324,7 @@ export function useUpdateCustomer() {
 }
 ```
 
-### Zustand — Global Client State
+### Zustand - Global Client State
 
 ```ts
 // store/useUIStore.ts
@@ -384,13 +422,13 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   )
 }
 
-// Usage — wrap individual features
+// Usage - wrap individual features
 <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => queryClient.clear()}>
   <OrderDashboard />
 </ErrorBoundary>
 ```
 
-### Loading & Error States — Always Handle Both
+### Loading & Error States - Always Handle Both
 
 ```tsx
 export function CustomerList() {
@@ -407,7 +445,7 @@ export function CustomerList() {
 
 ---
 
-## useReducer — Complex Local State
+## useReducer - Complex Local State
 
 Use `useReducer` when a component has multiple related state variables that update together, or when the next state depends on the previous one in non-trivial ways.
 
@@ -457,12 +495,12 @@ export function Cart() {
 
 ---
 
-## useRef — DOM Access & Mutable Values
+## useRef - DOM Access & Mutable Values
 
 `useRef` has two uses: accessing a DOM element directly, and storing a mutable value that does not trigger a re-render.
 
 ```tsx
-// DOM access — auto-focus an input on mount
+// DOM access - auto-focus an input on mount
 export function SearchInput() {
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -473,7 +511,7 @@ export function SearchInput() {
   return <input ref={inputRef} placeholder="Search..." />
 }
 
-// Mutable ref — track the previous value without causing a re-render
+// Mutable ref - track the previous value without causing a re-render
 export function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T>()
   useEffect(() => {
@@ -482,7 +520,7 @@ export function usePrevious<T>(value: T): T | undefined {
   return ref.current
 }
 
-// Mutable ref — store a timer ID without triggering renders
+// Mutable ref - store a timer ID without triggering renders
 export function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value)
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
@@ -499,14 +537,14 @@ export function useDebounce<T>(value: T, delay: number): T {
 
 ---
 
-## Code Splitting — React.lazy + Suspense
+## Code Splitting - React.lazy + Suspense
 
 Defer loading heavy components until they are needed. Keeps the initial bundle small.
 
 ```tsx
 import { lazy, Suspense } from 'react'
 
-// Lazy-loaded — bundle is split here; loaded only when rendered
+// Lazy-loaded - bundle is split here; loaded only when rendered
 const HeavyReportChart = lazy(() => import('@/context.reports/components/ReportChart'))
 const PDFViewer = lazy(() => import('@/common/components/PDFViewer'))
 
@@ -529,9 +567,9 @@ export function ReportPage() {
 
 ---
 
-## URL State — useSearchParams
+## URL State - useSearchParams
 
-Filters, tabs, pagination, and search queries belong in the URL — not in `useState`. The URL is shareable, bookmarkable, and survives a page refresh.
+Filters, tabs, pagination, and search queries belong in the URL - not in `useState`. The URL is shareable, bookmarkable, and survives a page refresh.
 
 ```tsx
 'use client'
@@ -583,7 +621,7 @@ export function CustomerFilters() {
 // ✅ Semantic HTML, keyboard accessible, ARIA labeled
 export function StatusBadge({ status }: { status: 'active' | 'inactive' }) {
   return (
-    // Use <span> with role for non-interactive status — not a <div>
+    // Use <span> with role for non-interactive status - not a <div>
     <span
       role="status"
       aria-label={`Account is ${status}`}
@@ -599,7 +637,7 @@ export function StatusBadge({ status }: { status: 'active' | 'inactive' }) {
   )
 }
 
-// ✅ Icon-only button — screen reader gets meaningful label
+// ✅ Icon-only button - screen reader gets meaningful label
 export function CloseButton({ onClose }: { onClose: () => void }) {
   return (
     <button
@@ -613,7 +651,7 @@ export function CloseButton({ onClose }: { onClose: () => void }) {
   )
 }
 
-// ✅ Live region — announces dynamic changes to screen readers
+// ✅ Live region - announces dynamic changes to screen readers
 export function SearchResultsAnnouncer({ count }: { count: number }) {
   return (
     <p aria-live="polite" aria-atomic="true" className="sr-only">
@@ -652,10 +690,10 @@ export function EmailField() {
 - [ ] Named export used
 - [ ] TypeScript types defined with `type`, prefixed with `T`
 - [ ] Props typed with a `TProps` type
-- [ ] No `any` types — use `unknown` + Zod where needed
+- [ ] No `any` types - use `unknown` + Zod where needed
 - [ ] Server state managed via React Query (not `useState` + `useEffect`)
 - [ ] Forms use React Hook Form + Zod resolver
 - [ ] `useEffect` has a cleanup function if it sets up a subscription
 - [ ] Loading and error states handled in every data-fetching component
 - [ ] Error Boundary wrapping each major feature section
-- [ ] No barrel file imports (`import from '@/context.foo'` — import directly)
+- [ ] No barrel file imports (`import from '@/context.foo'` - import directly)

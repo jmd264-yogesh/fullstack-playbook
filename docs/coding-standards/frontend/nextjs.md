@@ -1,10 +1,21 @@
 # Next.js Best Practices & Standards
 
+<Callout type="important">
+The App Router defaults to Server Components. Add `"use client"` only at the smallest interactive boundary.
+</Callout>
+
 Next.js with the App Router is the standard meta-framework for all frontend projects. It enables React Server Components, file-based routing, server actions, and built-in performance optimizations.
 
 ---
 
 ## Quick Start
+
+<Tabs>
+  <Tab title="npm"><code>npx create-next-app@latest my-app --typescript --tailwind --eslint --app</code></Tab>
+  <Tab title="pnpm"><code>pnpm create next-app my-app --typescript --tailwind --eslint --app</code></Tab>
+  <Tab title="yarn"><code>yarn create next-app my-app --typescript --tailwind --eslint --app</code></Tab>
+  <Tab title="bun"><code>bun create next-app my-app --typescript --tailwind --eslint --app</code></Tab>
+</Tabs>
 
 ```bash
 npx create-next-app@latest my-app \
@@ -28,19 +39,19 @@ Every folder inside `src/app/` is a route segment. Only these special file names
 
 | File | Purpose |
 |---|---|
-| `page.tsx` | The UI for a route — makes the segment publicly accessible |
+| `page.tsx` | The UI for a route - makes the segment publicly accessible |
 | `layout.tsx` | Persistent shell around a segment and all its children |
-| `loading.tsx` | Automatic Suspense boundary — shown while the page loads |
-| `error.tsx` | Error boundary — shown when a page or its children throw |
+| `loading.tsx` | Automatic Suspense boundary - shown while the page loads |
+| `error.tsx` | Error boundary - shown when a page or its children throw |
 | `not-found.tsx` | Shown when `notFound()` is called |
 | `route.ts` | API endpoint (replaces `pages/api/`) |
 | `middleware.ts` | Runs before every request (at root, outside `app/`) |
 
 ```text
 src/app/
-├── layout.tsx              # Root layout — wraps everything
+├── layout.tsx              # Root layout - wraps everything
 ├── page.tsx                # Home route: /
-├── (marketing)/            # Route group — no URL segment
+├── (marketing)/            # Route group - no URL segment
 │   ├── about/
 │   │   └── page.tsx        # /about
 │   └── pricing/
@@ -67,12 +78,12 @@ src/app/
 
 All components in the App Router are Server Components by default. They:
 - Run on the server at request time (or build time for static routes)
-- Can `await` directly — no `useEffect` for data fetching
+- Can `await` directly - no `useEffect` for data fetching
 - Ship **zero JavaScript** to the browser
 - Can access server-only resources: databases, environment secrets, file system
 
 ```tsx
-// ✅ Server Component — fetches data directly, no JS shipped to client
+// ✅ Server Component - fetches data directly, no JS shipped to client
 // src/app/dashboard/orders/page.tsx
 import { prisma } from '@/database/prisma.service'
 
@@ -129,7 +140,7 @@ export default function DashboardPage() {
 }
 
 // ✅ Only the interactive part is a client component
-// dashboard/page.tsx — Server Component
+// dashboard/page.tsx - Server Component
 export default async function DashboardPage() {
   const stats = await fetchStats()
   return (
@@ -165,14 +176,14 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
 
 ### Parallel Data Fetching
 
-Avoid sequential waterfalls — fetch in parallel with `Promise.all`:
+Avoid sequential waterfalls - fetch in parallel with `Promise.all`:
 
 ```tsx
-// ❌ Sequential — total time = A + B
+// ❌ Sequential - total time = A + B
 const user = await fetchUser(id)
 const orders = await fetchOrders(id)
 
-// ✅ Parallel — total time = max(A, B)
+// ✅ Parallel - total time = max(A, B)
 const [user, orders] = await Promise.all([
   fetchUser(id),
   fetchOrders(id),
@@ -216,7 +227,7 @@ Next.js caches `fetch` results and page renders. Understanding the options is cr
 | Strategy | Config | Use When |
 |---|---|---|
 | **No cache (dynamic)** | `cache: 'no-store'` | Real-time data, user-specific pages |
-| **Time-based (ISR)** | `next: { revalidate: 60 }` | Semi-static data — products, blog posts |
+| **Time-based (ISR)** | `next: { revalidate: 60 }` | Semi-static data - products, blog posts |
 | **Tag-based** | `next: { tags: ['products'] }` | Invalidate precisely on mutation |
 | **Static** | Default (no fetch config) | Data that never changes at build time |
 
@@ -245,7 +256,7 @@ export async function updateProduct(id: string, data: TUpdateProductDto) {
 
 ## Server Actions
 
-Replace form-handling API routes with Server Actions — they run on the server, called directly from client forms.
+Replace form-handling API routes with Server Actions - they run on the server, called directly from client forms.
 
 ```tsx
 // src/app/dashboard/orders/actions.ts
@@ -293,7 +304,7 @@ export default function NewOrderPage() {
 
 ## Layouts
 
-Layouts persist between route changes — use them for navigation shells, sidebars, and context providers.
+Layouts persist between route changes - use them for navigation shells, sidebars, and context providers.
 
 ```tsx
 // src/app/dashboard/layout.tsx
@@ -320,7 +331,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 ```tsx
 // Static metadata
 export const metadata = {
-  title: 'Orders — My App',
+  title: 'Orders - My App',
   description: 'Manage your orders',
 }
 
@@ -338,7 +349,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 
 ## Middleware
 
-Middleware runs on the Edge before every request. Use it for authentication checks and redirects — not for heavy logic.
+Middleware runs on the Edge before every request. Use it for authentication checks and redirects - not for heavy logic.
 
 ```ts
 // src/middleware.ts
@@ -367,20 +378,20 @@ export const config = {
 ## Environment Variables
 
 ```dotenv
-# .env.local (never commit — gitignored)
+# .env.local (never commit - gitignored)
 DATABASE_URL=postgresql://...
 JWT_SECRET=replace-with-secret
 
-# .env.example (commit this — shows required keys)
+# .env.example (commit this - shows required keys)
 DATABASE_URL=postgresql://user:password@localhost:5432/mydb
 JWT_SECRET=replace-with-a-long-random-string
 
-# Public variables — prefixed with NEXT_PUBLIC_ (exposed to browser)
+# Public variables - prefixed with NEXT_PUBLIC_ (exposed to browser)
 NEXT_PUBLIC_API_URL=https://api.example.com
 ```
 
 ```ts
-// Server-only (no NEXT_PUBLIC_ prefix — never sent to the browser)
+// Server-only (no NEXT_PUBLIC_ prefix - never sent to the browser)
 const secret = process.env.JWT_SECRET!
 
 // Browser-accessible
@@ -418,7 +429,7 @@ export async function POST(request: NextRequest) {
 Every significant route segment should have its own `loading.tsx` and `error.tsx`. Next.js wraps these automatically in `<Suspense>` and `ErrorBoundary`.
 
 ```tsx
-// src/app/dashboard/loading.tsx — shown while page.tsx is fetching
+// src/app/dashboard/loading.tsx - shown while page.tsx is fetching
 import { Skeleton } from '@/common/components/ui/skeleton'
 
 export default function DashboardLoading() {
@@ -436,7 +447,7 @@ export default function DashboardLoading() {
 ```
 
 ```tsx
-// src/app/dashboard/error.tsx — must be a Client Component
+// src/app/dashboard/error.tsx - must be a Client Component
 'use client'
 import { useEffect } from 'react'
 import { Button } from '@/common/components/ui/button'
@@ -492,7 +503,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
 ---
 
-## Static Generation — generateStaticParams
+## Static Generation - generateStaticParams
 
 Use `generateStaticParams` to statically build pages for known dynamic routes at build time.
 
@@ -560,17 +571,17 @@ export function DashboardNav() {
 ```tsx
 import Image from 'next/image'
 
-// ✅ Fixed dimensions — always declare width/height
+// ✅ Fixed dimensions - always declare width/height
 <Image
   src="/images/hero.jpg"
   alt="Hero image"
   width={1200}
   height={600}
-  priority            // LCP image — loads eagerly
+  priority            // LCP image - loads eagerly
   className="rounded-xl"
 />
 
-// ✅ Responsive fill — parent must have position: relative
+// ✅ Responsive fill - parent must have position: relative
 <div className="relative aspect-video w-full overflow-hidden rounded-xl">
   <Image
     src={product.imageUrl}
@@ -583,7 +594,7 @@ import Image from 'next/image'
   />
 </div>
 
-// ✅ Remote images — allowlist domains in next.config.ts
+// ✅ Remote images - allowlist domains in next.config.ts
 // next.config.ts
 images: {
   remotePatterns: [{ protocol: 'https', hostname: 'cdn.example.com' }],

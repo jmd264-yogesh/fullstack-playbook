@@ -1,5 +1,7 @@
 # Scenario 2: No FRD – Discovery & Elicitation
 
+> **Intake Scenarios:** [← Back to Requirement Intake Overview](../requirement-intake.md) | [Scenario 1: Client Provides FRD](./scenario-1-client-provides-frd.md) | [Scenario 3: UI Mockup](./scenario-3-ui-mockup.md) | [Variations & Edge Cases](./variations-edge-cases.md)
+
 When no formal Functional Requirements Document (FRD) exists, the project begins with a structured **requirements discovery and elicitation phase**. The objective is to understand the client's business goals, identify user needs, and define the project scope before development begins.
 
 ## 1. Discovery Workshop
@@ -262,14 +264,40 @@ Discovery-driven projects generally require more upfront planning compared to pr
 
 ### Typical Timeline
 
-| Phase                         | Duration               |
-| ----------------------------- | ---------------------- |
-| Discovery Workshops           | 1–2 Weeks              |
-| Requirement Documentation     | 1 Week                 |
-| Wireframing & Prototyping     | 1–2 Weeks              |
-| Backlog Grooming & Estimation | 1 Week                 |
-| Sprint Planning               | 2–3 Days               |
-| Development Phase             | Based on Project Scope |
+```mermaid
+gantt
+    title No-FRD Discovery & Delivery Timeline
+    dateFormat  YYYY-MM-DD
+    axisFormat  Week %W
+
+    section Discovery
+    Discovery Workshops         :active, disc, 2024-01-01, 10d
+    Requirement Documentation   :req,  after disc, 5d
+
+    section Design
+    Wireframing & Prototyping   :wf, after req, 10d
+
+    section Planning
+    Backlog Grooming & Estimation :bg, after wf, 5d
+    Sprint Planning              :sp, after bg, 3d
+
+    section Development
+    Development Phase           :dev, after sp, 30d
+```
+
+> **Note:** The Development Phase duration is based on project scope and backlog size agreed during Sprint Planning. Typical sprints are 2 weeks each.
+
+### Phase Breakdown
+
+| Phase | Typical Duration | Key Output |
+|---|---|---|
+| Discovery Workshops | 1–2 Weeks | Stakeholder register, process docs, user journeys |
+| Requirement Documentation | 1 Week | User stories, scope document |
+| Wireframing & Prototyping | 1–2 Weeks | Wireframes, click-through prototypes |
+| Backlog Grooming & Estimation | 1 Week | Story points, prioritised backlog |
+| Sprint Planning | 2–3 Days | Sprint-ready backlog, milestone schedule |
+| Development Phase | Based on Project Scope | Working software, tested and deployed |
+
 
 ### Planning Considerations
 
@@ -291,3 +319,16 @@ Discovery-driven projects generally require more upfront planning compared to pr
 ## Summary
 
 When no FRD is available, the project begins with a structured discovery and elicitation process. Through workshops, stakeholder interviews, user story creation, wireframing, backlog refinement, and iterative validation, the team establishes a clear understanding of business needs and project scope. The outcome is a prioritized backlog, validated requirements, design artifacts, and a development-ready plan that minimizes ambiguity and reduces project risk.
+
+---
+
+## Related Scenarios
+
+| Scenario | When to Use |
+|---|---|
+| [📋 Scenario 1: Client Provides FRD](./scenario-1-client-provides-frd.md) | Full requirements document exists |
+| 🔍 **You are here** — Scenario 2: No FRD | No formal requirements — needs discovery |
+| [🎨 Scenario 3: UI Mockup](./scenario-3-ui-mockup.md) | Visual designs are the primary reference |
+| [⚡ Variations & Edge Cases](./variations-edge-cases.md) | Partial FRD, POC, API-only, legacy |
+
+> **Next Phase:** [Solution Design →](../design-phase.md)
