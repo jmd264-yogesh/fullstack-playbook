@@ -1,44 +1,38 @@
 # Basics
 
-This section explains the foundational concepts referenced throughout the rest of the playbook — written for someone who is a capable programmer but new to full-stack delivery, cloud environments, or this org's tooling. Every other section in this playbook assumes you know this material; if a term ever feels unexplained elsewhere, it's probably explained here.
+This section explains the foundational concepts referenced throughout the rest of the playbook — written for engineers who are capable programmers but looking to master full-stack delivery standards, cloud environments, and organizational architecture patterns.
 
-Each page is short, has at least one diagram or table, and ends with links to the "professional-level" pages that build on it.
+Every other section in this playbook builds upon this material. If a core architectural term or workflow concept feels unfamiliar elsewhere, you will find its baseline explanation here.
 
-## Pages in this section
+---
 
-| Page | What it covers |
+## Modules in this Section
+
+Each page is designed for quick reading with key concepts, structured tables, visual models, and direct links to advanced guidelines.
+
+| Module | What It Covers |
 |---|---|
-| [Full-Stack Architecture 101](/basics/full-stack-architecture) | Client, server, database — how a web request actually flows |
-| [Git & Version Control](/basics/git-version-control) | Commits, branches, pull requests, merge conflicts |
-| [APIs & HTTP](/basics/apis-http) | REST, HTTP methods, status codes, authentication |
-| [Databases 101](/basics/databases) | SQL vs NoSQL, schemas, migrations, ORMs |
-| [Containers & Docker](/basics/docker) | Why containers exist, images vs containers |
-| [CI/CD 101](/basics/ci-cd) | What a pipeline is and why builds are automated |
-| [Environments & Cloud Basics](/basics/environments-cloud) | Dev/staging/production, environment variables, the cloud in plain terms |
-| [Testing 101](/basics/testing) | The testing pyramid — unit, integration, E2E |
-| [Security 101](/basics/security) | OWASP Top 10, SAST/SCA, CVEs — in plain language |
-| [Glossary](/basics/glossary) | Every acronym used elsewhere in this playbook, defined in one place |
+| 📐 **[Full-Stack Architecture](/basics/full-stack-architecture)** | Client, server, and data tier interactions, HTTP request flows, and modern application state. |
+| 🔀 **[Git & Version Control](/basics/git-version-control/overview)** | Version control fundamentals, three-area model, branching models, and resolving merge conflicts. |
+| 🌐 **[APIs & HTTP](/basics/apis-http/overview)** | Anatomy of HTTP requests/responses, REST vs GraphQL/gRPC, status codes, and API testing tools. |
+| 🗄️ **[Databases](/basics/databases/overview)** | SQL vs NoSQL decision matrix, relational schemas, ORM usage, and database migration strategies. |
+| ⚙️ **[Environments](/basics/environments)** | Dev, Staging, and Production environment promotion, environment variables, and `.env.example` templates. |
+| ☁️ **[Cloud Computing](/basics/cloud/overview)** | On-premises vs cloud, cloud architecture, IaaS/PaaS/SaaS/FaaS, Shared Responsibility Model, and top cloud providers. |
+| 📖 **[Glossary](/basics/glossary)** | Comprehensive index of technical terms, acronyms, and delivery jargon used across this playbook. |
 
-## How the pieces fit together
+---
 
-```mermaid
-flowchart TB
-    subgraph Client
-        UI[Frontend UI]
-    end
-    subgraph Server
-        API[Backend API]
-    end
-    subgraph Data
-        DB[(Database)]
-    end
-    UI -- HTTP request --> API
-    API -- query --> DB
-    DB -- data --> API
-    API -- HTTP response --> UI
-    Git[Git repo] --> CI[CI/CD Pipeline]
-    CI --> Docker[Docker image]
-    Docker --> Env[Dev / Staging / Prod environments]
-```
+## How Full-Stack Concepts Fit Together
 
-Read the pages above roughly in order — each one builds a little on the last — then head to [Delivery Lifecycle](/delivery-lifecycle/overview) to see how these pieces come together on a real project.
+Engineering delivery follows a structured pipeline across these foundational areas:
+
+1. **Client & Server Interaction**: The user interface (Frontend UI) triggers HTTP requests to the backend server (Backend API), which processes business logic and queries persistent data (Database).
+2. **Version & Code Control**: Code changes are managed through Git, tracked in local and remote repositories, and merged through peer-reviewed Pull Requests.
+3. **Automated Pipeline**: Merged code is validated through automated CI/CD pipelines, packaged into container images (Docker), and deployed safely across isolated environments.
+4. **Environment Promotion**: Application builds progress through Development (testing), Staging (pre-production verification), and Production (live user traffic).
+
+---
+
+## Next Steps
+
+Read through the modules above in sequence, then proceed to the **[Delivery Lifecycle](/delivery-lifecycle/overview)** section to learn how these concepts operate within real-world project workflows.

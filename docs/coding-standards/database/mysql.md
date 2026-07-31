@@ -8,9 +8,9 @@ MySQL is the standard database for rapid SaaS products and Laravel-backed applic
 
 ### 1. Use InnoDB Storage Engine
 - **Best Practice**: Always use the **InnoDB** storage engine (the default since MySQL 5.5).
-- **Why?**: InnoDB supports ACID-compliant transactions, foreign key constraints, and row-level locking. The legacy **MyISAM** engine does not support transactions — never use it for application data.
+- **Why?**: InnoDB supports ACID-compliant transactions, foreign key constraints, and row-level locking. The legacy **MyISAM** engine does not support transactions - never use it for application data.
 
-### 2. Explicit Character Set — utf8mb4
+### 2. Explicit Character Set - utf8mb4
 - **Best Practice**: Set the database, tables, and columns to `utf8mb4` with `utf8mb4_unicode_ci` collation.
 - **Why?**: MySQL's `utf8` is a 3-byte encoding that cannot store 4-byte Unicode characters (e.g., emojis, many CJK characters). `utf8mb4` is the true UTF-8 encoding.
 
@@ -43,7 +43,7 @@ CREATE INDEX idx_orders_status_created ON orders (status, created_at);
 EXPLAIN SELECT * FROM orders WHERE user_id = 42 AND status = 'pending';
 ```
 
-Look for `type = ALL` (full scan) — this must be resolved with an appropriate index.
+Look for `type = ALL` (full scan) - this must be resolved with an appropriate index.
 
 ### 5. Soft Deletes with Partial-Equivalent Indexes
 - **Best Practice**: If using soft deletes (`deleted_at` column), filter out deleted records in your default scopes.
@@ -65,7 +65,7 @@ CREATE INDEX idx_users_active ON users (email, deleted_at);
 - **Anti-Pattern**: Comparing a string column to an integer (or vice versa) in a `WHERE` clause.
 - **Why?**: MySQL silently converts the type, which prevents the query from using indexes and causes a full table scan.
   ```sql
-  -- Bad: user_id is VARCHAR, but compared to INT — index not used
+  -- Bad: user_id is VARCHAR, but compared to INT - index not used
   SELECT * FROM sessions WHERE user_id = 123;
 
   -- Good: match the column type
@@ -87,20 +87,20 @@ CREATE INDEX idx_users_active ON users (email, deleted_at);
 
 ## Security
 
-### 1. Parameterized Queries — Never String Concatenation
+### 1. Parameterized Queries - Never String Concatenation
 
 ```php
-// Bad — SQL Injection vulnerability
+// Bad - SQL Injection vulnerability
 $users = DB::select("SELECT * FROM users WHERE email = '$email'");
 
-// Good — Parameterized query
+// Good - Parameterized query
 $users = DB::select('SELECT * FROM users WHERE email = ?', [$email]);
 // Or with Eloquent
 $user = User::where('email', $email)->first();
 ```
 
 ### 2. Principle of Least Privilege
-- The application database user must only have `SELECT`, `INSERT`, `UPDATE`, `DELETE` permissions on the application database — never `DROP`, `CREATE`, or `GRANT`.
+- The application database user must only have `SELECT`, `INSERT`, `UPDATE`, `DELETE` permissions on the application database - never `DROP`, `CREATE`, or `GRANT`.
 - Run migrations with a separate **migration user** that has DDL permissions.
 
 ---
@@ -144,7 +144,8 @@ model User {
 }
 ```
 
-> **MySQL vs PostgreSQL in Prisma**: MySQL does not support native `uuid()` in `@default()`. Use `@default(autoincrement())` for integer PKs, or generate UUIDs in your application layer (`@default(uuid())` with Prisma's `uuid()` function is supported from Prisma 5+).
+>[!Note]
+ **MySQL vs PostgreSQL in Prisma**: MySQL does not support native `uuid()` in `@default()`. Use `@default(autoincrement())` for integer PKs, or generate UUIDs in your application layer (`@default(uuid())` with Prisma's `uuid()` function is supported from Prisma 5+).
 
 ### Common Queries
 
@@ -305,7 +306,7 @@ WHERE MATCH(name, description) AGAINST ('wireless keyboard' IN NATURAL LANGUAGE 
 ORDER BY score DESC
 LIMIT 20;
 
--- Boolean mode — supports + - * operators
+-- Boolean mode - supports + - * operators
 SELECT id, name FROM products
 WHERE MATCH(name, description) AGAINST ('+wireless -bluetooth keyboard*' IN BOOLEAN MODE);
 ```
@@ -323,7 +324,7 @@ $products = Product::whereRaw(
 
 ---
 
-## EXPLAIN Output — Reading Results
+## EXPLAIN Output - Reading Results
 
 ```sql
 EXPLAIN SELECT * FROM orders WHERE user_id = 42 AND status = 'pending';
@@ -339,10 +340,10 @@ EXPLAIN SELECT * FROM orders WHERE user_id = 42 AND status = 'pending';
 ```
 
 Key things to check:
-- `type = ALL` → full table scan — **must** add an index
-- `type = ref` or `range` → index is being used — good
-- `rows` → estimated row count scanned — lower is better
-- `Extra: Using filesort` → costly in-memory sort — consider adding the sort column to the index
+- `type = ALL` → full table scan - **must** add an index
+- `type = ref` or `range` → index is being used - good
+- `rows` → estimated row count scanned - lower is better
+- `Extra: Using filesort` → costly in-memory sort - consider adding the sort column to the index
 
 ---
 

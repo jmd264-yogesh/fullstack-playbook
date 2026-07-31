@@ -8,7 +8,7 @@ Performance is a feature. Slow applications lose users, increase infrastructure 
 
 ### General Rules
 
-- **Measure before optimizing.** Never optimize code based on intuition alone — profile first, fix what the data shows.
+- **Measure before optimizing.** Never optimize code based on intuition alone - profile first, fix what the data shows.
 - **The 80/20 rule.** 20% of code paths generate 80% of the performance cost. Find the hotspots.
 - **Avoid premature optimization.** Write clear, correct code first. Optimize only when you have evidence of a problem.
 
@@ -21,7 +21,7 @@ function OrderList({ orders }) {
   return <div>{total}</div>
 }
 
-// ✅ Memoized — only recalculates when orders changes
+// ✅ Memoized - only recalculates when orders changes
 function OrderList({ orders }) {
   const total = useMemo(
     () => orders.reduce((sum, o) => sum + o.amount, 0),
@@ -36,7 +36,7 @@ function OrderList({ orders }) {
 The N+1 problem is the single most common cause of backend performance degradation.
 
 ```ts
-// ❌ NestJS — 1 query for users + N queries for orders (N+1)
+// ❌ NestJS - 1 query for users + N queries for orders (N+1)
 const users = await prisma.user.findMany()
 for (const user of users) {
   user.orders = await prisma.order.findMany({ where: { userId: user.id } })
@@ -49,30 +49,30 @@ const users = await prisma.user.findMany({
 ```
 
 ```php
-// ❌ Laravel — N+1 with lazy loading
+// ❌ Laravel - N+1 with lazy loading
 $users = User::all();
 foreach ($users as $user) {
   echo $user->orders->count();  // Query per user
 }
 
-// ✅ Eager loading — 2 queries total
+// ✅ Eager loading - 2 queries total
 $users = User::with('orders')->get();
 ```
 
 ### Database Query Optimization
 
-- Always select only the columns you need — avoid `SELECT *`.
+- Always select only the columns you need - avoid `SELECT *`.
 - Add indexes for columns used in `WHERE`, `ORDER BY`, and `JOIN` clauses.
 - Use `EXPLAIN ANALYZE` (PostgreSQL) or `EXPLAIN` (MySQL) to profile slow queries.
 - Batch bulk inserts instead of inserting row-by-row.
 
 ```ts
-// ❌ Row-by-row insert — N round trips to the database
+// ❌ Row-by-row insert - N round trips to the database
 for (const item of items) {
   await prisma.orderItem.create({ data: item })
 }
 
-// ✅ Bulk insert — 1 round trip
+// ✅ Bulk insert - 1 round trip
 await prisma.orderItem.createMany({ data: items })
 ```
 
@@ -96,7 +96,7 @@ await prisma.orderItem.createMany({ data: items })
 Use React Server Components (RSC) for data-fetching pages. They render on the server and send zero JavaScript to the client.
 
 ```tsx
-// ✅ Server Component — no client-side JS, data fetched at build/request time
+// ✅ Server Component - no client-side JS, data fetched at build/request time
 async function ProductPage({ params }: { params: { id: string } }) {
   const product = await fetchProduct(params.id)  // Server-side fetch
   return <ProductDetails product={product} />
@@ -164,7 +164,7 @@ Rules:
 | Simple read (single DB query) | < 50ms | < 150ms | < 300ms |
 | Complex read (joins/aggregations) | < 100ms | < 300ms | < 500ms |
 | Write operations | < 100ms | < 300ms | < 500ms |
-| File uploads | Async — return a job ID immediately |
+| File uploads | Async - return a job ID immediately |
 
 ### Caching Strategy
 
@@ -209,7 +209,7 @@ Cache invalidation rule: **invalidate on write, not on read**. When a product is
 #### TanStack Query Client Caching (Frontend)
 
 ```ts
-// Configure stale time — data is considered fresh for 5 minutes
+// Configure stale time - data is considered fresh for 5 minutes
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -226,14 +226,14 @@ const queryClient = new QueryClient({
 Never block an HTTP response for operations that take more than ~200ms.
 
 ```ts
-// ❌ Blocking — client waits for the entire PDF to generate
+// ❌ Blocking - client waits for the entire PDF to generate
 @Post('invoices')
 async generateInvoice(@Body() dto: CreateInvoiceDto) {
   const pdf = await this.pdfService.generate(dto)  // 3 seconds
   return { pdfUrl: pdf.url }
 }
 
-// ✅ Async — return a job ID immediately
+// ✅ Async - return a job ID immediately
 @Post('invoices')
 async generateInvoice(@Body() dto: CreateInvoiceDto) {
   const job = await this.queue.add('generate-invoice', dto)
@@ -257,7 +257,7 @@ Applications must be designed to run as **stateless** processes. Any state share
 | Anti-Pattern | Problem | Solution |
 |---|---|---|
 | Storing session data in memory | Breaks when running multiple instances | Use Redis or database-backed sessions |
-| In-memory caches (`Map`, `{}` at module level) | Each pod has its own cache — stale data | Use Redis for shared caching |
+| In-memory caches (`Map`, `{}` at module level) | Each pod has its own cache - stale data | Use Redis for shared caching |
 | Local file storage | Files only exist on one pod | Use S3 / Azure Blob / GCS |
 | WebSocket state in memory | Socket connections are not shared | Use Redis pub/sub adapter for Socket.IO/NestJS |
 
@@ -268,11 +268,11 @@ Applications must be designed to run as **stateless** processes. Any state share
 For read-heavy workloads, route read queries to a **read replica** and write queries to the primary:
 
 ```ts
-// Prisma — configure read replica
+// Prisma - configure read replica
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")       // Primary — writes
-  directUrl = env("DATABASE_URL_READ")  // Read replica — reads
+  url       = env("DATABASE_URL")       // Primary - writes
+  directUrl = env("DATABASE_URL_READ")  // Read replica - reads
 }
 ```
 
@@ -285,13 +285,13 @@ For a 4-core server: ~10 connections per application instance
 For 10 app instances:  100 connections → use PgBouncer in front of PostgreSQL
 ```
 
-#### Pagination — Never Use Offset on Large Tables
+#### Pagination - Never Use Offset on Large Tables
 
 ```ts
-// ❌ Offset pagination — scans all previous rows, degrades at scale
+// ❌ Offset pagination - scans all previous rows, degrades at scale
 const users = await prisma.user.findMany({ skip: 100000, take: 20 })
 
-// ✅ Cursor pagination — uses index, O(1) regardless of position
+// ✅ Cursor pagination - uses index, O(1) regardless of position
 const users = await prisma.user.findMany({
   take: 20,
   cursor: { id: lastSeenId },
@@ -348,4 +348,4 @@ Performance issues you cannot see are issues you cannot fix.
 | Frontend | Core Web Vitals per page | Google Search Console, Vercel Analytics |
 | Infrastructure | CPU, memory, disk per pod/instance | Datadog, CloudWatch |
 
-Set up alerting thresholds — do not wait for users to report slowness.
+Set up alerting thresholds - do not wait for users to report slowness.

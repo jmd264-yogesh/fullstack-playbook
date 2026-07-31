@@ -36,11 +36,11 @@ Every log line must be a single-line JSON object (never a multi-line string) wit
 | `error` | A request or operation failed | "Payment gateway returned 500" |
 | `fatal` | The process itself cannot continue and is about to crash | "Failed to connect to database on startup" |
 
-`LOG_LEVEL` is set per environment (see [Environments & Cloud Basics](/basics/environments-cloud)) — typically `debug` in Dev, `info` or `warn` in Production.
+`LOG_LEVEL` is set per environment (see [Environments](/basics/environments)) — typically `debug` in Dev, `info` or `warn` in Production.
 
 ## What never goes in a log
 
-Never log secrets, passwords, full card numbers, or tokens — even at `debug` level. Redact or omit them entirely; see [Security 101](/basics/security). A logging library's default serializers (e.g. Pino's `redact` option) should be configured to strip known sensitive fields automatically, rather than relying on every call site to remember.
+Never log secrets, passwords, full card numbers, or tokens — even at `debug` level. Redact or omit them entirely; see [Security Guardrails](/security/security-guardrails). A logging library's default serializers (e.g. Pino's `redact` option) should be configured to strip known sensitive fields automatically, rather than relying on every call site to remember.
 
 ## Example: NestJS + Pino
 

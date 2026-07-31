@@ -247,3 +247,32 @@
 .dark .vp-doc h2 {
   color: rgba(255, 255, 255, 0.87) !important;
 }
+
+/* --------------------------------------
+   MERMAID DIAGRAM SIZING & READABILITY
+--------------------------------------- */
+.vp-doc .mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.vp-doc .mermaid svg {
+  max-width: 100% !important;
+  max-height: 500px !important;
+  height: auto !important;
+}
+
+/* Fix Mermaid Subgraph (cluster) default yellow background in light theme */
+.vp-doc .mermaid .cluster rect {
+  fill: rgba(25, 16, 91, 0.03) !important;
+  stroke: rgba(25, 16, 91, 0.2) !important;
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+.dark .vp-doc .mermaid .cluster rect {
+  fill: rgba(255, 255, 255, 0.03) !important;
+  stroke: rgba(255, 255, 255, 0.15) !important;
+}

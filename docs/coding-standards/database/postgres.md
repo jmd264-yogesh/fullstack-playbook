@@ -42,7 +42,7 @@ PostgreSQL is our primary relational database. Proper schema design, indexing, a
 ## Security & Maintenance
 
 ### Principle of Least Privilege
-- The application's database user must only hold `SELECT`, `INSERT`, `UPDATE`, `DELETE` on application tables — never `DROP`, `CREATE`, `TRUNCATE`, or `GRANT`.
+- The application's database user must only hold `SELECT`, `INSERT`, `UPDATE`, `DELETE` on application tables - never `DROP`, `CREATE`, `TRUNCATE`, or `GRANT`.
 - Run migrations with a separate **migration role** that holds DDL privileges; the application connects with a different, more restricted role at runtime.
 - **Example**:
   ```sql
@@ -52,7 +52,7 @@ PostgreSQL is our primary relational database. Proper schema design, indexing, a
   ```
 
 ### Row-Level Security (RLS) for Multi-Tenant Data
-- For multi-tenant tables, enable Postgres's native Row-Level Security instead of relying solely on `WHERE tenant_id = ...` in application code — it's a second, database-enforced layer that still protects data even if a query forgets the filter.
+- For multi-tenant tables, enable Postgres's native Row-Level Security instead of relying solely on `WHERE tenant_id = ...` in application code - it's a second, database-enforced layer that still protects data even if a query forgets the filter.
   ```sql
   ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
   CREATE POLICY tenant_isolation ON orders
@@ -60,7 +60,7 @@ PostgreSQL is our primary relational database. Proper schema design, indexing, a
   ```
 
 ### Injection Prevention
-- Never build a query with string concatenation, including in raw `$queryRawUnsafe` calls. Always use parameterized queries or the ORM's tagged-template raw query helper (see the `$queryRaw` example above) — Postgres treats parameters strictly as data, not executable SQL.
+- Never build a query with string concatenation, including in raw `$queryRawUnsafe` calls. Always use parameterized queries or the ORM's tagged-template raw query helper (see the `$queryRaw` example above) - Postgres treats parameters strictly as data, not executable SQL.
 
 ### Soft Deletes & Unique Constraints
 - **Warning**: If you use a `deleted_at` column (soft deletes), traditional `UNIQUE` constraints will break (e.g., a user deletes their account and tries to sign up again with the same email, but the DB blocks it).
@@ -124,7 +124,8 @@ enum UserStatus {
 }
 ```
 
-> Use `@db.Uuid` with `gen_random_uuid()` for UUID v4, or install `pgcrypto` for UUID v7 (sequential). Sequential UUIDs are strongly preferred for performance — see the Sequential UUIDs section above.
+>[!note]
+ Use `@db.Uuid` with `gen_random_uuid()` for UUID v4, or install `pgcrypto` for UUID v7 (sequential). Sequential UUIDs are strongly preferred for performance - see the Sequential UUIDs section above.
 
 ### Common Query Patterns
 
@@ -149,14 +150,14 @@ const users = await prisma.user.findMany({
   },
 })
 
-// Atomic transaction — keep it short, no external I/O inside
+// Atomic transaction - keep it short, no external I/O inside
 const result = await prisma.$transaction(async (tx) => {
   const user = await tx.user.create({ data: { ... } })
   await tx.auditLog.create({ data: { userId: user.id, action: 'USER_CREATED' } })
   return user
 })
 
-// Raw query with parameterized values (safe — no string concatenation)
+// Raw query with parameterized values (safe - no string concatenation)
 const rows = await prisma.$queryRaw`
   SELECT id, email FROM users
   WHERE status = ${status}
@@ -174,7 +175,7 @@ npx prisma migrate dev --name add_user_status_column
 # Deploy pending migrations (CI / production)
 npx prisma migrate deploy
 
-# Reset and re-seed (development only — destructive)
+# Reset and re-seed (development only - destructive)
 npx prisma migrate reset
 ```
 
@@ -217,7 +218,7 @@ WHERE metadata->>'subscription_tier' = 'pro';
 -- Existence of a key
 SELECT id FROM users WHERE metadata ? 'onboarding_completed';
 
--- JSONB containment — find all users with a specific tag
+-- JSONB containment - find all users with a specific tag
 SELECT id FROM users WHERE metadata @> '{"tags": ["beta-tester"]}';
 
 -- Index a JSONB key for fast lookup
@@ -229,9 +230,9 @@ CREATE INDEX idx_users_metadata_gin ON users USING GIN (metadata);
 
 ---
 
-## EXPLAIN ANALYZE — Finding Slow Queries
+## EXPLAIN ANALYZE - Finding Slow Queries
 
-Always run `EXPLAIN (ANALYZE, BUFFERS)` before deploying a query that touches large tables. Look for `Seq Scan` — it means a missing index.
+Always run `EXPLAIN (ANALYZE, BUFFERS)` before deploying a query that touches large tables. Look for `Seq Scan` - it means a missing index.
 
 ```sql
 -- Run explain analyze
@@ -298,7 +299,7 @@ const results = await prisma.$queryRaw`
 
 ## Window Functions
 
-Use window functions for running totals, ranking, and row numbering — without a subquery.
+Use window functions for running totals, ranking, and row numbering - without a subquery.
 
 ```sql
 -- Rank users by order count within their region

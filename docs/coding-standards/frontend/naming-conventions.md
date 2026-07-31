@@ -32,32 +32,32 @@ Consistent naming makes navigating the codebase intuitive and reduces the cognit
 
 ## TypeScript Naming
 
-### Types — Always Use `type`, Prefix with `T`
+### Types - Always Use `type`, Prefix with `T`
 
 ```ts
 // ✅ Correct
 type TCustomerFormData = { ... }
 type TApiResponse<T> = { data: T; status: number }
 
-// ❌ Avoid interfaces — use type aliases
+// ❌ Avoid interfaces - use type aliases
 interface CustomerFormData { ... }
 ```
 
-### Enums — PascalCase
+### Enums - PascalCase
 
 ```ts
 enum ChannelType { Direct, Partner, Online }
 enum OrderStatus { Pending, Processing, Complete, Cancelled }
 ```
 
-### Constants — UPPER_SNAKE_CASE
+### Constants - UPPER_SNAKE_CASE
 
 ```ts
 const MAX_RETRY_COUNT = 3
 const API_TIMEOUT = 30_000
 ```
 
-### Functions & Variables — camelCase
+### Functions & Variables - camelCase
 
 ```ts
 const customerName = 'Acme Corp'
@@ -65,7 +65,7 @@ const isLoading = false
 function formatCurrency(amount: number): string { ... }
 ```
 
-### Booleans — Prefix with `is`, `has`, or `should`
+### Booleans - Prefix with `is`, `has`, or `should`
 
 ```ts
 const isVisible = true

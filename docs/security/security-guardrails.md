@@ -16,7 +16,7 @@ This section consolidates every security control already defined across the FS D
 - <Badge type="danger" text="Gap" /> = referenced but no real content exists yet
 :::
 
-## 1.1 Secure Coding Practices <Badge type="tip" text="Covered" />
+## 2.1 Secure Coding Practices <Badge type="tip" text="Covered" />
 
 **Source:** [`docs/coding-standards/devsecops-standards.md`](../coding-standards/devsecops-standards.md)
 
@@ -27,7 +27,7 @@ This section consolidates every security control already defined across the FS D
 
 ---
 
-## 1.2 Authentication, Authorization & RBAC <Badge type="tip" text="Covered" />
+## 2.2 Authentication, Authorization & RBAC <Badge type="tip" text="Covered" />
 
 - Auth delegated to enterprise Identity Providers (Azure AD, Okta, Auth0) via OAuth2/OIDC — **no custom password-hashing implementations.**
 - RBAC/ABAC enforced server-side, verified at controller/route level *before* business logic executes — never trust client-side role hiding.
@@ -45,7 +45,7 @@ This section consolidates every security control already defined across the FS D
 
 ---
 
-## 1.3 Secrets Management <Badge type="tip" text="Covered" />
+## 2.3 Secrets Management <Badge type="tip" text="Covered" />
 
 - No credentials, API keys, or JWT secrets ever committed to source control.
 - **If a secret is committed, it must be revoked and rotated immediately** — rewriting Git history alone is explicitly called out as insufficient.
@@ -54,7 +54,7 @@ This section consolidates every security control already defined across the FS D
 
 ---
 
-## 1.4 CI/CD Security Gates (Shift-Left) <Badge type="tip" text="Covered" />
+## 2.4 CI/CD Security Gates (Shift-Left) <Badge type="tip" text="Covered" />
 
 **Sources:** [`docs/coding-standards/devsecops-standards.md`](../coding-standards/devsecops-standards.md), [`ci-cd.md`](../coding-standards/ci-cd.md)
 
@@ -69,7 +69,7 @@ This section consolidates every security control already defined across the FS D
 
 ---
 
-## 1.5 Infrastructure & Container Security <Badge type="tip" text="Covered" />
+## 2.5 Infrastructure & Container Security <Badge type="tip" text="Covered" />
 
 - Immutable infrastructure via Terraform; manual cloud-console changes ("ClickOps") prohibited.
 - Docker hardening: containers run as non-root (`USER node` / `USER app`), minimal Alpine/Distroless base images.
@@ -78,7 +78,7 @@ This section consolidates every security control already defined across the FS D
 
 ---
 
-## 1.6 Production Security & Rate Limiting <Badge type="tip" text="Covered" />
+## 2.6 Production Security & Rate Limiting <Badge type="tip" text="Covered" />
 
 - WAF (Cloudflare / AWS WAF) with OWASP Top 10 managed rulesets; DDoS protection via AWS Shield; load balancers/EC2 never directly exposed.
 - API Gateway throttling (e.g. 500 req/sec/IP); stricter auth-endpoint throttling (max 5 failed attempts/min with backoff/CAPTCHA) to mitigate credential stuffing and brute force.
@@ -88,14 +88,14 @@ This section consolidates every security control already defined across the FS D
 
 ---
 
-## 1.7 Database Security <Badge type="tip" text="Covered" />
+## 2.7 Database Security <Badge type="tip" text="Covered" />
 
 - **MySQL:** parameterized queries only (explicit bad example of string-concatenated queries flagged as SQL-injection risk); Principle of Least Privilege — app DB user gets only SELECT/INSERT/UPDATE/DELETE, never DROP/CREATE/GRANT; a separate migration user holds DDL rights.
 - **Postgres:** Least-privilege database roles, Row-Level Security for multi-tenant tables, and parameterized/raw-tagged-template queries only — see [PostgreSQL: Security & Maintenance](../coding-standards/database/postgres.md#security-maintenance).
 
 ---
 
-## 1.8 Framework-Specific Controls <Badge type="tip" text="Covered" />
+## 2.8 Framework-Specific Controls <Badge type="tip" text="Covered" />
 
 | Stack | Controls Documented |
 | :--- | :--- |
@@ -107,7 +107,7 @@ This section consolidates every security control already defined across the FS D
 
 ---
 
-## 1.9 Checklists Coverage Map <Badge type="tip" text="Covered" />
+## 2.9 Checklists Coverage Map <Badge type="tip" text="Covered" />
 
 | Checklist | Security Items |
 | :--- | :--- |
@@ -118,7 +118,7 @@ This section consolidates every security control already defined across the FS D
 
 ---
 
-## 1.10 Governance & Compliance <Badge type="tip" text="Covered" />
+## 2.10 Governance & Compliance <Badge type="tip" text="Covered" />
 
 **Source:** [`docs/governance/*`](../governance/overview.md)
 
@@ -131,6 +131,6 @@ This section consolidates every security control already defined across the FS D
 
 ---
 
-## 1.11 Remaining Gaps <Badge type="tip" text="Covered" />
+## 2.11 Remaining Gaps <Badge type="tip" text="Covered" />
 
 Logging field/format standards, disaster-recovery/backup policy, and accessibility standards — previously flagged as missing here — are now documented at [Logging Standards](/operations/logging-standards), [Disaster Recovery & Backups](/operations/disaster-recovery), and [Accessibility Standards](/coding-standards/accessibility/overview) respectively. No further known content gaps at this time.

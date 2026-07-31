@@ -1,6 +1,17 @@
-# Release Automation Workflow
+# Release Automation
 
- **Automated GitHub Release Generation** – This job creates a release linked to Azure Boards work items, ensuring traceability and up‑to‑date documentation.
+This page covers the **automated release tagging and documentation workflow** used in our CI/CD pipeline. Every production deployment must be accompanied by a versioned GitHub release that is fully traceable to Azure Boards work items.
+
+> **Looking for deployment strategies?** Blue/Green deployments, Canary releases, feature flag management, and zero-downtime database migrations are covered in the **[Deployment & Operations](../operations/overview.md)** section — not here.
+
+## What This Page Covers
+
+- Automated GitHub release generation tied to Azure Boards tickets
+- Version tag creation and management
+- Release notes automation from commit history
+- Traceability from code commit → work item → production release
+
+---
 
 ## Overview
 
@@ -139,4 +150,8 @@ create_release:
 - **Safety & Idempotence** – The job runs only after a successful Docker image build and respects a 15‑minute timeout, preventing runaway pipelines.
 
 
-> Note: Creating release tags is a mandatory step in the development lifecycle, and this page describes the automation used to enforce that process.
+> **Note:** Creating release tags is a mandatory step in the development lifecycle, and this page describes the automation used to enforce that process.
+
+---
+
+> **See also:** [Delivery Lifecycle Overview →](./overview.md) | [Testing Phase →](./testing-phase.md) | [Monitoring & Hypercare →](./monitoring-phase.md)

@@ -29,7 +29,7 @@ features:
     link: /delivery-lifecycle/overview
     linkText: Explore the lifecycle
   - icon: 💻
-    title: Coding Standards
+    title: Development & Coding Standards
     details: Deep architectural guidelines for React, Next.js, NestJS, Laravel, TypeScript, and databases.
     link: /coding-standards/overview
     linkText: View standards
@@ -44,9 +44,9 @@ features:
     link: /operations/overview
     linkText: See the full pipeline
   - icon: 🛡️
-    title: Security Guardrails
+    title: Testing & Security Guardrails
     details: Every security control in one reference — secure coding, auth, secrets, CI/CD gates, and production hardening.
-    link: /security/security-guardrails
+    link: /security/testing/overview
     linkText: Review guardrails
   - icon: ✅
     title: Quality Gates & Governance

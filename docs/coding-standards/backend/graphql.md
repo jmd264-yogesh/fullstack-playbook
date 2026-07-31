@@ -1,17 +1,48 @@
 # GraphQL Best Practices & Standards
 
-GraphQL is used for complex APIs where clients need flexible data fetching. We use a **Code-First** approach with NestJS and TypeGraphQL decorators — no manual `.graphql` schema files.
+<Callout type="important">
+Design the schema around product concepts and client tasks, not database tables. GraphQL types are a public contract; version changes deliberately and avoid exposing ORM entities or sensitive fields.
+</Callout>
+
+GraphQL is used for complex APIs where clients need flexible data fetching. We use a **Code-First** approach with NestJS and TypeGraphQL decorators - no manual `.graphql` schema files.
+
+---
+
+## Overview
+
+Use GraphQL when clients benefit from flexible, typed queries over a stable product API. Protect that flexibility with schema design, authentication, pagination, request context, and query-cost limits.
 
 ---
 
 ## Quick Start
 
+### npm
 ```bash
 npm install @nestjs/graphql @nestjs/apollo @apollo/server graphql
 npm install dataloader
 npm install graphql-query-complexity
 ```
-
+---
+### pnpm
+```bash
+pnpm add @nestjs/graphql @nestjs/apollo @apollo/server graphql 
+pnpm add dataloader 
+pnpm add graphql-query-complexity
+```
+---
+### bun
+```bash
+bun add @nestjs/graphql @nestjs/apollo @apollo/server graphql 
+bun add dataloader 
+bun add graphql-query-complexity
+```
+---
+### yarn
+```bash
+yarn add @nestjs/graphql @nestjs/apollo @apollo/server graphql 
+yarn add dataloader 
+yarn add graphql-query-complexity
+```
 ---
 
 ## Setup in NestJS
@@ -68,7 +99,7 @@ export class User {
   createdAt: Date
 
   // ❌ Never expose sensitive fields like password
-  // password is not annotated with @Field() — it won't appear in the schema
+  // password is not annotated with @Field() - it won't appear in the schema
 }
 ```
 
@@ -138,17 +169,17 @@ export class UsersResolver {
     return this.usersService.create(createUserInput)
   }
 
-  // Field resolver — uses DataLoader to batch orders for all users
+  // Field resolver - uses DataLoader to batch orders for all users
   @ResolveField(() => [Order])
   async orders(@Parent() user: User) {
-    return this.ordersLoader.load(user.id)   // Batched — not N+1
+    return this.ordersLoader.load(user.id)   // Batched - not N+1
   }
 }
 ```
 
 ---
 
-## DataLoader — Mandatory for Relations
+## DataLoader - Mandatory for Relations
 
 Every field resolver that fetches related data must use DataLoader to batch requests and prevent N+1.
 
@@ -214,7 +245,7 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
 ```
 
 ```ts
-// src/common/decorators/current-user.decorator.ts — updated for GraphQL
+// src/common/decorators/current-user.decorator.ts - updated for GraphQL
 import { createParamDecorator, ExecutionContext } from '@nestjs/common'
 import { GqlExecutionContext } from '@nestjs/graphql'
 
@@ -240,7 +271,7 @@ me(@CurrentUser() user: TJwtPayload) {
 Without limits, a malicious query can deeply nest relations and crash the database.
 
 ```ts
-// src/app.module.ts — add complexity plugin
+// src/app.module.ts - add complexity plugin
 import { GraphQLModule } from '@nestjs/graphql'
 import { createComplexityPlugin } from 'graphql-query-complexity'
 
@@ -409,7 +440,7 @@ export enum UserRole {
   VIEWER = 'VIEWER',
 }
 
-// Register with GraphQL — makes it available in the schema
+// Register with GraphQL - makes it available in the schema
 registerEnumType(UserRole, {
   name: 'UserRole',
   description: 'The role of a user within the system',
@@ -447,7 +478,7 @@ async usersByRole(@Args('role', { type: () => UserRole }) role: UserRole) {
 
 ## Union Types
 
-Use unions when a query can return one of several different types — e.g., a search result that returns Users, Orders, or Products.
+Use unions when a query can return one of several different types - e.g., a search result that returns Users, Orders, or Products.
 
 ```ts
 // src/modules/search/models/search-result.model.ts
@@ -482,7 +513,7 @@ async search(@Args('query') query: string): Promise<Array<typeof SearchResult>> 
 ```
 
 ```graphql
-# Client query — use inline fragments to access type-specific fields
+# Client query - use inline fragments to access type-specific fields
 query Search($query: String!) {
   search(query: $query) {
     ... on User    { id email firstName }
@@ -503,7 +534,7 @@ npm install graphql-subscriptions @graphql-tools/schema
 ```
 
 ```ts
-// app.module.ts — enable subscriptions
+// app.module.ts - enable subscriptions
 GraphQLModule.forRoot<ApolloDriverConfig>({
   driver: ApolloDriver,
   autoSchemaFile: true,
@@ -578,11 +609,11 @@ subscription OnOrderUpdated($orderId: ID!) {
 
 | Anti-Pattern | Problem | Correct Approach |
 |---|---|---|
-| Field resolver without DataLoader | N+1 queries — DB crashes under load | Always use DataLoader for related fields |
-| Exposing DB entities as `@ObjectType()` | Schema couples to DB — breaks on rename | Maintain separate DTO/model classes |
+| Field resolver without DataLoader | N+1 queries - DB crashes under load | Always use DataLoader for related fields |
+| Exposing DB entities as `@ObjectType()` | Schema couples to DB - breaks on rename | Maintain separate DTO/model classes |
 | No complexity limits | Client sends deeply-nested query, crashes DB | Configure `graphql-query-complexity` |
 | Leaking stack traces in errors | Security risk | Format errors plugin strips stacktrace in production |
-| Schema-first approach | Manual type sync between `.graphql` and TypeScript | Use Code-First — schema auto-generated |
+| Schema-first approach | Manual type sync between `.graphql` and TypeScript | Use Code-First - schema auto-generated |
 | `SELECT *` in resolvers | Fetches fields the client didn't request | Pass `info` to ORM to select only requested fields |
 
 ---

@@ -63,7 +63,7 @@ app/
 ├── Actions/              # Single-responsibility business logic
 │   └── CreateUserAction.php
 ├── Http/
-│   ├── Controllers/      # HTTP layer only — receive request, return response
+│   ├── Controllers/      # HTTP layer only - receive request, return response
 │   ├── Requests/         # Form validation and authorization
 │   ├── Resources/        # API output transformers
 │   └── Middleware/
@@ -112,7 +112,7 @@ Route::post('auth/register', [AuthController::class, 'register']);
 
 ---
 
-## Form Requests — Always Use Them
+## Form Requests - Always Use Them
 
 Never validate inside a controller method. Always use `FormRequest` classes.
 
@@ -126,7 +126,7 @@ class StoreUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Simple authorization checks here — complex logic goes to Policies
+        // Simple authorization checks here - complex logic goes to Policies
         return $this->user()?->isAdmin() ?? true;
     }
 
@@ -151,7 +151,7 @@ class StoreUserRequest extends FormRequest
 ```
 
 ```php
-// app/Http/Controllers/UserController.php — controller stays clean
+// app/Http/Controllers/UserController.php - controller stays clean
 public function store(StoreUserRequest $request): JsonResponse
 {
     // $request->validated() contains only the validated, declared fields
@@ -195,7 +195,7 @@ class CreateUserAction
 
 ---
 
-## API Resources — Control Your JSON Output
+## API Resources - Control Your JSON Output
 
 Never return raw Eloquent models. Always transform output through API Resources.
 
@@ -217,8 +217,8 @@ class UserResource extends JsonResource
             'email'      => $this->email,
             'role'       => $this->role,
             'created_at' => $this->created_at->toISOString(),
-            // ✅ password is NOT included — you control exactly what's exposed
-            // ✅ Conditional fields — include orders only if loaded
+            // ✅ password is NOT included - you control exactly what's exposed
+            // ✅ Conditional fields - include orders only if loaded
             'orders'     => OrderResource::collection($this->whenLoaded('orders')),
         ];
     }
@@ -265,7 +265,7 @@ class User extends Model
         return $this->hasOne(Profile::class);
     }
 
-    // Scopes — reusable query constraints
+    // Scopes - reusable query constraints
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
@@ -281,7 +281,7 @@ class User extends Model
 ### Common Query Patterns
 
 ```php
-// Always eager-load — prevent N+1
+// Always eager-load - prevent N+1
 $users = User::active()
     ->with(['orders' => fn($q) => $q->latest()->limit(5), 'profile'])
     ->latest()
@@ -291,7 +291,7 @@ $users = User::active()
 $user = User::with($request->boolean('include_orders') ? 'orders' : [])
     ->findOrFail($id);
 
-// Chunking large datasets — never load millions of rows into memory
+// Chunking large datasets - never load millions of rows into memory
 User::chunk(500, function (Collection $users) {
     foreach ($users as $user) {
         ProcessUserJob::dispatch($user);
@@ -332,7 +332,7 @@ Schema::create('users', function (Blueprint $table) {
 
 ---
 
-## Authentication — Laravel Sanctum (API Tokens)
+## Authentication - Laravel Sanctum (API Tokens)
 
 ```bash
 composer require laravel/sanctum
@@ -377,7 +377,7 @@ class AuthController extends Controller
 ```
 
 ```php
-// routes/api.php — protected with Sanctum
+// routes/api.php - protected with Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('auth/me', [AuthController::class, 'me']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
@@ -387,7 +387,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 ---
 
-## Authorization — Policies
+## Authorization - Policies
 
 ```php
 // app/Policies/OrderPolicy.php
@@ -411,7 +411,7 @@ class OrderPolicy
 ```
 
 ```php
-// Controller — enforce policy
+// Controller - enforce policy
 public function show(Order $order): OrderResource
 {
     $this->authorize('view', $order);  // Throws 403 if unauthorized
@@ -588,7 +588,7 @@ class CreateDefaultSettings
 ```
 
 ```php
-// app/Providers/EventServiceProvider.php — register the event → listeners map
+// app/Providers/EventServiceProvider.php - register the event → listeners map
 protected $listen = [
     UserRegistered::class => [
         SendWelcomeEmail::class,
@@ -598,7 +598,7 @@ protected $listen = [
 ```
 
 ```php
-// Fire from Action — multiple side effects, zero coupling
+// Fire from Action - multiple side effects, zero coupling
 class CreateUserAction
 {
     public function execute(array $data): User
@@ -667,7 +667,7 @@ Thanks, **My App Team**
 // Sending mail (sync or queued)
 Mail::to($user->email)->send(new WelcomeEmail($user));
 
-// Queued — non-blocking, use in production
+// Queued - non-blocking, use in production
 Mail::to($user->email)->queue(new WelcomeEmail($user));
 ```
 
@@ -771,11 +771,11 @@ public function boot(): void
 
 - [ ] Input validation always uses `FormRequest` classes
 - [ ] Business logic is in `Action` classes, not controllers
-- [ ] API output always uses `Resource` classes — never raw model
-- [ ] Eager loading used — `Model::preventLazyLoading()` enabled in `AppServiceProvider` (dev)
-- [ ] `env()` called only in `config/` files — use `config()` helper in app code
+- [ ] API output always uses `Resource` classes - never raw model
+- [ ] Eager loading used - `Model::preventLazyLoading()` enabled in `AppServiceProvider` (dev)
+- [ ] `env()` called only in `config/` files - use `config()` helper in app code
 - [ ] Background jobs used for emails, PDF generation, payment processing
 - [ ] Rate limiting applied to auth endpoints
-- [ ] Authorization enforced via Policies — no inline `if ($user->role === 'admin')`
+- [ ] Authorization enforced via Policies - no inline `if ($user->role === 'admin')`
 - [ ] `RefreshDatabase` used in all feature tests
 - [ ] Migrations are reversible with a `down()` method

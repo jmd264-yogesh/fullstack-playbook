@@ -1,5 +1,7 @@
 # Scenario 3: UI Mockup Provided
 
+> **Intake Scenarios:** [← Back to Requirement Intake Overview](../requirement-intake.md) | [Scenario 1: Client Provides FRD](./scenario-1-client-provides-frd.md) | [Scenario 2: No FRD](./scenario-2-no-frd.md) | [Variations & Edge Cases](./variations-edge-cases.md)
+
 When the client provides UI mockups or visual designs with little or no Functional Requirements Document (FRD), the project follows a **UI-driven implementation approach**. In this scenario, the mockups serve as the primary source of requirements, and the team collaborates to translate the designs into functional and responsive application components.
 
 ## Review & Asset Extraction
@@ -232,3 +234,16 @@ Once the design specifications have been reviewed and approved, any significant 
 ## Summary
 
 When UI mockups are provided without detailed functional requirements, the design becomes the primary reference for implementation. The team must extract functional requirements, define responsive and accessibility standards, create implementation specifications, and establish clear acceptance criteria. Through structured reviews, component mapping, and controlled change management, the team can successfully transform approved designs into a scalable, maintainable, and user-friendly solution.
+
+---
+
+## Related Scenarios
+
+| Scenario | When to Use |
+|---|---|
+| [📋 Scenario 1: Client Provides FRD](./scenario-1-client-provides-frd.md) | Full requirements document exists |
+| [🔍 Scenario 2: No FRD](./scenario-2-no-frd.md) | No formal requirements — needs discovery |
+| 🎨 **You are here** — Scenario 3: UI Mockup | Visual designs are the primary reference |
+| [⚡ Variations & Edge Cases](./variations-edge-cases.md) | Partial FRD, POC, API-only, legacy |
+
+> **Next Phase:** [Solution Design →](../design-phase.md)
