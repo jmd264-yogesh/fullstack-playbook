@@ -115,6 +115,6 @@ API_SECRET_KEY=your_api_key_here
 
 ## Where This Leads Next
 
-- [Cloud Basics](/basics/cloud-basics) — how applications and environments are hosted in the cloud
+- [Cloud Basics](/basics/cloud/overview) — how applications and environments are hosted in the cloud
 - [Deployment & Operations Overview](/operations/overview) — how code moves automatically between environments
 - [Environment Strategy](/engineering/environments) — concrete standards for configuring environments in this organization

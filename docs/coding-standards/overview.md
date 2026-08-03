@@ -99,12 +99,12 @@ For the exact SonarQube thresholds (branch coverage, duplication, cognitive comp
 ---
 
 ### Frontend
-- [Framework Structures](/coding-standards/frontend/frameworks) - React, Next.js, Vite, and Angular layouts
+- [Folder Structure](/coding-standards/frontend/folder-structure) - React, Next.js, Vite, and Angular layouts
 - [Naming Conventions](/coding-standards/frontend/naming-conventions) - Files, folders, TypeScript
 - [Code Organization](/coding-standards/frontend/code-organization) - Component design, state management
 - [Reusability Guidelines](/coding-standards/frontend/reusability) - Shared primitives, hooks, forms
 - [React](/coding-standards/frontend/react) - Composition, hooks, error boundaries
-- [State Management](/coding-standards/frontend/state-management) - Local state, Context, Zustand, Redux, Jotai, and React Query
+- [Code Organization & State Management](/coding-standards/frontend/code-organization) - Local state, Context, Zustand, Redux, Jotai, and React Query
 - [Next.js](/coding-standards/frontend/nextjs) - Server components, caching, routing
 - [shadcn/ui](/coding-standards/frontend/shadcn) - Component library usage
 
@@ -112,7 +112,7 @@ For the exact SonarQube thresholds (branch coverage, duplication, cognitive comp
 
 ### Backend
 - [Folder Structure](/coding-standards/backend/folder-structure) - NestJS and Laravel project layout
-- [Next.js Backend](/coding-standards/backend/nextjs) - Route handlers, validation, auth, database, caching, and deployment
+
 - [Naming Conventions](/coding-standards/backend/naming-conventions) - Files, classes, methods, database
 - [NestJS](/coding-standards/backend/nestjs) - CQRS, DI, guards, interceptors
 - [GraphQL](/coding-standards/backend/graphql) - DataLoader, pagination, complexity
