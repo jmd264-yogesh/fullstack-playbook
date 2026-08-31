@@ -6,12 +6,14 @@ import "./style.css";
 import "./framework-folder-tabs.css";
 import FrontendFrameworkTabs from "./components/FrontendFrameworkFolderTabs.vue";
 import BackendFrameworkTabs from "./components/BackendFrameworkFolderTabs.vue";
+import HeroVisual from "./components/HeroVisual.vue";
 
 export default {
   extends: DefaultTheme,
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
       "layout-bottom": () => h(MermaidZoom),
+      "home-hero-image": () => h(HeroVisual),
     });
   },
 

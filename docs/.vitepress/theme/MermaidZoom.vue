@@ -142,7 +142,7 @@ onUnmounted(() => {
   cursor: zoom-in;
 }
 
-/* Full-page-level overlay — this IS the modal, no inner card */
+/* Full-page-level overlay - this IS the modal, no inner card */
 .mz-overlay {
   position: fixed;
   inset: 0;
@@ -155,7 +155,7 @@ onUnmounted(() => {
   cursor: zoom-out;
 }
 
-/* No padding, no background, no border — just a positioning host for the SVG */
+/* No padding, no background, no border - just a positioning host for the SVG */
 .mz-svg-host {
   cursor: default;
   display: flex;

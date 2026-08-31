@@ -1,6 +1,6 @@
 :root {
   --vp-layout-max-width: 100%;
-  
+
   /* Brand Colors */
   --vp-c-brand-1: #ff6196;
   --vp-c-brand-2: #ff4785;
@@ -25,27 +25,67 @@
 /* --------------------------------------
    HERO SECTION ENHANCEMENTS
 --------------------------------------- */
-/* Solid color for the main title */
+.VPHero {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Soft, static brand-color wash behind the hero - no motion */
+.VPHero::before {
+  content: "";
+  position: absolute;
+  inset: -10% -10% auto -10%;
+  height: 140%;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(25, 16, 91, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(255, 97, 150, 0.10), transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark .VPHero::before {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(139, 161, 255, 0.10), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(255, 97, 150, 0.08), transparent 40%);
+}
+
+.VPHero .container {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+}
+
+/* Solid color for the main title. Sized to fit on one line within the
+   hero's text column (max-width:592px once a hero image is present)
+   without forcing nowrap/max-width:none, which overflowed the column
+   and pushed the hero image off-screen. */
 .VPHero .name {
   color: #19105b;
-  font-size: clamp(3rem, 6vw, 5rem);
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
   font-weight: 800;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
 }
 
 .dark .VPHero .name {
   color: #ff6196;
 }
 
-/* Floating Animation for the Hero Image */
-.VPHero .image {
-  animation: float 6s ease-in-out infinite;
+/* Secondary line: muted neutral so the navy name still carries the color */
+.VPHero .text {
+  color: #475569 !important;
+  font-weight: 700 !important;
+  font-size: clamp(1rem, 1.8vw, 1.35rem) !important;
+  max-width: 560px;
 }
 
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-  100% { transform: translateY(0px); }
+.dark .VPHero .text {
+  color: #b0b6c4 !important;
+}
+
+.VPHero .tagline {
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  max-width: 640px;
+  line-height: 1.6;
 }
 
 /* Call to Action Buttons */
@@ -66,6 +106,23 @@
 }
 .dark .VPHero .action .VPButton.brand:hover {
   background-color: #ff4785;
+}
+
+/* --------------------------------------
+   FULL-WIDTH FEATURE GRID (default caps at 1152px)
+--------------------------------------- */
+.VPFeatures .container {
+  max-width: 100%;
+}
+
+/* --------------------------------------
+   FULL-WIDTH HOME CONTENT (Built for High-Velocity..., Not sure
+   where to start?, Your path through the playbook) - the markdown
+   content below the hero/features is wrapped by VitePress in a
+   container capped at 1280px by default.
+--------------------------------------- */
+.VPHome .vp-doc.container {
+  max-width: 100%;
 }
 
 /* --------------------------------------
@@ -110,7 +167,6 @@
 .custom-stats-desc {
   font-size: 1.1rem;
   color: var(--vp-c-text-2);
-  max-width: 700px;
   margin: 0 auto;
   line-height: 1.8;
 }
@@ -155,9 +211,9 @@
 
 .role-router-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
-  max-width: 1152px;
+  width: 100%;
   margin: 3rem auto 0;
   text-align: left;
 }
@@ -168,7 +224,8 @@
   background: var(--feature-bg);
   border: 1px solid var(--feature-border);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 2rem 1.75rem;
+  min-height: 230px;
   text-decoration: none !important;
   color: var(--vp-c-text-1);
   transition: all 0.25s ease;
@@ -225,6 +282,99 @@
   margin: 2rem auto;
 }
 
+.path-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 1.5rem auto 2rem;
+  max-width: 900px;
+}
+
+.path-link {
+  display: inline-block;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--feature-border);
+  background: var(--feature-bg);
+  color: var(--vp-c-text-1) !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+}
+
+.path-link:hover {
+  border-color: #ff6196;
+  color: #ff6196 !important;
+  transform: translateY(-2px);
+}
+
+/* --------------------------------------
+   FINAL CTA SECTION (Home page)
+--------------------------------------- */
+.final-cta-section {
+  padding: 4rem 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, #19105b, #4a2e8f 55%, #ff4785);
+  border-radius: 16px;
+  color: white;
+}
+
+.final-cta-section .final-cta-title {
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 800;
+  margin: 0 0 1rem !important;
+  border-top: none !important;
+  padding-top: 0 !important;
+  color: white !important;
+}
+
+.final-cta-section .custom-stats-desc {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.final-cta-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.final-cta-button {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: all 0.25s ease;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  color: white;
+}
+
+.final-cta-button:hover {
+  transform: translateY(-2px);
+  border-color: white;
+}
+
+.final-cta-button.primary {
+  background: white;
+  color: #19105b;
+  border-color: white;
+}
+
+.final-cta-button.primary:hover {
+  background: #ffe3ec;
+}
+
+/* --------------------------------------
+   WIDEN DOC CONTENT (default caps at 688px next to the outline aside)
+--------------------------------------- */
+.VPDoc.has-aside .content-container {
+  max-width: 100%;
+}
+
 /* --------------------------------------
    DOCUMENTATION PAGE HEADERS
 --------------------------------------- */
@@ -275,4 +425,178 @@
 .dark .vp-doc .mermaid .cluster rect {
   fill: rgba(255, 255, 255, 0.03) !important;
   stroke: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* --------------------------------------
+   CASE STUDIES SECTION
+--------------------------------------- */
+.cs-pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0;
+}
+
+.cs-pattern-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--feature-bg);
+  border: 1px solid var(--feature-border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-decoration: none !important;
+  color: var(--vp-c-text-1);
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 10px var(--feature-shadow);
+}
+
+.cs-pattern-card:hover {
+  transform: translateY(-4px);
+  border-color: #ff6196;
+}
+
+.cs-pattern-count {
+  display: inline-block;
+  background: rgba(255, 97, 150, 0.12);
+  color: #ff4785;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  margin-bottom: 0.6rem;
+  width: fit-content;
+}
+
+.dark .cs-pattern-count {
+  background: rgba(255, 97, 150, 0.18);
+  color: #ff85ae;
+}
+
+.cs-pattern-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #19105b;
+  margin-bottom: 0.4rem;
+}
+
+.dark .cs-pattern-title {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.cs-pattern-desc {
+  font-size: 0.92rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.6;
+  flex-grow: 1;
+}
+
+.cs-pattern-link {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ff6196;
+}
+
+.cs-intro-banner {
+  background: var(--feature-bg);
+  border: 1px solid var(--feature-border);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.cs-intro-text {
+  font-size: 0.92rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.cs-intro-text strong {
+  color: var(--vp-c-text-1);
+}
+
+.cs-project-card {
+  background: var(--feature-bg);
+  border: 1px solid var(--feature-border);
+  border-radius: 14px;
+  padding: 1.75rem;
+  margin: 1.75rem 0;
+  box-shadow: 0 4px 10px var(--feature-shadow);
+}
+
+.cs-project-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #19105b;
+  margin: 0 0 0.6rem 0;
+}
+
+.dark .cs-project-title {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.cs-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.cs-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(25, 16, 91, 0.06);
+  color: #19105b;
+}
+
+.dark .cs-tag {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cs-tag.cs-tag-stack {
+  background: rgba(255, 97, 150, 0.12);
+  color: #ff4785;
+}
+
+.dark .cs-tag.cs-tag-stack {
+  background: rgba(255, 97, 150, 0.18);
+  color: #ff85ae;
+}
+
+.cs-block {
+  margin-top: 0.9rem;
+}
+
+.cs-block-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--stat-label);
+  margin-bottom: 0.3rem;
+}
+
+.cs-block p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+/* --------------------------------------
+   WIDEN THE READING COLUMN
+   VitePress caps prose at 688px by default; with a full-width
+   layout that leaves large empty gutters either side of the text
+   on normal monitors. Give it more breathing room instead.
+--------------------------------------- */
+.VPDoc.has-aside .content-container {
+  max-width: 900px;
 }
