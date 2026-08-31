@@ -2,22 +2,24 @@
 layout: home
 hero:
   name: "Full Stack Delivery Playbook"
-  text: "Engineering Governance & Standards"
-  tagline: "One source of truth for how we design, build, secure, ship, and operate software — from your first commit to production hypercare."
-  image:
-    src: /hero-logo.png
-    alt: Playbook Logo
+  text: "One Way to Build. Every Team, Every Project."
+  tagline: "From the first conversation about a business problem to the alert that wakes someone up in production - the standards, decision frameworks, and real project examples our engineers actually use, so no two teams reinvent the same decisions."
   actions:
     - theme: brand
       text: Get Started
       link: /getting-started
     - theme: alt
-      text: New here? Start with Basics
-      link: /basics/overview
+      text: See a Real Case Study
+      link: /case-studies/overview
     - theme: alt
-      text: View Coding Standards
+      text: Browse Coding Standards
       link: /coding-standards/overview
 features:
+  - icon: 🎯
+    title: Business & Solution Foundations
+    details: Think in problems, not technologies. How to choose an application, automation, integration, or data platform based on the actual problem.
+    link: /business-foundations/overview
+    linkText: Start here
   - icon: 🧭
     title: Basics
     details: Zero-assumed-background primers on full-stack architecture, Git, APIs, databases, Docker, CI/CD, testing, and security.
@@ -45,7 +47,7 @@ features:
     linkText: See the full pipeline
   - icon: 🛡️
     title: Testing & Security Guardrails
-    details: Every security control in one reference — secure coding, auth, secrets, CI/CD gates, and production hardening.
+    details: Every security control in one reference - secure coding, auth, secrets, CI/CD gates, and production hardening.
     link: /security/testing/overview
     linkText: Review guardrails
   - icon: ✅
@@ -55,7 +57,7 @@ features:
     linkText: See the gates
   - icon: 📊
     title: KPIs & Metrics
-    details: DORA metrics — Deployment Frequency, Lead Time, MTTR, and Change Failure Rate — tracked objectively.
+    details: DORA metrics - Deployment Frequency, Lead Time, MTTR, and Change Failure Rate - tracked objectively.
     link: /kpis/engineering-metrics
     linkText: View metrics
 ---
@@ -63,30 +65,40 @@ features:
 <div class="custom-stats-section">
   <h2 class="custom-stats-title">Built for High-Velocity Engineering Teams</h2>
   <p class="custom-stats-desc">
-    This playbook is not just documentation; it is the absolute source of truth for how we build software at scale. By standardizing our tech stack, automating our quality gates, and embracing AI-driven workflows, we eliminate boilerplate decisions and empower engineers to focus purely on delivering massive business value.
+    This isn't a wiki nobody reads - it's the operating manual for how we actually build software. Every stack choice, quality gate, and security control here is the default we expect engineers to reach for, so time goes into solving the client's problem instead of re-litigating tooling decisions on every new project.
   </p>
 
   <div class="custom-stats-grid">
     <div class="custom-stat-card">
-      <div class="custom-stat-value" style="color: #19105b;">100%</div>
-      <div class="custom-stat-label">Compliance</div>
+      <div class="custom-stat-value" style="color: #19105b;">18</div>
+      <div class="custom-stat-label">Practice Areas</div>
     </div>
     <div class="custom-stat-card">
-      <div class="custom-stat-value" style="color: #ff6196;">Zero</div>
-      <div class="custom-stat-label">Critical CVEs</div>
+      <div class="custom-stat-value" style="color: #ff6196;">100%</div>
+      <div class="custom-stat-label">PRs Gated on Review + CI</div>
     </div>
     <div class="custom-stat-card">
-      <div class="custom-stat-value" style="color: #19105b;">Day 1</div>
-      <div class="custom-stat-label">Developer Onboarding</div>
+      <div class="custom-stat-value" style="color: #19105b;">Zero</div>
+      <div class="custom-stat-label">Tolerance for Critical CVEs</div>
+    </div>
+    <div class="custom-stat-card">
+      <div class="custom-stat-value" style="color: #ff6196;">Day 1</div>
+      <div class="custom-stat-label">Time to Productive Onboarding</div>
     </div>
   </div>
 </div>
 
 <div class="role-router-section">
   <h2 class="custom-stats-title">Not sure where to start?</h2>
-  <p class="custom-stats-desc">Find your role below — each one links straight to the part of the playbook built for you.</p>
+  <p class="custom-stats-desc">Find your role below - each one links straight to the part of the playbook built for you.</p>
 
   <div class="role-router-grid">
+    <a class="role-card" href="/business-foundations/overview">
+      <div class="role-card-icon">🎯</div>
+      <div class="role-card-title">Client / Business Stakeholder / BA / PM</div>
+      <div class="role-card-desc">Start with Business & Solution Foundations to understand how problems become solutions, and how to judge whether one fits.</div>
+      <div class="role-card-link">Start with Foundations →</div>
+    </a>
     <a class="role-card" href="/basics/overview">
       <div class="role-card-icon">🌱</div>
       <div class="role-card-title">Fresher / New Engineer</div>
@@ -122,18 +134,46 @@ features:
 
 <div class="path-section">
   <h2 class="custom-stats-title">Your path through the playbook</h2>
-  <p class="custom-stats-desc">The sidebar follows this same order — roughly the sequence you'd hit these concerns on a real project.</p>
+  <p class="custom-stats-desc">The sidebar follows this same order - roughly the sequence you'd hit these concerns on a real project, from "should we even build this" through to "how do we know it's working."</p>
 
 ```mermaid
 flowchart LR
-    A[Basics] --> B[Delivery Lifecycle]
-    B --> C[Coding Standards]
-    C --> D[Architecture & Engineering]
-    D --> E[Deployment & Operations]
-    E --> F[Quality Gates, Governance & KPIs]
+    Z[["Business & Solution<br/>Foundations"]] --> A[["Basics"]]
+    A --> B[["Delivery<br/>Lifecycle"]]
+    B --> C[["Coding<br/>Standards"]]
+    C --> D[["Architecture &<br/>Engineering"]]
+    D --> E[["Deployment &<br/>Operations"]]
+    E --> F[["Quality Gates,<br/>Governance & KPIs"]]
+
+    style Z fill:#19105b,color:#fff,stroke:none
+    style A fill:#4a2e8f,color:#fff,stroke:none
+    style B fill:#7a3fb5,color:#fff,stroke:none
+    style C fill:#b13ea0,color:#fff,stroke:none
+    style D fill:#e13a8c,color:#fff,stroke:none
+    style E fill:#ff4785,color:#fff,stroke:none
+    style F fill:#ff6196,color:#fff,stroke:none
 ```
 
-  <p class="custom-stats-desc">If you only read one page beyond this one, read <a href="/vision-principles">Vision &amp; Principles</a> — it explains the "why" behind every rule in this playbook.</p>
+  <div class="path-link-row">
+    <a class="path-link" href="/business-foundations/overview">1. Foundations</a>
+    <a class="path-link" href="/basics/overview">2. Basics</a>
+    <a class="path-link" href="/delivery-lifecycle/overview">3. Delivery Lifecycle</a>
+    <a class="path-link" href="/coding-standards/overview">4. Coding Standards</a>
+    <a class="path-link" href="/architecture/standards">5. Architecture</a>
+    <a class="path-link" href="/operations/overview">6. Deployment &amp; Ops</a>
+    <a class="path-link" href="/quality-gates/overview">7. Gates &amp; Governance</a>
+  </div>
+
+  <p class="custom-stats-desc">If you only read one page beyond this one, read <a href="/vision-principles">Vision &amp; Principles</a> - it explains the "why" behind every rule in this playbook.</p>
+</div>
+
+<div class="final-cta-section">
+  <h2 class="final-cta-title">Ready to build it the right way?</h2>
+  <p class="custom-stats-desc">Every decision in this playbook exists so your team doesn't have to make it from scratch. Start with the page written for you.</p>
+  <div class="final-cta-actions">
+    <a class="final-cta-button primary" href="/getting-started">Get Started →</a>
+    <a class="final-cta-button" href="/vision-principles">Read the Principles</a>
+  </div>
 </div>
 
 <style>

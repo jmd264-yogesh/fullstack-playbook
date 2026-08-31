@@ -1,0 +1,228 @@
+# E2E Testing (Playwright + BDD)
+
+## 1.4.1 Overview
+
+End-to-end (E2E) tests verify complete user workflows through the actual browser. This project uses **Playwright** with **BDD (Behaviour-Driven Development)** via Gherkin syntax, enabling collaboration between developers and product stakeholders.
+
+### Core Tools
+
+| Tool | Purpose |
+|---|---|
+| **Playwright** | Browser automation - Chromium, Firefox, WebKit. Built-in auto-waiting, network interception, parallel execution. |
+| **playwright-bdd** | BDD integration layer connecting Gherkin feature files to Playwright step definitions. |
+| **Gherkin** | Human-readable test specification language (Given/When/Then) - serves as living documentation. |
+
+### Why BDD
+
+- **Executable Specifications** - tests serve as documentation that non-technical stakeholders can read.
+- **Shift-Left Testing** - feature files can be written before implementation, clarifying requirements upfront.
+- **Decoupled Logic** - clear separation between test intent (features) and test implementation (steps).
+
+## 1.4.2 Setup
+
+### Installation
+
+```bash
+yarn add --dev @playwright/test playwright-bdd
+npx playwright install    # Install browser binaries
+```
+
+### `playwright.config.ts`
+
+```typescript
+import { defineConfig, devices } from '@playwright/test'
+import { defineBddConfig } from 'playwright-bdd'
+
+const testDir = defineBddConfig({
+    features: 'e2e/features/**/*.feature',
+    steps: 'e2e/steps/**/*.step.ts',
+})
+
+export default defineConfig({
+    testDir,
+    timeout: 30_000,
+    retries: process.env.CI ? 2 : 0,
+    workers: process.env.CI ? 1 : undefined,
+    reporter: 'html',
+    use: {
+        baseURL: process.env.WEB_DOMAIN || 'http://localhost:3000',
+        screenshot: 'only-on-failure',
+        trace: 'on-first-retry',
+    },
+    projects: [
+        {
+            name: 'setup',
+            testDir: './e2e/steps/setup',
+            testMatch: /.*\.step\.ts/,
+        },
+        {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+            dependencies: ['setup'],
+        },
+        {
+            name: 'firefox',
+            use: { ...devices['Desktop Firefox'] },
+            dependencies: ['setup'],
+        },
+    ],
+})
+```
+
+## 1.4.3 Project Structure
+
+```text
+e2e/
+├── features/               # Gherkin feature files (test specs)
+│   ├── customer/
+│   │   └── customer-search.feature
+│   ├── login/
+│   │   └── login-flow.feature
+│   └── quote/
+│       └── quote-document.feature
+├── steps/                  # Step definitions (Playwright code)
+│   ├── common/             # Reusable step definitions
+│   │   └── navigation.step.ts
+│   ├── setup/
+│   │   └── authentication.step.ts
+│   ├── customer/
+│   │   └── customer-search.step.ts
+│   └── quote/
+│       └── quote-document.step.ts
+├── common/                 # Page objects & shared utilities
+│   └── login.ts
+├── support/
+│   ├── constants.ts        # Test data constants
+│   ├── mocks/              # Mock files (PDFs, images)
+│   └── utils/              # Helper functions
+├── fixtures.ts             # BDD test fixtures
+└── specs/                  # Pure Playwright tests (non-BDD)
+```
+
+## 1.4.4 Writing Feature Files
+
+Feature files describe application behaviour in plain English.
+
+```gherkin
+# e2e/features/customer/customer-search.feature
+
+Feature: Customer Search
+    As a partner user
+    I want to search for customers
+    So that I can quickly find and manage their accounts
+
+    Background:
+        Given User is logged in
+
+    Scenario: Search by customer name
+        When User navigates to the customer list
+        And User types "Acme Corp" in the search field
+        Then User should see "Acme Corp" in the results
+
+    Scenario: No results found
+        When User navigates to the customer list
+        And User types "NonExistent12345" in the search field
+        Then User should see the empty state message
+
+    Scenario Outline: Filter by status
+        When User navigates to the customer list
+        And User selects "<status>" filter
+        Then User should see only "<status>" customers
+
+        Examples:
+            | status   |
+            | Active   |
+            | Inactive |
+```
+
+### Feature Writing Guidelines
+
+- **User perspective** - write using business language, not technical terms.
+- **Single focus** - one scenario = one behaviour. Keep scenarios independent.
+- **Background** - use for shared setup steps like authentication.
+- **GWT Structure** - Given (state), When (action), Then (assertion).
+- **Scenario Outlines** - use for parameterised tests covering multiple data sets.
+- **Conciseness** - keep scenarios short (typically 3-7 steps).
+
+## 1.4.5 Writing Step Definitions
+
+Step definitions bridge Gherkin steps and Playwright automation code.
+
+```typescript
+import { expect } from '@playwright/test'
+import { Given, When, Then } from '@@/e2e/fixtures'
+
+Given('User is logged in', async ({ page }) => {
+    // Handled by setup project - authentication shared via storage state
+})
+
+When('User navigates to the customer list', async ({ page }) => {
+    await page.goto('/customers')
+    await page.waitForLoadState('networkidle')
+})
+
+When(
+    'User types {string} in the search field',
+    async ({ page }, searchTerm: string) => {
+        const searchInput = page.getByRole('textbox', { name: /search/i })
+        await searchInput.fill(searchTerm)
+        await page.waitForLoadState('networkidle')
+    }
+)
+
+Then(
+    'User should see {string} in the results',
+    async ({ page }, expectedText: string) => {
+        await expect(page.getByText(expectedText)).toBeVisible()
+    }
+)
+
+Then('User should see the empty state message', async ({ page }) => {
+    await expect(page.getByText(/no results found/i)).toBeVisible()
+})
+```
+
+## 1.4.6 Best Practices
+
+### Reliability
+
+- **Auto-waiting** - use Playwright's built-in auto-waiting. Never use explicit `sleep()` or `waitForTimeout()` calls.
+- **Selector priority** - role-based and text-based selectors over CSS selectors or XPath.
+- **Test IDs** - use `data-testid` attributes as a reliable fallback for selectors that cannot use role/text.
+- **Retries** - configure 2 retries in CI to handle flaky infrastructure. Not a substitute for stable tests.
+
+### Performance
+
+- **Auth state** - share authentication state via `storageState`. Never log in before every test.
+- **Parallelism** - run tests in parallel for independent scenarios.
+- **CI workers** - use a single worker in CI to avoid resource contention.
+- **Focus** - E2E tests cover critical user paths only. Do not duplicate unit test coverage.
+
+### Maintenance
+
+- **Page objects** - use the Page Object pattern for complex page interactions.
+- **Reusable steps** - create reusable step definitions in `e2e/steps/common/`.
+- **Centralised data** - keep test data in `e2e/support/constants.ts`.
+- **Artifacts** - screenshots on failure and traces on first retry (configured in `playwright.config.ts`).
+
+## 1.4.7 Running E2E Tests
+
+```bash
+# Start the application first
+yarn dev
+
+# Run all E2E tests
+yarn e2e
+
+# Run specific feature
+yarn playwright test --grep "Customer Search"
+
+# Run in headed mode (visible browser)
+yarn playwright test --headed
+
+# Run in debug mode with inspector
+yarn playwright test --debug
+
+# View the HTML test report
+yarn playwright show-report
+```
